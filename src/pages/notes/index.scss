@@ -1,4 +1,73 @@
 .notes {
   padding: 20px;
-  text-align: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+
+  &__stat {
+    display: flex;
+    justify-content: space-around;
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  &__stat-item {
+    text-align: center;
+  }
+
+  &__stat-number {
+    font-size: 48px;
+    font-weight: 700;
+    color: #3B82F6;
+    display: block;
+  }
+
+  &__stat-label {
+    font-size: 24px;
+    color: #999;
+  }
+
+  &__checkin {
+    display: flex;
+    gap: 12px;
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+
+  &__checkin-input {
+    flex: 1;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 28px;
+  }
+
+  &__checkin-btn {
+    background-color: #10B981;
+    color: #fff;
+    font-size: 28px;
+    padding: 12px 24px;
+    border-radius: 8px;
+  }
+
+  &__add {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  &__add-textarea {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 28px;
+    width: 100%;
+    min-height: 120px;
+    margin-bottom: 12px;
+  }
 }

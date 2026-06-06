@@ -1,0 +1,31 @@
+.note-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+
+  &__content {
+    flex: 1;
+  }
+
+  &__text {
+    font-size: 28px;
+    color: #333;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  &__date {
+    font-size: 22px;
+    color: #999;
+  }
+
+  &__delete {
+    padding: 8px 16px;
+    color: #EF4444;
+    font-size: 24px;
+  }
+}
