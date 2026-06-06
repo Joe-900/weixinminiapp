@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "commonjs",
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "noImplicitAny": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@cloud/*": ["./cloud/*"]
+    },
+    "rootDir": ".",
+    "jsx": "react-jsx",
+    "allowJs": false,
+    "outDir": "./dist",
+    "typeRoots": ["./node_modules/@types", "./global.d.ts"],
+    "types": ["jest", "node"]
+  },
+  "include": ["src/**/*", "cloud/**/*", "global.d.ts"],
+  "exclude": ["node_modules", "dist", ".temp"]
+}
