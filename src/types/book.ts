@@ -1,0 +1,43 @@
+/**
+ * @file 书籍类型定义
+ * @description 书籍集合的数据模型与相关请求/响应类型
+ */
+
+export type BookStatus = 'online' | 'offline'
+
+export interface Book {
+  _id: string
+  bookId: string
+  title: string
+  author: string
+  isbn: string
+  cover: string
+  summary: string
+  status: BookStatus
+  addedBy: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface BookListParams {
+  page: number
+  pageSize: number
+  keyword?: string
+}
+
+export interface BookCreateParams {
+  title: string
+  author: string
+  isbn: string
+  summary: string
+  cover: string
+}
+
+export interface BookUpdateParams {
+  bookId: string
+  title?: string
+  author?: string
+  isbn?: string
+  summary?: string
+  cover?: string
+}
