@@ -9,7 +9,6 @@ import type { Note, CheckinStat } from '../../../src/types/note'
 import { success, fail } from '../common/response'
 import { ErrorCode } from '../../../src/types/common'
 import { validateParams } from '../common/validate'
-import type { AuthContext } from '../common/auth'
 import { requireOwner } from '../common/auth'
 
 export async function handleAddNote(
