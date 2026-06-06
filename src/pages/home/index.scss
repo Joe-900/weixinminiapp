@@ -1,4 +1,12 @@
 .home {
   padding: 20px;
-  text-align: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+
+  &__load-more {
+    text-align: center;
+    padding: 20px;
+    color: #3B82F6;
+    font-size: 28px;
+  }
 }

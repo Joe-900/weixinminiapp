@@ -1,0 +1,38 @@
+.book-card {
+  display: flex;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  &__cover {
+    width: 120px;
+    height: 160px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    flex: 1;
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  &__title {
+    font-size: 32px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__author {
+    font-size: 26px;
+    color: #666;
+  }
+}
