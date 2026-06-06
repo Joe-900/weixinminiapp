@@ -18,6 +18,7 @@ export interface AiMessage {
   _id: string
   msgId: string
   sessionId: string
+  openid: string
   role: AiMessageRole
   content: string
   createdAt: number

@@ -1,7 +1,7 @@
 /**
- * @file AI 客户端本地假实现
- * @description 离线假回复，不发起任何网络请�?
- * 假回复回显关键上下文，以便断言上下文确实被正确拼装传入
+ * @file Mock AI client implementation
+ * @description Offline fake replies, no network requests
+ * Fake reply echoes key context so assertions can verify context assembly
  */
 
 import type { AiClient } from '../interfaces/aiClient'
@@ -22,15 +22,15 @@ export class MockAiClient implements AiClient {
     const systemMsg = messages.find((m) => m.role === 'system')
     const userMsg = messages.find((m) => m.role === 'user')
 
-    let bookTitle = '未知书籍'
+    let bookTitle = 'Unknown Book'
     if (systemMsg) {
-      const titleMatch = systemMsg.content.match(/书名[�?]\s*(.+)/)
+      const titleMatch = systemMsg.content.match(/"([^"]+)"/)
       if (titleMatch) {
-        bookTitle = titleMatch[1].trim()
+        bookTitle = titleMatch[1]
       }
     }
 
-    const question = userMsg?.content ?? ''
-    return `已收到关于�?{bookTitle}》的问题�?{question}，这是本地模拟回复。`
+    const questionText = userMsg?.content ?? ''
+    return `Received question about "${bookTitle}": ${questionText}. This is a local mock reply.`
   }
 }
