@@ -1,4 +1,73 @@
 .ai-chat {
-  padding: 20px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f5f5f5;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background-color: #fff;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  &__title {
+    font-size: 28px;
+    color: #3B82F6;
+  }
+
+  &__new {
+    font-size: 28px;
+    color: #10B981;
+  }
+
+  &__sessions {
+    background-color: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  &__session-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+
+    &--active {
+      background-color: #EBF5FF;
+    }
+  }
+
+  &__messages {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__input-bar {
+    display: flex;
+    padding: 12px 20px;
+    background-color: #fff;
+    border-top: 1px solid #e5e5e5;
+    gap: 12px;
+  }
+
+  &__input {
+    flex: 1;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 28px;
+  }
+
+  &__send-btn {
+    background-color: #3B82F6;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+  }
 }
