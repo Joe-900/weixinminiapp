@@ -1,7 +1,7 @@
 /**
- * @file 本地 Mock 桥接
- * @description 本地模式下直接调用 mock 业务函数，返回统一信封
- * 前端不感知当前是本地还是云模式
+ * @file Local Mock bridge
+ * @description Local mode directly calls mock business functions, returns unified envelope
+ * Frontend is unaware of local vs cloud mode
  */
 
 import type { ApiResponse } from '../types/common'
@@ -10,6 +10,9 @@ import { LocalStorage } from '../../cloud/functions/mock/localStorage'
 import { MockAiClient } from '../../cloud/functions/mock/mockAiClient'
 import { seedUsers, seedBooks } from '../../cloud/functions/mock/seedData'
 import { userMain } from '../../cloud/functions/user/index'
+import { bookMain } from '../../cloud/functions/book/index'
+import { aiMain } from '../../cloud/functions/ai/index'
+import { noteMain } from '../../cloud/functions/note/index'
 import type { Repository } from '../../cloud/functions/interfaces/repository'
 import type { Storage } from '../../cloud/functions/interfaces/storage'
 import type { AiClient } from '../../cloud/functions/interfaces/aiClient'
@@ -38,23 +41,29 @@ export function resetMockData(): void {
   initSeedData()
 }
 
-/**
- * 本地模式下模拟云函数调用
- */
+const MOCK_CTX = { OPENID: 'user_openid_002' }
+
 export async function callMockFunction<T = unknown>(
   functionName: string,
   data: Record<string, unknown>,
 ): Promise<ApiResponse<T>> {
-  const mockContext = { OPENID: 'user_openid_002' }
-
   switch (functionName) {
     case 'user':
-      return userMain(data, mockContext, repo) as Promise<ApiResponse<T>>
+      return userMain(data, MOCK_CTX, repo) as Promise<ApiResponse<T>>
+
+    case 'book':
+      return bookMain(data, MOCK_CTX, repo) as Promise<ApiResponse<T>>
+
+    case 'ai':
+      return aiMain(data, MOCK_CTX, repo, aiClient) as Promise<ApiResponse<T>>
+
+    case 'note':
+      return noteMain(data, MOCK_CTX, repo) as Promise<ApiResponse<T>>
 
     default:
       return {
         code: 5000,
-        message: `未知的云函数: ${functionName}`,
+        message: `Unknown cloud function: ${functionName}`,
         data: null,
       }
   }
