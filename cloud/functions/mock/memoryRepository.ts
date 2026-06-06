@@ -1,13 +1,13 @@
 /**
- * @file 基于内存的 Repository 实现
- * @description 本地 Mock 模式下使用内存数据库，提供与云数据库相同的接口
+ * @file 基于内存�?Repository 实现
+ * @description 本地 Mock 模式下使用内存数据库，提供与云数据库相同的接�?
  */
 
 import type { Repository, PageResult } from '../interfaces/repository'
-import type { User } from '../../src/types/user'
-import type { Book } from '../../src/types/book'
-import type { Note, Checkin, CheckinStat } from '../../src/types/note'
-import type { AiSession, AiMessage } from '../../src/types/ai'
+import type { User } from '../../../src/types/user'
+import type { Book } from '../../../src/types/book'
+import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
+import type { AiSession, AiMessage } from '../../../src/types/ai'
 
 export class MemoryRepository implements Repository {
   private users: Map<string, User> = new Map()
@@ -214,9 +214,15 @@ export class MemoryRepository implements Repository {
     const startOfDay = new Date(today).getTime()
     const endOfDay = startOfDay + 24 * 60 * 60 * 1000
 
+    const userSessionIds = new Set(
+      Array.from(this.sessions.values())
+        .filter((s) => s.openid === openid)
+        .map((s) => s.sessionId),
+    )
+
     return Array.from(this.messages.values()).filter(
       (m) =>
-        m.openid === openid &&
+        userSessionIds.has(m.sessionId) &&
         m.role === 'user' &&
         m.createdAt >= startOfDay &&
         m.createdAt < endOfDay,

@@ -1,7 +1,7 @@
 /**
  * @file 基于云存储的 Storage 实现
- * @description 线上模式使用微信云存储上传文件
- * 需按官方最新文档核实：微信云开发存储 API
+ * @description 线上模式使用微信云存储上传文�?
+ * 需按官方最新文档核实：微信云开发存�?API
  */
 
 import type { Storage } from '../interfaces/storage'

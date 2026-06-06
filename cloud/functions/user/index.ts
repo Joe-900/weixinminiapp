@@ -1,21 +1,22 @@
 /**
  * @file 用户域云函数入口
- * @description 鉴权后分发 action 到对应业务函数
- * 云函数入口只负责：取上下文 openid、获取数据库实例，然后传给纯业务函数
+ * @description 鉴权后分�?action 到对应业务函�?
+ * 云函数入口只负责：取上下�?openid、获取数据库实例，然后传给纯业务函数
  */
 
-import type { ApiResponse } from '../../src/types/common'
+import type { ApiResponse } from '../../../src/types/common'
 import type { Repository } from '../interfaces/repository'
 import { handleLogin, handleProfile } from './userService'
 import { authenticate } from '../common/auth'
 import { fail } from '../common/response'
-import { ErrorCode } from '../../src/types/common'
+import { ErrorCode } from '../../../src/types/common'
 import { validateParams } from '../common/validate'
 
 interface UserEvent {
-  action: string
+  action?: string
   nickname?: string
   avatar?: string
+  [key: string]: unknown
 }
 
 interface CloudContext {
@@ -25,7 +26,7 @@ interface CloudContext {
 /**
  * 用户域云函数入口
  * @param event 请求参数
- * @param context 云函数上下文（包含 OPENID）
+ * @param context 云函数上下文（包�?OPENID�?
  * @param repo 数据访问 Repository 实例
  */
 export async function userMain(
@@ -56,6 +57,6 @@ export async function userMain(
     }
 
     default:
-      return fail(ErrorCode.BAD_REQUEST, `未知的 action: ${event.action}`)
+      return fail(ErrorCode.BAD_REQUEST, `未知�?action: ${event.action}`)
   }
 }

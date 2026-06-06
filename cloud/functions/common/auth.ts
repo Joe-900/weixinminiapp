@@ -1,12 +1,12 @@
 /**
- * @file 鉴权工具
- * @description 取上下文 openid、查 role，提供鉴权能力
+ * @file Auth utility
+ * @description Get context openid, check role, provide auth capabilities
  */
 
 import type { Repository } from '../interfaces/repository'
-import { ErrorCode } from '../../src/types/common'
-import type { ApiResponse } from '../../src/types/common'
-import type { User } from '../../src/types/user'
+import { ErrorCode } from '../../../src/types/common'
+import type { ApiResponse } from '../../../src/types/common'
+import type { User } from '../../../src/types/user'
 
 export interface AuthContext {
   openid: string
@@ -15,8 +15,8 @@ export interface AuthContext {
 }
 
 /**
- * 从云函数上下文获取 openid
- * 需按官方最新文档核实：微信云开发获取 OPENID 的方式
+ * Get openid from cloud function context
+ * Need to verify with latest official docs: WeChat cloud development OPENID retrieval
  */
 export function getOpenidFromContext(context: Record<string, unknown>): string {
   const openid = (context as { OPENID?: string }).OPENID ?? ''
@@ -24,7 +24,7 @@ export function getOpenidFromContext(context: Record<string, unknown>): string {
 }
 
 /**
- * 鉴权：获取用户身份信息
+ * Authenticate: get user identity info
  */
 export async function authenticate(
   repo: Repository,
@@ -35,7 +35,7 @@ export async function authenticate(
       auth: null,
       error: {
         code: ErrorCode.UNAUTHORIZED,
-        message: '无法获取 openid',
+        message: 'Cannot get openid',
         data: null,
       },
     }
@@ -48,7 +48,7 @@ export async function authenticate(
       auth: null,
       error: {
         code: ErrorCode.UNAUTHORIZED,
-        message: '用户不存在',
+        message: 'User not found',
         data: null,
       },
     }
@@ -65,13 +65,13 @@ export async function authenticate(
 }
 
 /**
- * 校验是否为管理员
+ * Check if user is admin
  */
 export function requireAdmin(auth: AuthContext): ApiResponse<null> | null {
   if (auth.role !== 'admin') {
     return {
       code: ErrorCode.FORBIDDEN,
-      message: '权限不足，仅管理员可执行此操作',
+      message: 'Permission denied, admin only',
       data: null,
     }
   }
@@ -79,13 +79,13 @@ export function requireAdmin(auth: AuthContext): ApiResponse<null> | null {
 }
 
 /**
- * 校验数据归属：当前用户只能操作自己的数据
+ * Check data ownership: current user can only operate own data
  */
 export function requireOwner(auth: AuthContext, dataOpenid: string): ApiResponse<null> | null {
   if (auth.openid !== dataOpenid) {
     return {
       code: ErrorCode.ACCESS_DENIED,
-      message: '越权访问，只能操作本人数据',
+      message: 'Access denied, can only operate own data',
       data: null,
     }
   }

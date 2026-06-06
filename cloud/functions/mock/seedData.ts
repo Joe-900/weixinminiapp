@@ -1,10 +1,10 @@
 /**
- * @file 种子数据
- * @description 本地 Mock 模式下的预置测试数据
+ * @file Seed data for local mock mode
+ * @description Pre-populated test data for local mock
  */
 
-import type { User } from '../../src/types/user'
-import type { Book } from '../../src/types/book'
+import type { User } from '../../../src/types/user'
+import type { Book } from '../../../src/types/book'
 
 export const SEED_ADMIN_OPENID = 'admin_openid_001'
 export const SEED_USER_OPENID = 'user_openid_002'
@@ -13,7 +13,7 @@ export const seedUsers: User[] = [
   {
     _id: SEED_ADMIN_OPENID,
     openid: SEED_ADMIN_OPENID,
-    nickname: '管理员',
+    nickname: 'Admin',
     avatar: '',
     role: 'admin',
     createdAt: Date.now() - 86400000,
@@ -21,7 +21,7 @@ export const seedUsers: User[] = [
   {
     _id: SEED_USER_OPENID,
     openid: SEED_USER_OPENID,
-    nickname: '测试用户',
+    nickname: 'TestUser',
     avatar: '',
     role: 'user',
     createdAt: Date.now() - 43200000,
@@ -32,11 +32,11 @@ export const seedBooks: Book[] = [
   {
     _id: 'book_001',
     bookId: 'book_001',
-    title: '西游记',
-    author: '吴承恩',
+    title: 'Journey to the West',
+    author: 'Wu Chengen',
     isbn: '9787020008735',
     cover: 'local-mock://cover/xiyouji.png',
-    summary: '中国古典四大名著之一，讲述唐僧师徒四人西天取经的故事。',
+    summary: 'One of the Four Great Classical Novels of Chinese literature.',
     status: 'online',
     addedBy: SEED_ADMIN_OPENID,
     createdAt: Date.now() - 172800000,
@@ -45,11 +45,11 @@ export const seedBooks: Book[] = [
   {
     _id: 'book_002',
     bookId: 'book_002',
-    title: '红楼梦',
-    author: '曹雪芹',
+    title: 'Dream of the Red Chamber',
+    author: 'Cao Xueqin',
     isbn: '9787020002207',
     cover: 'local-mock://cover/hongloumeng.png',
-    summary: '中国古典四大名著之首，以贾宝玉和林黛玉的爱情悲剧为主线。',
+    summary: 'The greatest of the Chinese classical novels.',
     status: 'online',
     addedBy: SEED_ADMIN_OPENID,
     createdAt: Date.now() - 86400000,
@@ -58,11 +58,11 @@ export const seedBooks: Book[] = [
   {
     _id: 'book_003',
     bookId: 'book_003',
-    title: '三国演义',
-    author: '罗贯中',
+    title: 'Romance of the Three Kingdoms',
+    author: 'Luo Guanzhong',
     isbn: '9787020008728',
     cover: 'local-mock://cover/sanguoyanyi.png',
-    summary: '中国古典四大名著之一，描述东汉末年到西晋初年的历史风云。',
+    summary: 'A historical novel set in the turbulent years near the end of the Han dynasty.',
     status: 'offline',
     addedBy: SEED_ADMIN_OPENID,
     createdAt: Date.now() - 259200000,

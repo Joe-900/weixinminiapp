@@ -1,13 +1,13 @@
 /**
- * @file 数据访问抽象接口（Repository）
- * @description 定义所有数据访问操作的抽象接口，业务函数通过此接口操作数据
- * 线上实现基于云数据库，本地实现基于内存
+ * @file 数据访问抽象接口（Repository�?
+ * @description 定义所有数据访问操作的抽象接口，业务函数通过此接口操作数�?
+ * 线上实现基于云数据库，本地实现基于内�?
  */
 
-import type { User } from '../../src/types/user'
-import type { Book } from '../../src/types/book'
-import type { Note, Checkin, CheckinStat } from '../../src/types/note'
-import type { AiSession, AiMessage } from '../../src/types/ai'
+import type { User } from '../../../src/types/user'
+import type { Book } from '../../../src/types/book'
+import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
+import type { AiSession, AiMessage } from '../../../src/types/ai'
 
 export interface PageResult<T> {
   list: T[]

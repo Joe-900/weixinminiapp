@@ -1,14 +1,14 @@
 /**
- * @file 基于云数据库的 Repository 实现
+ * @file 基于云数据库�?Repository 实现
  * @description 线上模式使用微信云数据库进行数据访问
  * 需按官方最新文档核实：微信云开发数据库 API
  */
 
 import type { Repository, PageResult } from '../interfaces/repository'
-import type { User } from '../../src/types/user'
-import type { Book } from '../../src/types/book'
-import type { Note, Checkin, CheckinStat } from '../../src/types/note'
-import type { AiSession, AiMessage } from '../../src/types/ai'
+import type { User } from '../../../src/types/user'
+import type { Book } from '../../../src/types/book'
+import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
+import type { AiSession, AiMessage } from '../../../src/types/ai'
 
 interface CloudDbCollection {
   where(condition: Record<string, unknown>): { get(): Promise<{ data: Record<string, unknown>[] }>; count(): Promise<{ total: number }> }

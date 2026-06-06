@@ -1,11 +1,11 @@
 /**
- * @file 基于 OpenAI 兼容格式的 AIClient 实现
- * @description 线上模式走 OpenAI 兼容接口（默认对接 DeepSeek）
+ * @file 基于 OpenAI 兼容格式�?AIClient 实现
+ * @description 线上模式�?OpenAI 兼容接口（默认对�?DeepSeek�?
  * baseURL、key、model 名称全部从云函数环境变量读取
  */
 
 import type { AiClient } from '../interfaces/aiClient'
-import type { OpenAIChatMessage } from '../../src/types/ai'
+import type { OpenAIChatMessage } from '../../../src/types/ai'
 
 interface ChatCompletionParams {
   model: string

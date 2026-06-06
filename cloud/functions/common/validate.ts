@@ -1,10 +1,10 @@
 /**
- * @file 入参校验工具函数
- * @description 统一的入参校验逻辑，缺失或类型错误返回 1003
+ * @file Param validation utility
+ * @description Unified param validation logic, missing or wrong type returns 1003
  */
 
-import { ErrorCode } from '../../src/types/common'
-import type { ApiResponse } from '../../src/types/common'
+import { ErrorCode } from '../../../src/types/common'
+import type { ApiResponse } from '../../../src/types/common'
 
 interface FieldRule {
   name: string
@@ -12,17 +12,17 @@ interface FieldRule {
   required: boolean
 }
 
-export function validateParams(
+export function validateParams<T = null>(
   params: Record<string, unknown>,
   rules: FieldRule[],
-): ApiResponse<null> | null {
+): ApiResponse<T> | null {
   for (const rule of rules) {
     const value = params[rule.name]
 
     if (rule.required && (value === undefined || value === null || value === '')) {
       return {
         code: ErrorCode.BAD_REQUEST,
-        message: `${rule.name} 字段缺失`,
+        message: `${rule.name} field is required`,
         data: null,
       }
     }
@@ -30,7 +30,7 @@ export function validateParams(
     if (value !== undefined && value !== null && typeof value !== rule.type) {
       return {
         code: ErrorCode.BAD_REQUEST,
-        message: `${rule.name} 字段类型错误，期望 ${rule.type}`,
+        message: `${rule.name} field type error, expected ${rule.type}`,
         data: null,
       }
     }
