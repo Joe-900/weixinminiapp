@@ -1,4 +1,114 @@
 .admin {
   padding: 20px;
-  text-align: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  &__title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #333;
+  }
+
+  &__add-btn {
+    background-color: #3B82F6;
+    color: #fff;
+    font-size: 28px;
+    padding: 12px 24px;
+    border-radius: 8px;
+  }
+
+  &__filter {
+    display: flex;
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+
+  &__filter-item {
+    padding: 8px 20px;
+    border-radius: 20px;
+    background-color: #e5e5e5;
+    font-size: 24px;
+
+    &--active {
+      background-color: #3B82F6;
+      color: #fff;
+    }
+  }
+
+  &__book-item {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__book-info {
+    flex: 1;
+  }
+
+  &__book-title {
+    font-size: 30px;
+    font-weight: 600;
+    color: #333;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  &__book-status {
+    font-size: 24px;
+    color: #999;
+  }
+
+  &__book-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  &__form {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 20px;
+  }
+
+  &__form-title {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  &__input {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-size: 28px;
+  }
+
+  &__textarea {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-size: 28px;
+    width: 100%;
+    min-height: 120px;
+  }
+
+  &__form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
 }
