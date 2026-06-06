@@ -1,5 +1,5 @@
 /**
- * @file 基于云数据库�?Repository 实现
+ * @file 基于云数据库�?Repository 实现
  * @description 线上模式使用微信云数据库进行数据访问
  * 需按官方最新文档核实：微信云开发数据库 API
  */
@@ -11,9 +11,11 @@ import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
 import type { AiSession, AiMessage } from '../../../src/types/ai'
 
 interface CloudDbCollection {
-  where(condition: Record<string, unknown>): { get(): Promise<{ data: Record<string, unknown>[] }>; count(): Promise<{ total: number }> }
+  where(condition: Record<string, unknown>): CloudDbCollection
   add(data: Record<string, unknown>): Promise<{ _id: string }>
   doc(id: string): { update(data: Record<string, unknown>): Promise<{ updated: number }>; get(): Promise<{ data: Record<string, unknown> }>; remove(): Promise<{ deleted: number }> }
+  update(data: Record<string, unknown>): Promise<{ updated: number }>
+  remove(): Promise<{ deleted: number }>
   skip(n: number): CloudDbCollection
   limit(n: number): CloudDbCollection
   orderBy(field: string, order: string): CloudDbCollection

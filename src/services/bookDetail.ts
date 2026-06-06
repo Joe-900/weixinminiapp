@@ -3,7 +3,7 @@
  * @description Wrapper for book detail page
  */
 
-import { callFunction } from '../request'
+import { callFunction } from './request'
 import type { ApiResponse } from '../types/common'
 import type { Book } from '../types/book'
 

@@ -6,8 +6,8 @@
 
 import { PropsWithChildren } from 'react'
 import { View, Text } from '@tarojs/components'
-import { useUserStore } from '../store/userStore'
-import type { UserRole } from '../types/user'
+import { useUserStore } from '../../store/userStore'
+import type { UserRole } from '../../types/user'
 
 interface AuthGuardProps {
   requiredRole?: UserRole

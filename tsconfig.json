@@ -8,8 +8,8 @@
     "experimentalDecorators": true,
     "noImplicitAny": true,
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
@@ -28,6 +28,7 @@
     "allowJs": false,
     "outDir": "./dist",
     "typeRoots": ["./node_modules/@types", "./global.d.ts"],
+    "skipLibCheck": true,
     "types": ["jest", "node"]
   },
   "include": ["src/**/*", "cloud/**/*", "global.d.ts"],

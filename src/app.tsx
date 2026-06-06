@@ -1,6 +1,6 @@
 /**
- * @file 应用入口
- * @description 启动时静默登录，初始化用户状态
+ * @file App entry point
+ * @description Silent login on startup, initialize user state
  */
 
 import { PropsWithChildren, useEffect } from 'react'
@@ -31,7 +31,7 @@ async function silentLogin(
       showErrorToast(res.code)
     }
   } catch {
-    Taro.showToast({ title: '登录失败，请重试', icon: 'none' })
+    Taro.showToast({ title: 'Login failed, please retry', icon: 'none' })
   }
 }
 

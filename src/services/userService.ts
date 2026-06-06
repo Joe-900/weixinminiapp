@@ -4,8 +4,8 @@
  */
 
 import { callFunction } from './request'
-import type { ApiResponse, LoginResult } from '../types/common'
-import type { User, ProfileParams } from '../types/user'
+import type { ApiResponse } from '../types/common'
+import type { User, LoginResult, ProfileParams } from '../types/user'
 
 /**
  * 用户登录
