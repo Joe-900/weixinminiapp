@@ -59,7 +59,7 @@ export async function bookMain(
         event.page ?? 1,
         event.pageSize ?? 20,
         event.keyword,
-        event.status,
+        event.status ?? 'online',
       )
     }
 

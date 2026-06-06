@@ -12,9 +12,6 @@ import { validateParams } from '../common/validate'
 import type { AuthContext } from '../common/auth'
 import { requireAdmin } from '../common/auth'
 
-/**
- * List books with pagination and optional keyword filter
- */
 export async function handleList(
   repo: Repository,
   page: number,
@@ -31,9 +28,6 @@ export async function handleList(
   })
 }
 
-/**
- * Get book detail by bookId
- */
 export async function handleDetail(
   repo: Repository,
   bookId: string,
@@ -41,24 +35,19 @@ export async function handleDetail(
   if (!bookId) {
     return fail(ErrorCode.BAD_REQUEST, 'bookId is required')
   }
-
   const book = await repo.findBookById(bookId)
   if (!book) {
     return fail(ErrorCode.NOT_FOUND, 'Book not found')
   }
-
   return success(book)
 }
 
-/**
- * Create a new book (admin only)
- */
 export async function handleCreate(
   repo: Repository,
   auth: AuthContext,
   params: BookCreateParams,
 ): Promise<ApiResponse<string>> {
-  const adminError = requireAdmin(auth)
+  const adminError = requireAdmin<string>(auth)
   if (adminError) return adminError
 
   const validationError = validateParams<string>(
@@ -92,22 +81,17 @@ export async function handleCreate(
   return success(bookId)
 }
 
-/**
- * Update a book (admin only)
- */
 export async function handleUpdate(
   repo: Repository,
   auth: AuthContext,
   params: BookUpdateParams,
 ): Promise<ApiResponse<string>> {
-  const adminError = requireAdmin(auth)
+  const adminError = requireAdmin<string>(auth)
   if (adminError) return adminError
 
   const validationError = validateParams<string>(
     params as unknown as Record<string, unknown>,
-    [
-      { name: 'bookId', type: 'string', required: true },
-    ],
+    [{ name: 'bookId', type: 'string', required: true }],
   )
   if (validationError) return validationError
 
@@ -127,15 +111,12 @@ export async function handleUpdate(
   return success('ok')
 }
 
-/**
- * Take a book offline (admin only)
- */
 export async function handleOffline(
   repo: Repository,
   auth: AuthContext,
   bookId: string,
 ): Promise<ApiResponse<string>> {
-  const adminError = requireAdmin(auth)
+  const adminError = requireAdmin<string>(auth)
   if (adminError) return adminError
 
   if (!bookId) {
@@ -151,15 +132,12 @@ export async function handleOffline(
   return success('ok')
 }
 
-/**
- * Bring a book online (admin only)
- */
 export async function handleOnline(
   repo: Repository,
   auth: AuthContext,
   bookId: string,
 ): Promise<ApiResponse<string>> {
-  const adminError = requireAdmin(auth)
+  const adminError = requireAdmin<string>(auth)
   if (adminError) return adminError
 
   if (!bookId) {

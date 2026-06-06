@@ -67,7 +67,7 @@ export async function authenticate(
 /**
  * Check if user is admin
  */
-export function requireAdmin(auth: AuthContext): ApiResponse<null> | null {
+export function requireAdmin<T = null>(auth: AuthContext): ApiResponse<T> | null {
   if (auth.role !== 'admin') {
     return {
       code: ErrorCode.FORBIDDEN,
@@ -81,7 +81,7 @@ export function requireAdmin(auth: AuthContext): ApiResponse<null> | null {
 /**
  * Check data ownership: current user can only operate own data
  */
-export function requireOwner(auth: AuthContext, dataOpenid: string): ApiResponse<null> | null {
+export function requireOwner<T = null>(auth: AuthContext, dataOpenid: string): ApiResponse<T> | null {
   if (auth.openid !== dataOpenid) {
     return {
       code: ErrorCode.ACCESS_DENIED,
