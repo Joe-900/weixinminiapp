@@ -16,7 +16,7 @@ export const SEED_USER_OPENID = 'user_openid_002'
  * 'user'  = 以普通用户身份登录
  * 修改此值后重新编译即可切换身份
  */
-export const MOCK_LOGIN_ROLE: UserRole = 'user'
+export const MOCK_LOGIN_ROLE: UserRole = 'admin'
 
 const OPENID_MAP: Record<UserRole, string> = {
   admin: SEED_ADMIN_OPENID,
