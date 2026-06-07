@@ -4,18 +4,14 @@
  * 所有mock代码位于src/mock/，避免cloud/被编译到小程序产物
  */
 
-import type { ApiResponse } from '../types/common'
 import { ErrorCode, ERROR_MESSAGE_MAP } from '../types/common'
+import type { ApiResponse } from '../types/common'
 import { MemoryRepository } from '../mock/memoryRepository'
 import { LocalStorage } from '../mock/localStorage'
 import { MockAiClient } from '../mock/mockAiClient'
 import { seedUsers, seedBooks, MOCK_LOGIN_OPENID } from '../mock/seedData'
-import type { MockRepository } from '../mock/types'
-import type { User, UserRole, LoginResult } from '../types/user'
 import type { Book } from '../types/book'
-import type { AiSession, AiMessage, ChatResult, OpenAIChatMessage } from '../types/ai'
-import type { Note, CheckinStat } from '../types/note'
-import type { PaginatedData } from '../types/common'
+import type { OpenAIChatMessage } from '../types/ai'
 
 const repo = new MemoryRepository()
 const storage = new LocalStorage()

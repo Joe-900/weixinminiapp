@@ -6,11 +6,10 @@
 import { View, Text, Button } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useUserStore } from '../../store/userStore'
-import AuthGuard from '../../components/AuthGuard'
 import './index.scss'
 
 export default function Profile() {
-  const { nickname, role, openid } = useUserStore()
+  const { nickname, role } = useUserStore()
 
   function goToAdmin() {
     Taro.navigateTo({ url: '/pages/admin/index' })

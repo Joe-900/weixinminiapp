@@ -8,7 +8,6 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect, useCallback } from 'react'
 import { bookList, bookCreate, bookUpdate, bookOffline, bookOnline } from '../../services/bookService'
 import { isSuccess, showErrorToast } from '../../services/request'
-import { useUserStore } from '../../store/userStore'
 import AuthGuard from '../../components/AuthGuard'
 import StateView from '../../components/StateView'
 import type { Book } from '../../types/book'
@@ -23,7 +22,6 @@ const STATUS_LABEL_MAP: Record<StatusFilter, string> = {
 }
 
 export default function Admin() {
-  const role = useUserStore((s) => s.role)
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
@@ -38,7 +36,6 @@ export default function Admin() {
   const loadBooks = useCallback(async () => {
     setLoading(true)
     try {
-      const statusParam = statusFilter === 'all' ? undefined : statusFilter
       const res = await bookList({ page: 1, pageSize: 100 })
       if (isSuccess(res) && res.data) {
         const filtered = statusFilter === 'all'

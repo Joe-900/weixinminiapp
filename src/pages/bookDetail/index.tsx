@@ -49,10 +49,14 @@ export default function BookDetail() {
   if (loading || error || !book) {
     return (
       <View className='book-detail'>
-        <StateView loading={loading} error={error} onRetry={() => {
-          const params = Taro.getCurrentInstance().router?.params
-          if (params?.bookId) loadBook(params.bookId)
-        }} />
+        <StateView
+          loading={loading}
+          error={error}
+          onRetry={() => {
+            const params = Taro.getCurrentInstance().router?.params
+            if (params?.bookId) loadBook(params.bookId)
+          }}
+        />
       </View>
     )
   }

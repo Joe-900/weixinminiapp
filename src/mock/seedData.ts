@@ -4,7 +4,7 @@
  * 切换管理员/普通用户：修改 MOCK_LOGIN_ROLE 即可
  */
 
-import type { User } from '../types/user'
+import type { User, UserRole } from '../types/user'
 import type { Book } from '../types/book'
 
 export const SEED_ADMIN_OPENID = 'admin_openid_001'
@@ -16,9 +16,14 @@ export const SEED_USER_OPENID = 'user_openid_002'
  * 'user'  = 以普通用户身份登录
  * 修改此值后重新编译即可切换身份
  */
-export const MOCK_LOGIN_ROLE: 'admin' | 'user' = 'user'
+export const MOCK_LOGIN_ROLE: UserRole = 'user'
 
-export const MOCK_LOGIN_OPENID = MOCK_LOGIN_ROLE === 'admin' ? SEED_ADMIN_OPENID : SEED_USER_OPENID
+const OPENID_MAP: Record<UserRole, string> = {
+  admin: SEED_ADMIN_OPENID,
+  user: SEED_USER_OPENID,
+}
+
+export const MOCK_LOGIN_OPENID = OPENID_MAP[MOCK_LOGIN_ROLE]
 
 export const seedUsers: User[] = [
   {

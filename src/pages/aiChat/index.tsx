@@ -16,7 +16,7 @@ import { ErrorCode } from '../../types/common'
 import './index.scss'
 
 export default function AiChat() {
-  const { currentSessionId, sessions, messages, setCurrentSession, setSessions, setMessages, addMessage, loading, setLoading } = useAiStore()
+  const { currentSessionId, sessions, messages, setCurrentSession, setSessions, setMessages, addMessage, setLoading } = useAiStore()
   const [question, setQuestion] = useState('')
   const [showSessions, setShowSessions] = useState(false)
 

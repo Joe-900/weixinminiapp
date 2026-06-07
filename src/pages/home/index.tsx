@@ -36,7 +36,7 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [books, pageSize, setBookList, keyword])
+  }, [books, pageSize, setBookList])
 
   const handleRefresh = useCallback(() => {
     loadBooks(1, keyword)

@@ -1,28 +1,17 @@
+/**
+ * @file ESLint 配置
+ * @description 在 Taro 默认配置基础上调整规则
+ */
+
 module.exports = {
-  extends: ['taro/react'],
+  extends: ['taro'],
+  settings: {
+    react: {
+      version: 'detect',
+    },
+  },
   rules: {
-    'react/jsx-uses-react': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
     'react/react-in-jsx-scope': 'off',
-    '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/explicit-function-return-type': 'warn',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
-    'import/no-commonjs': 'off',
-    'import/first': 'error',
-    'import/no-duplicates': 'error',
   },
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
-  },
-  overrides: [
-    {
-      files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
-      rules: {
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/explicit-function-return-type': 'off',
-      },
-    },
-  ],
 }
