@@ -12,7 +12,7 @@ interface UserState {
   nickname: string
   avatar: string
   isLoggedIn: boolean
-  setLoginInfo: (openid: string, role: UserRole) => void
+  setLoginInfo: (openid: string, role: UserRole, nickname: string, avatar: string) => void
   setProfile: (nickname: string, avatar: string) => void
   clearLogin: () => void
 }
@@ -24,8 +24,8 @@ export const useUserStore = create<UserState>((set) => ({
   avatar: '',
   isLoggedIn: false,
 
-  setLoginInfo: (openid, role) =>
-    set({ openid, role, isLoggedIn: true }),
+  setLoginInfo: (openid, role, nickname, avatar) =>
+    set({ openid, role, nickname, avatar, isLoggedIn: true }),
 
   setProfile: (nickname, avatar) =>
     set({ nickname, avatar }),

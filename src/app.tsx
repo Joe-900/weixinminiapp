@@ -21,17 +21,17 @@ function App({ children }: PropsWithChildren) {
 }
 
 async function silentLogin(
-  setLoginInfo: (openid: string, role: 'user' | 'admin') => void,
+  setLoginInfo: (openid: string, role: 'user' | 'admin', nickname: string, avatar: string) => void,
 ): Promise<void> {
   try {
     const res = await login()
     if (isSuccess(res) && res.data) {
-      setLoginInfo(res.data.openid, res.data.role)
+      setLoginInfo(res.data.openid, res.data.role, res.data.nickname, res.data.avatar)
     } else {
       showErrorToast(res.code)
     }
   } catch {
-    Taro.showToast({ title: 'Login failed, please retry', icon: 'none' })
+    Taro.showToast({ title: '登录失败，请重试', icon: 'none' })
   }
 }
 

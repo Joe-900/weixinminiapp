@@ -10,7 +10,7 @@ import { getMockDeps } from './mockBridge'
 
 export async function uploadCover(filePath: string): Promise<string> {
   if (CURRENT_MODE === 'local') {
-    const { storage } = getMockDeps()
+    const { storage } = getMockDeps() as { storage: { upload: (filePath: string, cloudPath: string) => Promise<string> } }
     const cloudPath = `covers/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`
     return storage.upload(filePath, cloudPath)
   }

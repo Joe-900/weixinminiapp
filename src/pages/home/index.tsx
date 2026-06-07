@@ -1,6 +1,6 @@
 /**
- * @file Home page - Book list
- * @description Display paginated book list with pull-down refresh and pull-up load
+ * @file 首页 - 书单列表
+ * @description 分页展示书籍列表，支持下拉刷新和上拉加载
  */
 
 import { View } from '@tarojs/components'
@@ -32,7 +32,7 @@ export default function Home() {
         showErrorToast(res.code)
       }
     } catch {
-      setError('Load failed')
+      setError('加载失败')
     } finally {
       setLoading(false)
     }
@@ -58,13 +58,13 @@ export default function Home() {
 
   return (
     <View className='home'>
-      <StateView loading={loading && books.length === 0} empty={books.length === 0 && !loading} error={error} onRetry={handleRefresh} emptyText='No books yet' />
+      <StateView loading={loading && books.length === 0} empty={books.length === 0 && !loading} error={error} onRetry={handleRefresh} emptyText='暂无书籍' />
       {books.map((book: Book) => (
         <BookCard key={book.bookId} book={book} onClick={handleBookClick} />
       ))}
       {books.length > 0 && books.length < total && (
         <View className='home__load-more' onClick={handleLoadMore}>
-          Load more
+          加载更多
         </View>
       )}
     </View>

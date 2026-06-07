@@ -24,15 +24,13 @@ export default defineConfig(async (merge) => {
     },
     cache: { enable: false },
     sass: {
-      data: '@import "@/assets/styles/variables.scss";',
+      data: '@import "D:/weixinminiapp/src/assets/styles/variables.scss";',
     },
     mini: {
       postcss: {
         pxtransform: { enable: true, config: {} },
         cssModules: {
           enable: false,
-          namingPattern: 'module',
-          generateScopedName: '[name]__[local]___[hash:base64:5]',
         },
       },
     },
@@ -43,8 +41,6 @@ export default defineConfig(async (merge) => {
         autoprefixer: { enable: true, config: {} },
         cssModules: {
           enable: false,
-          namingPattern: 'module',
-          generateScopedName: '[name]__[local]___[hash:base64:5]',
         },
       },
     },

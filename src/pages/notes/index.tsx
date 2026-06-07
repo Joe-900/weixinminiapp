@@ -1,6 +1,6 @@
 /**
- * @file Notes page - My notes and checkin
- * @description Display user notes, add/delete notes, checkin and stats
+ * @file 笔记打卡页
+ * @description 我的笔记、添加/删除笔记、打卡和统计
  */
 
 import { View, Text, Textarea, Button, Input } from '@tarojs/components'
@@ -77,11 +77,11 @@ export default function Notes() {
       <View className='notes__stat'>
         <View className='notes__stat-item'>
           <Text className='notes__stat-number'>{stat.streakDays}</Text>
-          <Text className='notes__stat-label'>Streak Days</Text>
+          <Text className='notes__stat-label'>连续打卡天数</Text>
         </View>
         <View className='notes__stat-item'>
           <Text className='notes__stat-number'>{stat.totalMinutes}</Text>
-          <Text className='notes__stat-label'>Total Minutes</Text>
+          <Text className='notes__stat-label'>累计阅读分钟</Text>
         </View>
       </View>
 
@@ -89,24 +89,24 @@ export default function Notes() {
         <Input
           className='notes__checkin-input'
           type='number'
-          placeholder='Minutes'
+          placeholder='阅读分钟数'
           value={checkinMinutes}
           onInput={(e) => setCheckinMinutes(e.detail.value)}
         />
-        <Button className='notes__checkin-btn' onClick={handleCheckIn}>Check In</Button>
+        <Button className='notes__checkin-btn' onClick={handleCheckIn}>打卡</Button>
       </View>
 
       <View className='notes__add'>
         <Textarea
           className='notes__add-textarea'
-          placeholder='Write a note...'
+          placeholder='写下你的读书笔记...'
           value={noteContent}
           onInput={(e) => setNoteContent(e.detail.value)}
         />
-        <Button onClick={handleAddNote}>Add Note</Button>
+        <Button onClick={handleAddNote}>添加笔记</Button>
       </View>
 
-      <StateView loading={loading} empty={notes.length === 0} emptyText='No notes yet' />
+      <StateView loading={loading} empty={notes.length === 0} emptyText='暂无笔记' />
 
       {notes.map((note) => (
         <NoteItem key={note.noteId} note={note} onDelete={handleDeleteNote} />

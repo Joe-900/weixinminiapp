@@ -1,6 +1,6 @@
 /**
- * @file AI Chat page
- * @description AI reading companion chat with session list and history
+ * @file AI伴读对话页
+ * @description AI阅读伴读对话，支持会话列表和历史消息
  */
 
 import { View, Text, Input, ScrollView } from '@tarojs/components'
@@ -93,8 +93,8 @@ export default function AiChat() {
   return (
     <View className='ai-chat'>
       <View className='ai-chat__header'>
-        <Text className='ai-chat__title' onClick={() => setShowSessions(!showSessions)}>Sessions</Text>
-        <Text className='ai-chat__new' onClick={handleNewSession}>+ New</Text>
+        <Text className='ai-chat__title' onClick={() => setShowSessions(!showSessions)}>会话列表</Text>
+        <Text className='ai-chat__new' onClick={handleNewSession}>+ 新对话</Text>
       </View>
 
       {showSessions && (
@@ -112,7 +112,7 @@ export default function AiChat() {
       )}
 
       <ScrollView className='ai-chat__messages' scrollY scrollIntoView=''>
-        <StateView empty={messages.length === 0} emptyText='Start a conversation' />
+        <StateView empty={messages.length === 0} emptyText='开始一段对话吧' />
         {messages.map((msg, idx) => (
           <ChatBubble key={msg.msgId ?? idx} message={msg} />
         ))}
@@ -121,13 +121,13 @@ export default function AiChat() {
       <View className='ai-chat__input-bar'>
         <Input
           className='ai-chat__input'
-          placeholder='Ask about the book...'
+          placeholder='提问关于这本书...'
           value={question}
           onInput={(e) => setQuestion(e.detail.value)}
           onConfirm={handleSend}
         />
         <View className='ai-chat__send-btn' onClick={handleSend}>
-          <Text>Send</Text>
+          <Text>发送</Text>
         </View>
       </View>
     </View>

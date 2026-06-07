@@ -17,6 +17,8 @@ export interface User {
 export interface LoginResult {
   openid: string
   role: UserRole
+  nickname: string
+  avatar: string
 }
 
 export interface ProfileParams {

@@ -1,6 +1,6 @@
 /**
- * @file Book detail page
- * @description Display full book metadata
+ * @file 书籍详情页
+ * @description 展示书籍完整元数据
  */
 
 import { View, Text, Image } from '@tarojs/components'
@@ -21,7 +21,7 @@ export default function BookDetail() {
     const params = Taro.getCurrentInstance().router?.params
     const bookId = params?.bookId ?? ''
     if (!bookId) {
-      setError('bookId is missing')
+      setError('缺少书籍编号')
       setLoading(false)
       return
     }
@@ -40,7 +40,7 @@ export default function BookDetail() {
         showErrorToast(res.code)
       }
     } catch {
-      setError('Load failed')
+      setError('加载失败')
     } finally {
       setLoading(false)
     }
@@ -62,8 +62,8 @@ export default function BookDetail() {
       <Image className='book-detail__cover' src={book.cover} mode='aspectFit' />
       <View className='book-detail__info'>
         <Text className='book-detail__title'>{book.title}</Text>
-        <Text className='book-detail__author'>Author: {book.author}</Text>
-        <Text className='book-detail__isbn'>ISBN: {book.isbn}</Text>
+        <Text className='book-detail__author'>作者：{book.author}</Text>
+        <Text className='book-detail__isbn'>ISBN：{book.isbn}</Text>
         <Text className='book-detail__summary'>{book.summary}</Text>
       </View>
     </View>

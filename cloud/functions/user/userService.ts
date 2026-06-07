@@ -37,6 +37,8 @@ export async function handleLogin(
   return success({
     openid: user.openid,
     role: user.role,
+    nickname: user.nickname,
+    avatar: user.avatar,
   })
 }
 

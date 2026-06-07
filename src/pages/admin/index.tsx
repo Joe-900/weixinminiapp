@@ -1,6 +1,6 @@
 /**
- * @file Admin book management page
- * @description Admin can create, edit, online/offline books with status filter
+ * @file 管理员书籍管理页
+ * @description 管理员可新增、编辑、上架/下架书籍，支持状态筛选
  */
 
 import { View, Text, Input, Textarea, Button } from '@tarojs/components'
@@ -15,6 +15,12 @@ import type { Book } from '../../types/book'
 import './index.scss'
 
 type StatusFilter = 'all' | 'online' | 'offline'
+
+const STATUS_LABEL_MAP: Record<StatusFilter, string> = {
+  all: '全部',
+  online: '已上架',
+  offline: '已下架',
+}
 
 export default function Admin() {
   const role = useUserStore((s) => s.role)
@@ -71,7 +77,7 @@ export default function Admin() {
 
   async function handleSubmit() {
     if (!formTitle || !formAuthor || !formIsbn) {
-      Taro.showToast({ title: 'Please fill required fields', icon: 'none' })
+      Taro.showToast({ title: '请填写必填项', icon: 'none' })
       return
     }
 
@@ -85,7 +91,7 @@ export default function Admin() {
         cover: formCover,
       })
       if (isSuccess(res)) {
-        Taro.showToast({ title: 'Updated', icon: 'success' })
+        Taro.showToast({ title: '更新成功', icon: 'success' })
         setShowForm(false)
         loadBooks()
       } else {
@@ -100,7 +106,7 @@ export default function Admin() {
         cover: formCover || 'local-mock://cover/default.png',
       })
       if (isSuccess(res)) {
-        Taro.showToast({ title: 'Created', icon: 'success' })
+        Taro.showToast({ title: '创建成功', icon: 'success' })
         setShowForm(false)
         loadBooks()
       } else {
@@ -115,7 +121,7 @@ export default function Admin() {
       : await bookOnline(book.bookId)
 
     if (isSuccess(res)) {
-      Taro.showToast({ title: 'Status updated', icon: 'success' })
+      Taro.showToast({ title: '状态已更新', icon: 'success' })
       loadBooks()
     } else {
       showErrorToast(res.code)
@@ -126,8 +132,8 @@ export default function Admin() {
     <AuthGuard requiredRole='admin'>
       <View className='admin'>
         <View className='admin__header'>
-          <Text className='admin__title'>Book Management</Text>
-          <Button className='admin__add-btn' onClick={openCreateForm}>+ Add Book</Button>
+          <Text className='admin__title'>书籍管理</Text>
+          <Button className='admin__add-btn' onClick={openCreateForm}>+ 新增书籍</Button>
         </View>
 
         <View className='admin__filter'>
@@ -137,23 +143,23 @@ export default function Admin() {
               className={`admin__filter-item ${statusFilter === s ? 'admin__filter-item--active' : ''}`}
               onClick={() => setStatusFilter(s)}
             >
-              <Text>{s}</Text>
+              <Text>{STATUS_LABEL_MAP[s]}</Text>
             </View>
           ))}
         </View>
 
-        <StateView loading={loading} empty={books.length === 0} emptyText='No books' />
+        <StateView loading={loading} empty={books.length === 0} emptyText='暂无书籍' />
 
         {books.map((book) => (
           <View key={book.bookId} className='admin__book-item'>
             <View className='admin__book-info'>
               <Text className='admin__book-title'>{book.title}</Text>
-              <Text className='admin__book-status'>{book.status}</Text>
+              <Text className='admin__book-status'>{book.status === 'online' ? '已上架' : '已下架'}</Text>
             </View>
             <View className='admin__book-actions'>
-              <Button size='mini' onClick={() => openEditForm(book)}>Edit</Button>
+              <Button size='mini' onClick={() => openEditForm(book)}>编辑</Button>
               <Button size='mini' onClick={() => handleToggleStatus(book)}>
-                {book.status === 'online' ? 'Offline' : 'Online'}
+                {book.status === 'online' ? '下架' : '上架'}
               </Button>
             </View>
           </View>
@@ -161,15 +167,15 @@ export default function Admin() {
 
         {showForm && (
           <View className='admin__form'>
-            <Text className='admin__form-title'>{editBook ? 'Edit Book' : 'Add Book'}</Text>
-            <Input className='admin__input' placeholder='Title' value={formTitle} onInput={(e) => setFormTitle(e.detail.value)} />
-            <Input className='admin__input' placeholder='Author' value={formAuthor} onInput={(e) => setFormAuthor(e.detail.value)} />
+            <Text className='admin__form-title'>{editBook ? '编辑书籍' : '新增书籍'}</Text>
+            <Input className='admin__input' placeholder='书名' value={formTitle} onInput={(e) => setFormTitle(e.detail.value)} />
+            <Input className='admin__input' placeholder='作者' value={formAuthor} onInput={(e) => setFormAuthor(e.detail.value)} />
             <Input className='admin__input' placeholder='ISBN' value={formIsbn} onInput={(e) => setFormIsbn(e.detail.value)} />
-            <Textarea className='admin__textarea' placeholder='Summary' value={formSummary} onInput={(e) => setFormSummary(e.detail.value)} />
-            <Input className='admin__input' placeholder='Cover URL or fileID' value={formCover} onInput={(e) => setFormCover(e.detail.value)} />
+            <Textarea className='admin__textarea' placeholder='简介' value={formSummary} onInput={(e) => setFormSummary(e.detail.value)} />
+            <Input className='admin__input' placeholder='封面地址或文件ID' value={formCover} onInput={(e) => setFormCover(e.detail.value)} />
             <View className='admin__form-actions'>
-              <Button onClick={handleSubmit}>Save</Button>
-              <Button onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button onClick={handleSubmit}>保存</Button>
+              <Button onClick={() => setShowForm(false)}>取消</Button>
             </View>
           </View>
         )}

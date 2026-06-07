@@ -1,6 +1,6 @@
 /**
- * @file NoteItem component
- * @description Display a single note item
+ * @file 笔记条目组件
+ * @description 展示单条笔记内容
  */
 
 import { View, Text } from '@tarojs/components'
@@ -21,7 +21,7 @@ export default function NoteItem({ note, onDelete }: NoteItemProps) {
       </View>
       {onDelete && (
         <View className='note-item__delete' onClick={() => onDelete(note.noteId)}>
-          <Text>Delete</Text>
+          <Text>删除</Text>
         </View>
       )}
     </View>
