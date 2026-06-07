@@ -1,5 +1,7 @@
 /**
- * @file Seed data for frontend local mock mode
+ * @file 本地Mock模式种子数据
+ * @description 包含模拟用户和书籍数据，以及当前模拟登录身份配置
+ * 切换管理员/普通用户：修改 MOCK_LOGIN_ROLE 即可
  */
 
 import type { User } from '../types/user'
@@ -7,6 +9,16 @@ import type { Book } from '../types/book'
 
 export const SEED_ADMIN_OPENID = 'admin_openid_001'
 export const SEED_USER_OPENID = 'user_openid_002'
+
+/**
+ * 本地Mock模式下的模拟登录身份
+ * 'admin' = 以管理员身份登录（可看到书籍管理入口）
+ * 'user'  = 以普通用户身份登录
+ * 修改此值后重新编译即可切换身份
+ */
+export const MOCK_LOGIN_ROLE: 'admin' | 'user' = 'user'
+
+export const MOCK_LOGIN_OPENID = MOCK_LOGIN_ROLE === 'admin' ? SEED_ADMIN_OPENID : SEED_USER_OPENID
 
 export const seedUsers: User[] = [
   {

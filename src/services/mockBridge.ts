@@ -9,7 +9,7 @@ import { ErrorCode, ERROR_MESSAGE_MAP } from '../types/common'
 import { MemoryRepository } from '../mock/memoryRepository'
 import { LocalStorage } from '../mock/localStorage'
 import { MockAiClient } from '../mock/mockAiClient'
-import { seedUsers, seedBooks, SEED_USER_OPENID } from '../mock/seedData'
+import { seedUsers, seedBooks, MOCK_LOGIN_OPENID } from '../mock/seedData'
 import type { MockRepository } from '../mock/types'
 import type { User, UserRole, LoginResult } from '../types/user'
 import type { Book } from '../types/book'
@@ -36,7 +36,7 @@ export function resetMockData(): void {
   initSeedData()
 }
 
-const MOCK_CTX = { OPENID: SEED_USER_OPENID }
+const MOCK_CTX = { OPENID: MOCK_LOGIN_OPENID }
 
 function success<T>(data: T, message = '成功'): ApiResponse<T> {
   return { code: 0, message, data }
