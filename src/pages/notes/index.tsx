@@ -4,6 +4,7 @@
  */
 
 import { View, Text, Textarea, Button, Input } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { useState, useEffect, useCallback } from 'react'
 import { addNote, listNote, deleteNote, checkIn, checkInStat } from '../../services/noteService'
 import { isSuccess, showErrorToast } from '../../services/request'
@@ -16,6 +17,14 @@ export default function Notes() {
   const { notes, stat, loading, setNotes, setStat, setLoading } = useNoteStore()
   const [noteContent, setNoteContent] = useState('')
   const [checkinMinutes, setCheckinMinutes] = useState('30')
+  const [bookId, setBookId] = useState('book_001')
+
+  useEffect(() => {
+    const params = Taro.getCurrentInstance().router?.params
+    if (params?.bookId) {
+      setBookId(params.bookId)
+    }
+  }, [])
 
   const loadNotes = useCallback(async () => {
     setLoading(true)
@@ -43,7 +52,7 @@ export default function Notes() {
 
   async function handleAddNote() {
     if (!noteContent.trim()) return
-    const res = await addNote({ bookId: 'book_001', content: noteContent.trim() })
+    const res = await addNote({ bookId, content: noteContent.trim() })
     if (isSuccess(res)) {
       setNoteContent('')
       loadNotes()
@@ -64,7 +73,7 @@ export default function Notes() {
   async function handleCheckIn() {
     const minutes = parseInt(checkinMinutes, 10)
     if (!minutes || minutes <= 0) return
-    const res = await checkIn({ bookId: 'book_001', minutes })
+    const res = await checkIn({ bookId, minutes })
     if (isSuccess(res)) {
       loadStat()
     } else {

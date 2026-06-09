@@ -5,3 +5,7 @@ dist/
 .DS_Store
 *.log
 coverage/
+.swc/
+pages/
+project.config.json
+project.private.config.json

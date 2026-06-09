@@ -3,9 +3,9 @@
  * @description 分页展示书籍列表，支持下拉刷新和上拉加载
  */
 
-import { View } from '@tarojs/components'
+import { View, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useBookStore } from '../../store/bookStore'
 import { bookList } from '../../services/bookService'
 import { isSuccess, showErrorToast } from '../../services/request'
@@ -15,9 +15,10 @@ import type { Book } from '../../types/book'
 import './index.scss'
 
 export default function Home() {
-  const { bookList: books, total, page, pageSize, setBookList, keyword } = useBookStore()
+  const { bookList: books, total, page, pageSize, setBookList, keyword, setKeyword } = useBookStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [searchInput, setSearchInput] = useState(keyword)
 
   const loadBooks = useCallback(async (p: number, kw?: string) => {
     setLoading(true)
@@ -25,7 +26,8 @@ export default function Home() {
     try {
       const res = await bookList({ page: p, pageSize, keyword: kw })
       if (isSuccess(res) && res.data) {
-        const newBooks = p === 1 ? res.data.list : [...books, ...res.data.list]
+        const currentBooks = useBookStore.getState().bookList
+        const newBooks = p === 1 ? res.data.list : [...currentBooks, ...res.data.list]
         setBookList(newBooks, res.data.total, p)
       } else {
         setError(res.message)
@@ -36,7 +38,7 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [books, pageSize, setBookList])
+  }, [pageSize, setBookList])
 
   const handleRefresh = useCallback(() => {
     loadBooks(1, keyword)
@@ -48,16 +50,32 @@ export default function Home() {
     }
   }, [books.length, total, page, loadBooks, keyword])
 
+  const handleSearch = useCallback(() => {
+    setKeyword(searchInput.trim())
+    loadBooks(1, searchInput.trim())
+  }, [searchInput, setKeyword, loadBooks])
+
   const handleBookClick = useCallback((bookId: string) => {
     Taro.navigateTo({ url: `/pages/bookDetail/index?bookId=${bookId}` })
   }, [])
 
-  if (!loading && books.length === 0 && !error) {
-    loadBooks(1)
-  }
+  useEffect(() => {
+    if (!loading && books.length === 0 && !error) {
+      loadBooks(1)
+    }
+  }, [loading, books.length, error, loadBooks])
 
   return (
     <View className='home'>
+      <View className='home__search-bar'>
+        <Input
+          className='home__search-input'
+          placeholder='搜索书籍...'
+          value={searchInput}
+          onInput={(e) => setSearchInput(e.detail.value)}
+          onConfirm={handleSearch}
+        />
+      </View>
       <StateView loading={loading && books.length === 0} empty={books.length === 0 && !loading} error={error} onRetry={handleRefresh} emptyText='暂无书籍' />
       {books.map((book: Book) => (
         <BookCard key={book.bookId} book={book} onClick={handleBookClick} />

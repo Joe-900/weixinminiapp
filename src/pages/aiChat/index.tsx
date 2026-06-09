@@ -19,6 +19,14 @@ export default function AiChat() {
   const { currentSessionId, sessions, messages, setCurrentSession, setSessions, setMessages, addMessage, setLoading } = useAiStore()
   const [question, setQuestion] = useState('')
   const [showSessions, setShowSessions] = useState(false)
+  const [bookId, setBookId] = useState('book_001')
+
+  useEffect(() => {
+    const params = Taro.getCurrentInstance().router?.params
+    if (params?.bookId) {
+      setBookId(params.bookId)
+    }
+  }, [])
 
   const loadSessions = useCallback(async () => {
     const res = await aiListSessions()
@@ -34,7 +42,6 @@ export default function AiChat() {
   async function handleSend() {
     if (!question.trim()) return
 
-    const bookId = 'book_001'
     setLoading(true)
 
     const res = await aiChat({
@@ -111,10 +118,12 @@ export default function AiChat() {
         </View>
       )}
 
-      <ScrollView className='ai-chat__messages' scrollY scrollIntoView=''>
+      <ScrollView className='ai-chat__messages' scrollY scrollIntoView={messages.length > 0 ? `msg-${messages.length - 1}` : ''}>
         <StateView empty={messages.length === 0} emptyText='开始一段对话吧' />
         {messages.map((msg, idx) => (
-          <ChatBubble key={msg.msgId ?? idx} message={msg} />
+          <View key={msg.msgId ?? idx} id={`msg-${idx}`}>
+            <ChatBubble message={msg} />
+          </View>
         ))}
       </ScrollView>
 
