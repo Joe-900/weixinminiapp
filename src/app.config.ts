@@ -6,6 +6,13 @@ export default defineAppConfig({
     'pages/notes/index',
     'pages/profile/index',
     'pages/admin/index',
+    'pages/reservation/index',
+    'pages/reservation/search',
+    'pages/reservation/detail',
+    'pages/reservation/my',
+    'pages/reservation/status',
+    'pages/admin/reservation/index',
+    'pages/admin/reservation/detail',
   ],
   tabBar: {
     color: '#999999',
