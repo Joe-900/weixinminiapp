@@ -1,0 +1,11 @@
+{
+  "name": "opac-crawler",
+  "version": "1.0.0",
+  "description": "BUPT Library OPAC Crawler Cloud Function",
+  "main": "index.ts",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^2.0.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0"
+  }
+}

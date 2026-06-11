@@ -3,7 +3,7 @@
  * @description 分页展示书籍列表，支持下拉刷新和上拉加载
  */
 
-import { View, Input } from '@tarojs/components'
+import { View, Input, Button, Text, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect, useCallback } from 'react'
 import { useBookStore } from '../../store/bookStore'
@@ -65,6 +65,10 @@ export default function Home() {
     }
   }, [loading, books.length, error, loadBooks])
 
+  const handleReservation = useCallback(() => {
+    Taro.navigateTo({ url: '/pages/reservation/index' })
+  }, [])
+
   return (
     <View className='home'>
       <View className='home__search-bar'>
@@ -76,6 +80,20 @@ export default function Home() {
           onConfirm={handleSearch}
         />
       </View>
+
+      <View className='home__reservation-entry' onClick={handleReservation}>
+        <Image
+          className='home__reservation-icon'
+          src='https://neeko-copilot.bytedance.net/api/text_to_image?prompt=library%20book%20reservation%20icon%20simple%20modern%20blue&image_size=square'
+          mode='aspectFit'
+        />
+        <View className='home__reservation-content'>
+          <Text className='home__reservation-title'>图书预约</Text>
+          <Text className='home__reservation-desc'>跨校区借阅，馆员代借</Text>
+        </View>
+        <Text className='home__reservation-arrow'>›</Text>
+      </View>
+
       <StateView loading={loading && books.length === 0} empty={books.length === 0 && !loading} error={error} onRetry={handleRefresh} emptyText='暂无书籍' />
       {books.map((book: Book) => (
         <BookCard key={book.bookId} book={book} onClick={handleBookClick} />

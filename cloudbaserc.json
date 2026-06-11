@@ -1,0 +1,36 @@
+{
+  "envId": "",
+  "version": "2.0",
+  "$schema": "https://framework-1258016615.tcloudbaseapp.com/schema/latest.json",
+  "framework": {
+    "name": "taro",
+    "plugins": {}
+  },
+  "functionRoot": "./cloud/functions",
+  "functions": [
+    {
+      "name": "opac-crawler",
+      "timeout": 60,
+      "envVariables": {},
+      "handler": "index.main",
+      "runtime": "Nodejs16.13",
+      "memorySize": 256,
+      "ignore": [
+        "node_modules",
+        ".git"
+      ]
+    },
+    {
+      "name": "reservation",
+      "timeout": 60,
+      "envVariables": {},
+      "handler": "index.main",
+      "runtime": "Nodejs16.13",
+      "memorySize": 256,
+      "ignore": [
+        "node_modules",
+        ".git"
+      ]
+    }
+  ]
+}
