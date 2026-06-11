@@ -25,15 +25,14 @@ export const useReservationStore = create<ReservationState>((set) => ({
   reservations: [],
   books: [],
   campuses: [
-    { id: 'campus_001', name: '校本部', address: '北京市海淀区学院路15号' },
-    { id: 'campus_002', name: '西校区', address: '北京市海淀区西三环北路105号' },
-    { id: 'campus_003', name: '东校区', address: '北京市朝阳区望京街9号' },
+    { id: 'shahe', name: '沙河校区', address: '北京市昌平区沙河高教园' },
+    { id: 'xitu', name: '西土城校区', address: '北京市海淀区学院路15号' },
   ],
   pickupLocations: [
-    { id: 'pickup_001', name: '图书馆一楼借书处', campus: 'campus_001' },
-    { id: 'pickup_002', name: '图书馆二楼借书处', campus: 'campus_001' },
-    { id: 'pickup_003', name: '西校区分馆', campus: 'campus_002' },
-    { id: 'pickup_004', name: '东校区分馆', campus: 'campus_003' },
+    { id: 'pickup_shahe_1', name: '沙河校区图书馆', campus: 'shahe' },
+    { id: 'pickup_shahe_2', name: '沙河校区第二借阅室', campus: 'shahe' },
+    { id: 'pickup_xitu_1', name: '西土城校区图书馆', campus: 'xitu' },
+    { id: 'pickup_xitu_2', name: '西土城校区理科馆', campus: 'xitu' },
   ],
   currentBook: null,
 

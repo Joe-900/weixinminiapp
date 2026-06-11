@@ -15,6 +15,7 @@ export interface Book {
   author: string
   isbn: string
   publisher: string
+  publishDate?: string
   callNumber: string
   stackType: StackType
   campus: string
@@ -62,7 +63,7 @@ export interface ReservationCreateParams {
   bookName: string
   isbn: string
   campus: string
-  pickupLocation: string
+  pickupLocation?: string
 }
 
 export interface ReservationSearchParams {

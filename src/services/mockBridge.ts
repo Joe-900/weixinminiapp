@@ -10,7 +10,8 @@ import { MemoryRepository } from '../mock/memoryRepository'
 import { LocalStorage } from '../mock/localStorage'
 import { MockAiClient } from '../mock/mockAiClient'
 import { seedUsers, seedBooks, MOCK_LOGIN_OPENID } from '../mock/seedData'
-import type { Book } from '../types/book'
+import { mockBooks as reservationBooks, mockReservations } from '../mock/reservationMock'
+import type { Book as BookItem } from '../types/book'
 import type { OpenAIChatMessage } from '../types/ai'
 
 const repo = new MemoryRepository()
@@ -130,7 +131,7 @@ async function mockBookMain(data: Record<string, unknown>): Promise<ApiResponse<
     if (v) return v
     const book = await repo.findBookById(data.bookId as string)
     if (!book) return fail(ErrorCode.NOT_FOUND, '书籍不存在')
-    const updates: Partial<Book> = { updatedAt: Date.now() }
+    const updates: Partial<BookItem> = { updatedAt: Date.now() }
     if (data.title) updates.title = data.title as string
     if (data.author) updates.author = data.author as string
     if (data.isbn) updates.isbn = data.isbn as string
@@ -284,6 +285,100 @@ async function mockNoteMain(data: Record<string, unknown>): Promise<ApiResponse<
   return fail(ErrorCode.BAD_REQUEST, `未知操作：${action}`)
 }
 
+async function mockReservationMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+  const action = data.action as string
+
+  if (action === 'searchBooks') {
+    const keyword = data.keyword as string
+    const campus = data.campus as string
+    let books = [...reservationBooks]
+    
+    if (keyword) {
+      books = books.filter(book => 
+        book.title.toLowerCase().includes(keyword.toLowerCase()) ||
+        book.author.toLowerCase().includes(keyword.toLowerCase()) ||
+        book.isbn.includes(keyword)
+      )
+    }
+    
+    if (campus) {
+      books = books.filter(book => book.campus === campus)
+    }
+    
+    return success({ list: books, total: books.length, page: 1, pageSize: books.length })
+  }
+
+  if (action === 'getBookDetail') {
+    const bookId = data.bookId as string
+    if (!bookId) return fail(ErrorCode.BAD_REQUEST, 'bookId为必填项')
+    const book = reservationBooks.find(b => b.bookId === bookId)
+    if (!book) return fail(ErrorCode.NOT_FOUND, '书籍不存在')
+    return success(book)
+  }
+
+  if (action === 'createReservation') {
+    const v = validateParams(data, [
+      { name: 'bookId', type: 'string', required: true },
+      { name: 'bookName', type: 'string', required: true },
+      { name: 'isbn', type: 'string', required: true },
+      { name: 'campus', type: 'string', required: true },
+    ])
+    if (v) return v
+
+    const book = reservationBooks.find(b => b.bookId === data.bookId)
+    if (!book) return fail(ErrorCode.NOT_FOUND, '书籍不存在')
+
+    const isAvailable = book.availableCount > 0
+    const position = isAvailable ? 0 : mockReservations.filter(r => r.bookId === book.bookId).length + 1
+
+    const newReservation = {
+      reservationId: `reservation_${Date.now()}`,
+      bookId: data.bookId as string,
+      bookName: data.bookName as string,
+      isbn: data.isbn as string,
+      userId: MOCK_LOGIN_OPENID,
+      userName: '阅读者',
+      userPhone: '13800138000',
+      reservationType: isAvailable ? 'BORROWING' : 'BORROWING' as const,
+      campus: data.campus as string,
+      status: 'PENDING' as const,
+      position,
+      estimatedTime: isAvailable ? '立即可取' : '约1-3个工作日',
+      pickupLocation: (data.pickupLocation as string) || `${data.campus === 'shahe' ? '沙河校区' : '西土城校区'}图书馆`,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }
+
+    mockReservations.push(newReservation)
+    return success(newReservation)
+  }
+
+  if (action === 'getMyReservations') {
+    const userReservations = mockReservations.filter(r => r.userId === MOCK_LOGIN_OPENID)
+    return success({ list: userReservations, total: userReservations.length, page: 1, pageSize: userReservations.length })
+  }
+
+  if (action === 'getReservationDetail') {
+    const reservationId = data.reservationId as string
+    if (!reservationId) return fail(ErrorCode.BAD_REQUEST, 'reservationId为必填项')
+    const reservation = mockReservations.find(r => r.reservationId === reservationId)
+    if (!reservation) return fail(ErrorCode.NOT_FOUND, '预约记录不存在')
+    return success(reservation)
+  }
+
+  if (action === 'cancelReservation') {
+    const reservationId = data.reservationId as string
+    if (!reservationId) return fail(ErrorCode.BAD_REQUEST, 'reservationId为必填项')
+    const index = mockReservations.findIndex(r => r.reservationId === reservationId)
+    if (index === -1) return fail(ErrorCode.NOT_FOUND, '预约记录不存在')
+    mockReservations[index].status = 'CANCELLED'
+    mockReservations[index].updatedAt = Date.now()
+    return success('ok')
+  }
+
+  return fail(ErrorCode.BAD_REQUEST, `未知操作：${action}`)
+}
+
 export async function callMockFunction<T = unknown>(
   functionName: string,
   data: Record<string, unknown>,
@@ -293,6 +388,7 @@ export async function callMockFunction<T = unknown>(
     case 'book': return mockBookMain(data) as Promise<ApiResponse<T>>
     case 'ai': return mockAiMain(data) as Promise<ApiResponse<T>>
     case 'note': return mockNoteMain(data) as Promise<ApiResponse<T>>
+    case 'reservation': return mockReservationMain(data) as Promise<ApiResponse<T>>
     default: return { code: 5000, message: `未知云函数：${functionName}`, data: null }
   }
 }
