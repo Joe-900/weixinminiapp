@@ -6,6 +6,11 @@ export default defineAppConfig({
     'pages/notes/index',
     'pages/profile/index',
     'pages/admin/index',
+    'pages/reading/index',
+    'pages/community/index',
+    'pages/tasks/index',
+    'pages/ranking/index',
+    'pages/reservations/index',
   ],
   tabBar: {
     color: '#999999',

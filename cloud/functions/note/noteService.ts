@@ -91,12 +91,24 @@ export async function handleCheckIn(
   )
   if (validationError) return validationError
 
+  if (minutes < 1 || minutes > 1440) {
+    return fail(ErrorCode.BAD_REQUEST, 'minutes must be between 1 and 1440')
+  }
+
   const today = new Date().toISOString().split('T')[0]
   await repo.addCheckin({
     openid,
     bookId,
     minutes,
     checkinDate: today,
+  })
+  await repo.addReadingEvent({
+    openid,
+    bookId,
+    eventType: 'checkin',
+    duration: minutes,
+    source: 'system',
+    createdAt: Date.now(),
   })
 
   return success('ok')

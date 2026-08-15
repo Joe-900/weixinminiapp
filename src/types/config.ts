@@ -5,4 +5,10 @@
 
 export type RunMode = 'local' | 'cloud'
 
-export const CURRENT_MODE: RunMode = 'local'
+const configuredMode = process.env.TARO_APP_RUN_MODE
+
+export const CURRENT_MODE: RunMode = configuredMode === 'cloud' ? 'cloud' : 'local'
+
+export const CLOUD_ENV_ID = process.env.TARO_APP_CLOUD_ENV_ID ?? ''
+
+export const CLOUD_TRACE_USER = process.env.TARO_APP_CLOUD_TRACE_USER !== 'false'

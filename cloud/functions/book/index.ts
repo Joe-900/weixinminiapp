@@ -29,6 +29,20 @@ interface BookEvent {
   isbn?: string
   summary?: string
   cover?: string
+  edition?: string
+  publisher?: string
+  publishedAt?: string
+  callNumber?: string
+  subjectTerms?: string
+  libraryName?: string
+  holdingsCount?: number
+  availableCount?: number
+  materialType?: string
+  sourceRecordId?: string
+  detailUrl?: string
+  librarySource?: string
+  collectionStatus?: string
+  location?: string
   status?: string
   [key: string]: unknown
 }
@@ -80,6 +94,20 @@ export async function bookMain(
         isbn: event.isbn ?? '',
         summary: event.summary ?? '',
         cover: event.cover ?? '',
+        edition: event.edition,
+        publisher: event.publisher,
+        publishedAt: event.publishedAt,
+        callNumber: event.callNumber,
+        subjectTerms: event.subjectTerms,
+        libraryName: event.libraryName,
+        holdingsCount: event.holdingsCount,
+        availableCount: event.availableCount,
+        materialType: event.materialType,
+        sourceRecordId: event.sourceRecordId,
+        detailUrl: event.detailUrl,
+        librarySource: event.librarySource,
+        collectionStatus: event.collectionStatus,
+        location: event.location,
       })
     }
 
@@ -94,6 +122,20 @@ export async function bookMain(
         isbn: event.isbn,
         summary: event.summary,
         cover: event.cover,
+        edition: event.edition,
+        publisher: event.publisher,
+        publishedAt: event.publishedAt,
+        callNumber: event.callNumber,
+        subjectTerms: event.subjectTerms,
+        libraryName: event.libraryName,
+        holdingsCount: event.holdingsCount,
+        availableCount: event.availableCount,
+        materialType: event.materialType,
+        sourceRecordId: event.sourceRecordId,
+        detailUrl: event.detailUrl,
+        librarySource: event.librarySource,
+        collectionStatus: event.collectionStatus,
+        location: event.location,
       })
     }
 

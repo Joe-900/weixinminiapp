@@ -1,11 +1,7 @@
-/**
- * @file 笔记打卡页
- * @description 我的笔记、添加/删除笔记、打卡和统计
- */
-
-import { View, Text, Textarea, Button, Input } from '@tarojs/components'
-import { useState, useEffect, useCallback } from 'react'
-import { addNote, listNote, deleteNote, checkIn, checkInStat } from '../../services/noteService'
+import { Button, Input, Text, Textarea, View } from '@tarojs/components'
+import Taro from '@tarojs/taro'
+import { useCallback, useEffect, useState } from 'react'
+import { addNote, checkIn, checkInStat, deleteNote, listNote } from '../../services/noteService'
 import { isSuccess, showErrorToast } from '../../services/request'
 import { useNoteStore } from '../../store/noteStore'
 import NoteItem from '../../components/NoteItem'
@@ -14,103 +10,82 @@ import './index.scss'
 
 export default function Notes() {
   const { notes, stat, loading, setNotes, setStat, setLoading } = useNoteStore()
+  const [bookId, setBookId] = useState('')
   const [noteContent, setNoteContent] = useState('')
   const [checkinMinutes, setCheckinMinutes] = useState('30')
 
   const loadNotes = useCallback(async () => {
     setLoading(true)
-    try {
-      const res = await listNote({ page: 1, pageSize: 50 })
-      if (isSuccess(res) && res.data) {
-        setNotes(res.data.list, res.data.total, 1)
-      }
-    } finally {
-      setLoading(false)
-    }
+    const res = await listNote({ page: 1, pageSize: 50 })
+    if (isSuccess(res) && res.data) setNotes(res.data.list, res.data.total, 1)
+    else if (!isSuccess(res)) showErrorToast(res.code)
+    setLoading(false)
   }, [setNotes, setLoading])
 
   const loadStat = useCallback(async () => {
     const res = await checkInStat()
-    if (isSuccess(res) && res.data) {
-      setStat(res.data)
-    }
+    if (isSuccess(res) && res.data) setStat(res.data)
   }, [setStat])
 
   useEffect(() => {
+    setBookId(Taro.getCurrentInstance().router?.params?.bookId ?? '')
     loadNotes()
     loadStat()
   }, [loadNotes, loadStat])
 
   async function handleAddNote() {
-    if (!noteContent.trim()) return
-    const res = await addNote({ bookId: 'book_001', content: noteContent.trim() })
+    if (!bookId.trim() || !noteContent.trim()) {
+      Taro.showToast({ title: 'Book id and note are required', icon: 'none' })
+      return
+    }
+    const res = await addNote({ bookId: bookId.trim(), content: noteContent.trim() })
     if (isSuccess(res)) {
       setNoteContent('')
       loadNotes()
-    } else {
-      showErrorToast(res.code)
-    }
+    } else showErrorToast(res.code)
   }
 
   async function handleDeleteNote(noteId: string) {
     const res = await deleteNote(noteId)
-    if (isSuccess(res)) {
-      loadNotes()
-    } else {
-      showErrorToast(res.code)
-    }
+    if (isSuccess(res)) loadNotes()
+    else showErrorToast(res.code)
   }
 
   async function handleCheckIn() {
-    const minutes = parseInt(checkinMinutes, 10)
-    if (!minutes || minutes <= 0) return
-    const res = await checkIn({ bookId: 'book_001', minutes })
-    if (isSuccess(res)) {
-      loadStat()
-    } else {
-      showErrorToast(res.code)
+    const minutes = Number(checkinMinutes)
+    if (!bookId.trim() || !Number.isFinite(minutes) || minutes <= 0) {
+      Taro.showToast({ title: 'Enter a book id and valid minutes', icon: 'none' })
+      return
     }
+    const res = await checkIn({ bookId: bookId.trim(), minutes })
+    if (isSuccess(res)) loadStat()
+    else showErrorToast(res.code)
   }
 
   return (
     <View className='notes'>
       <View className='notes__stat'>
-        <View className='notes__stat-item'>
-          <Text className='notes__stat-number'>{stat.streakDays}</Text>
-          <Text className='notes__stat-label'>连续打卡天数</Text>
-        </View>
-        <View className='notes__stat-item'>
-          <Text className='notes__stat-number'>{stat.totalMinutes}</Text>
-          <Text className='notes__stat-label'>累计阅读分钟</Text>
-        </View>
+        <View className='notes__stat-item'><Text className='notes__stat-number'>{stat.streakDays}</Text><Text>day streak</Text></View>
+        <View className='notes__stat-item'><Text className='notes__stat-number'>{stat.totalMinutes}</Text><Text>minutes read</Text></View>
+      </View>
+
+      <View className='notes__book'>
+        <Text className='notes__label'>Book id</Text>
+        <Input className='notes__book-input' placeholder='Use the id from a book detail page' value={bookId} onInput={(event) => setBookId(event.detail.value)} />
       </View>
 
       <View className='notes__checkin'>
-        <Input
-          className='notes__checkin-input'
-          type='number'
-          placeholder='阅读分钟数'
-          value={checkinMinutes}
-          onInput={(e) => setCheckinMinutes(e.detail.value)}
-        />
-        <Button className='notes__checkin-btn' onClick={handleCheckIn}>打卡</Button>
+        <Input className='notes__checkin-input' type='number' placeholder='Minutes' value={checkinMinutes} onInput={(event) => setCheckinMinutes(event.detail.value)} />
+        <Button className='notes__checkin-btn' onClick={handleCheckIn}>Check in</Button>
       </View>
 
       <View className='notes__add'>
-        <Textarea
-          className='notes__add-textarea'
-          placeholder='写下你的读书笔记...'
-          value={noteContent}
-          onInput={(e) => setNoteContent(e.detail.value)}
-        />
-        <Button onClick={handleAddNote}>添加笔记</Button>
+        <Textarea className='notes__add-textarea' placeholder='Write a reading note' value={noteContent} onInput={(event) => setNoteContent(event.detail.value)} />
+        <Button onClick={handleAddNote}>Add note</Button>
       </View>
 
-      <StateView loading={loading} empty={notes.length === 0} emptyText='暂无笔记' />
-
-      {notes.map((note) => (
-        <NoteItem key={note.noteId} note={note} onDelete={handleDeleteNote} />
-      ))}
+      <StateView loading={loading} empty={notes.length === 0} emptyText='No notes yet' />
+      {notes.map((note) => <NoteItem key={note.noteId} note={note} onDelete={handleDeleteNote} />)}
     </View>
   )
 }

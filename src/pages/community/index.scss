@@ -1,0 +1,14 @@
+.community-page { min-height: 100vh; padding: 20px; background: #f5f7fb;
+  &__card, &__group { margin-bottom: 14px; padding: 18px; background: #fff; border-radius: 12px; }
+  &__heading { display: block; margin-bottom: 12px; color: #111827; font-size: 28px; font-weight: 600; }
+  &__card input { display: block; margin-bottom: 12px; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 25px; }
+  &__card > button { color: #fff; background: #2563eb; font-size: 24px; }
+  &__switch { display: flex; gap: 8px; margin-bottom: 12px; }
+  &__switch button { color: #2563eb; background: #eff6ff; }
+  &__switch button.active { color: #fff; background: #2563eb; }
+  &__group { display: flex; align-items: center; justify-content: space-between; }
+  &__group-name, &__group-meta { display: block; }
+  &__group-name { color: #111827; font-size: 28px; }
+  &__group-meta { margin-top: 6px; color: #6b7280; font-size: 22px; }
+  &__group-actions { display: flex; gap: 6px; }
+}

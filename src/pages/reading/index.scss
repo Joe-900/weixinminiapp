@@ -1,0 +1,7 @@
+.reading-page { min-height: 100vh; padding: 20px; background: #f5f7fb;
+  &__stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; padding: 16px; background: #fff; border-radius: 12px; color: #2563eb; font-size: 24px; }
+  &__form { display: flex; gap: 10px; margin-bottom: 16px; padding: 16px; background: #fff; border-radius: 12px; }
+  &__form input { flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; }
+  &__form button { color: #fff; background: #2563eb; font-size: 24px; }
+  &__plan { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 16px; background: #fff; border-radius: 10px; font-size: 25px; }
+}

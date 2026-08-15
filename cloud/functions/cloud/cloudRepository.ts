@@ -9,6 +9,10 @@ import type { User } from '../../../src/types/user'
 import type { Book } from '../../../src/types/book'
 import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
 import type { AiSession, AiMessage } from '../../../src/types/ai'
+import type { ReadingEvent, ReadingPlan, ReadingStat } from '../../../src/types/reading'
+import type { ClassGroup, CommunityMember } from '../../../src/types/community'
+import type { ReadingTask, TaskSubmission, TaskFeedback } from '../../../src/types/task'
+import type { Reservation } from '../../../src/types/reservation'
 
 interface CloudDbCollection {
   where(condition: Record<string, unknown>): CloudDbCollection
@@ -39,6 +43,11 @@ export class CloudRepository implements Repository {
     return (res.data[0] as unknown as User) ?? null
   }
 
+  async listUsers(): Promise<User[]> {
+    const res = await this.db.collection('user').get()
+    return res.data as unknown as User[]
+  }
+
   async createUser(user: Omit<User, '_id'>): Promise<User> {
     await this.db.collection('user').add({ ...user })
     return { ...user, _id: user.openid }
@@ -52,12 +61,13 @@ export class CloudRepository implements Repository {
   }
 
   async findBookById(bookId: string): Promise<Book | null> {
-    try {
-      const res = await this.db.collection('book').where({ bookId }).get()
-      return (res.data[0] as unknown as Book) ?? null
-    } catch {
-      return null
-    }
+    const res = await this.db.collection('book').where({ bookId }).get()
+    return (res.data[0] as unknown as Book) ?? null
+  }
+
+  async findBookByIsbn(isbn: string): Promise<Book | null> {
+    const res = await this.db.collection('book').where({ isbn }).get()
+    return (res.data[0] as unknown as Book) ?? null
   }
 
   async listBooks(
@@ -190,10 +200,10 @@ export class CloudRepository implements Repository {
     const res = await this.db
       .collection('ai_message')
       .where({ sessionId })
-      .orderBy('createdAt', 'asc')
+      .orderBy('createdAt', 'desc')
       .limit(limit)
       .get()
-    return res.data as unknown as AiMessage[]
+    return (res.data as unknown as AiMessage[]).reverse()
   }
 
   async addMessage(message: Omit<AiMessage, '_id' | 'msgId'>): Promise<AiMessage> {
@@ -218,5 +228,209 @@ export class CloudRepository implements Repository {
       .count()
 
     return res.total
+  }
+
+  private makeId(prefix: string): string {
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+  }
+
+  async addReadingEvent(event: Omit<ReadingEvent, '_id' | 'eventId'>): Promise<ReadingEvent> {
+    const eventId = this.makeId('event')
+    const created: ReadingEvent = { ...event, _id: eventId, eventId }
+    await this.db.collection('reading_event').add({ ...created })
+    return created
+  }
+
+  async listReadingEvents(openid: string, bookId?: string): Promise<ReadingEvent[]> {
+    const condition: Record<string, unknown> = { openid }
+    if (bookId) condition.bookId = bookId
+    const result = await this.db.collection('reading_event').where(condition).orderBy('createdAt', 'desc').get()
+    return result.data as unknown as ReadingEvent[]
+  }
+
+  async listAllReadingEvents(groupId?: string): Promise<ReadingEvent[]> {
+    if (!groupId) {
+      const result = await this.db.collection('reading_event').where({}).orderBy('createdAt', 'desc').get()
+      return result.data as unknown as ReadingEvent[]
+    }
+
+    const [groupResult, classResult] = await Promise.all([
+      this.db.collection('reading_event').where({ groupId }).orderBy('createdAt', 'desc').get(),
+      this.db.collection('reading_event').where({ classId: groupId }).orderBy('createdAt', 'desc').get(),
+    ])
+    const events = [...groupResult.data, ...classResult.data] as unknown as ReadingEvent[]
+    return Array.from(new Map(events.map((event) => [event.eventId, event])).values())
+  }
+
+  async getReadingStat(openid: string): Promise<ReadingStat> {
+    const [events, checkins, plans] = await Promise.all([
+      this.listReadingEvents(openid),
+      this.db.collection('checkin').where({ openid }).get(),
+      this.db.collection('reading_plan').where({ openid }).get(),
+    ])
+    const checkinItems = checkins.data as unknown as Checkin[]
+    const planItems = plans.data as unknown as ReadingPlan[]
+    return {
+      streakDays: (await this.getCheckinStat(openid)).streakDays,
+      totalMinutes: checkinItems.reduce((sum, item) => sum + item.minutes, 0),
+      completedPlans: planItems.filter((item) => item.status === 'completed').length,
+      eventCount: events.length,
+    }
+  }
+
+  async createReadingPlan(plan: Omit<ReadingPlan, '_id' | 'planId'>): Promise<ReadingPlan> {
+    const planId = this.makeId('plan')
+    const created: ReadingPlan = { ...plan, _id: planId, planId }
+    await this.db.collection('reading_plan').add({ ...created })
+    return created
+  }
+
+  async listReadingPlans(openid: string): Promise<ReadingPlan[]> {
+    const result = await this.db.collection('reading_plan').where({ openid }).orderBy('updatedAt', 'desc').get()
+    return result.data as unknown as ReadingPlan[]
+  }
+
+  async updateReadingPlan(planId: string, openid: string, updates: Partial<ReadingPlan>): Promise<ReadingPlan> {
+    const existing = await this.db.collection('reading_plan').where({ planId, openid }).get()
+    const current = existing.data[0] as unknown as ReadingPlan | undefined
+    if (!current) throw new Error('Reading plan not found')
+    const next = { ...updates, updatedAt: Date.now() }
+    await this.db.collection('reading_plan').where({ planId, openid }).update(next)
+    return { ...current, ...next }
+  }
+
+  async createCommunityGroup(group: Omit<ClassGroup, '_id' | 'groupId'>): Promise<ClassGroup> {
+    const groupId = this.makeId('group')
+    const created: ClassGroup = { ...group, _id: groupId, groupId }
+    await this.db.collection('community_group').add({ ...created })
+    return created
+  }
+
+  async findCommunityGroup(groupId: string): Promise<ClassGroup | null> {
+    const result = await this.db.collection('community_group').where({ groupId }).get()
+    return (result.data[0] as unknown as ClassGroup) ?? null
+  }
+
+  async findCommunityGroupByInviteCode(inviteCode: string): Promise<ClassGroup | null> {
+    const result = await this.db.collection('community_group').where({ inviteCode }).get()
+    return (result.data[0] as unknown as ClassGroup) ?? null
+  }
+
+  async listCommunityGroups(openid: string): Promise<ClassGroup[]> {
+    const owned = await this.db.collection('community_group').where({ ownerOpenid: openid }).get()
+    const memberships = await this.db.collection('community_member').where({ openid }).get()
+    const ids = (memberships.data as Array<{ groupId: string }>).map((member) => member.groupId)
+    const joined = ids.length === 0
+      ? { data: [] as Record<string, unknown>[] }
+      : await this.db.collection('community_group').where({ groupId: { $in: ids } }).get()
+    const all = [...owned.data, ...joined.data] as unknown as ClassGroup[]
+    return Array.from(new Map(all.map((group) => [group.groupId, group])).values())
+  }
+
+  async addCommunityMember(member: Omit<CommunityMember, '_id' | 'memberId'>): Promise<CommunityMember> {
+    const memberId = this.makeId('member')
+    const created: CommunityMember = { ...member, _id: memberId, memberId }
+    await this.db.collection('community_member').add({ ...created })
+    return created
+  }
+
+  async findCommunityMember(groupId: string, openid: string): Promise<CommunityMember | null> {
+    const result = await this.db.collection('community_member').where({ groupId, openid }).get()
+    return (result.data[0] as unknown as CommunityMember) ?? null
+  }
+
+  async listCommunityMembers(groupId: string): Promise<CommunityMember[]> {
+    const result = await this.db.collection('community_member').where({ groupId }).get()
+    return result.data as unknown as CommunityMember[]
+  }
+
+  async createTask(task: Omit<ReadingTask, '_id' | 'taskId'>): Promise<ReadingTask> {
+    const taskId = this.makeId('task')
+    const created: ReadingTask = { ...task, _id: taskId, taskId }
+    await this.db.collection('reading_task').add({ ...created })
+    return created
+  }
+
+  async findTask(taskId: string): Promise<ReadingTask | null> {
+    const result = await this.db.collection('reading_task').where({ taskId }).get()
+    return (result.data[0] as unknown as ReadingTask) ?? null
+  }
+
+  async listTasksForUser(openid: string, groupIds: string[]): Promise<ReadingTask[]> {
+    if (groupIds.length === 0) return []
+    const result = await this.db.collection('reading_task').where({ groupId: { $in: groupIds }, status: 'published' }).get()
+    const memberships = await Promise.all(groupIds.map((groupId) => this.listCommunityMembers(groupId)))
+    const isMember = memberships.reduce<CommunityMember[]>((all, list) => all.concat(list), [])
+      .some((member) => member.openid === openid)
+    return isMember ? result.data as unknown as ReadingTask[] : []
+  }
+
+  async createTaskSubmission(submission: Omit<TaskSubmission, '_id' | 'submissionId'>): Promise<TaskSubmission> {
+    const submissionId = this.makeId('submission')
+    const created: TaskSubmission = { ...submission, _id: submissionId, submissionId }
+    await this.db.collection('task_submission').add({ ...created })
+    return created
+  }
+
+  async findTaskSubmissionById(submissionId: string): Promise<TaskSubmission | null> {
+    const result = await this.db.collection('task_submission').where({ submissionId }).get()
+    return (result.data[0] as unknown as TaskSubmission) ?? null
+  }
+
+  async findTaskSubmission(taskId: string, openid: string): Promise<TaskSubmission | null> {
+    const result = await this.db.collection('task_submission').where({ taskId, openid }).get()
+    return (result.data[0] as unknown as TaskSubmission) ?? null
+  }
+
+  async listTaskSubmissions(taskId: string): Promise<TaskSubmission[]> {
+    const result = await this.db.collection('task_submission').where({ taskId }).orderBy('updatedAt', 'desc').get()
+    return result.data as unknown as TaskSubmission[]
+  }
+
+  async updateTaskSubmission(submissionId: string, updates: Partial<TaskSubmission>): Promise<TaskSubmission> {
+    const result = await this.db.collection('task_submission').where({ submissionId }).get()
+    const current = result.data[0] as unknown as TaskSubmission | undefined
+    if (!current) throw new Error('Task submission not found')
+    const next = { ...updates, updatedAt: Date.now() }
+    await this.db.collection('task_submission').where({ submissionId }).update(next)
+    return { ...current, ...next }
+  }
+
+  async addTaskFeedback(feedback: Omit<TaskFeedback, '_id' | 'feedbackId'>): Promise<TaskFeedback> {
+    const feedbackId = this.makeId('feedback')
+    const created: TaskFeedback = { ...feedback, _id: feedbackId, feedbackId }
+    await this.db.collection('task_feedback').add({ ...created })
+    return created
+  }
+
+  async listTaskFeedback(submissionId: string): Promise<TaskFeedback[]> {
+    const result = await this.db.collection('task_feedback').where({ submissionId }).orderBy('createdAt', 'asc').get()
+    return result.data as unknown as TaskFeedback[]
+  }
+
+  async createReservation(reservation: Omit<Reservation, '_id' | 'reservationId'>): Promise<Reservation> {
+    const reservationId = this.makeId('reservation')
+    const created: Reservation = { ...reservation, _id: reservationId, reservationId }
+    await this.db.collection('reservation').add({ ...created })
+    return created
+  }
+
+  async findReservation(reservationId: string): Promise<Reservation | null> {
+    const result = await this.db.collection('reservation').where({ reservationId }).get()
+    return (result.data[0] as unknown as Reservation) ?? null
+  }
+
+  async listReservations(openid: string): Promise<Reservation[]> {
+    const result = await this.db.collection('reservation').where({ openid }).orderBy('createdAt', 'desc').get()
+    return result.data as unknown as Reservation[]
+  }
+
+  async updateReservation(reservationId: string, openid: string, updates: Partial<Reservation>): Promise<Reservation> {
+    const result = await this.db.collection('reservation').where({ reservationId, openid }).get()
+    const current = result.data[0] as unknown as Reservation | undefined
+    if (!current) throw new Error('Reservation not found')
+    const next = { ...updates, updatedAt: Date.now() }
+    await this.db.collection('reservation').where({ reservationId, openid }).update(next)
+    return { ...current, ...next }
   }
 }

@@ -1,0 +1,5 @@
+.reservations-page { min-height: 100vh; padding: 20px; background: #f5f7fb;
+  &__notice { display: block; margin-bottom: 14px; padding: 14px; color: #92400e; background: #fffbeb; border-radius: 10px; font-size: 22px; }
+  &__item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 16px; background: #fff; border-radius: 10px; }
+  &__item text { display: block; margin-bottom: 5px; color: #374151; font-size: 23px; }
+}

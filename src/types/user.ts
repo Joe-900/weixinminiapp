@@ -3,7 +3,7 @@
  * @description 用户集合的数据模型与相关请求/响应类型
  */
 
-export type UserRole = 'user' | 'admin'
+export type UserRole = 'student' | 'teacher' | 'admin' | 'user'
 
 export interface User {
   _id: string

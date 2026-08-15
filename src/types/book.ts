@@ -13,6 +13,20 @@ export interface Book {
   isbn: string
   cover: string
   summary: string
+  edition?: string
+  publisher?: string
+  publishedAt?: string
+  callNumber?: string
+  subjectTerms?: string
+  libraryName?: string
+  holdingsCount?: number
+  availableCount?: number
+  materialType?: string
+  sourceRecordId?: string
+  detailUrl?: string
+  librarySource?: string
+  collectionStatus?: string
+  location?: string
   status: BookStatus
   addedBy: string
   createdAt: number
@@ -31,6 +45,20 @@ export interface BookCreateParams {
   isbn: string
   summary: string
   cover: string
+  edition?: string
+  publisher?: string
+  publishedAt?: string
+  callNumber?: string
+  subjectTerms?: string
+  libraryName?: string
+  holdingsCount?: number
+  availableCount?: number
+  materialType?: string
+  sourceRecordId?: string
+  detailUrl?: string
+  librarySource?: string
+  collectionStatus?: string
+  location?: string
 }
 
 export interface BookUpdateParams {
@@ -40,4 +68,18 @@ export interface BookUpdateParams {
   isbn?: string
   summary?: string
   cover?: string
+  edition?: string
+  publisher?: string
+  publishedAt?: string
+  callNumber?: string
+  subjectTerms?: string
+  libraryName?: string
+  holdingsCount?: number
+  availableCount?: number
+  materialType?: string
+  sourceRecordId?: string
+  detailUrl?: string
+  librarySource?: string
+  collectionStatus?: string
+  location?: string
 }

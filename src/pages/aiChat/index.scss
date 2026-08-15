@@ -2,72 +2,30 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #f5f5f5;
+  background: #f5f7fb;
 
   &__header {
     display: flex;
     justify-content: space-between;
-    padding: 16px 20px;
-    background-color: #fff;
-    border-bottom: 1px solid #e5e5e5;
+    padding: 18px 20px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
   }
 
-  &__title {
-    font-size: 28px;
-    color: #3B82F6;
-  }
-
-  &__new {
-    font-size: 28px;
-    color: #10B981;
-  }
-
-  &__sessions {
-    background-color: #fff;
-    border-bottom: 1px solid #e5e5e5;
-    max-height: 300px;
-    overflow-y: auto;
-  }
-
-  &__session-item {
-    padding: 16px 20px;
-    border-bottom: 1px solid #f0f0f0;
-
-    &--active {
-      background-color: #EBF5FF;
-    }
-  }
-
-  &__messages {
-    flex: 1;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__input-bar {
-    display: flex;
-    padding: 12px 20px;
-    background-color: #fff;
-    border-top: 1px solid #e5e5e5;
-    gap: 12px;
-  }
-
-  &__input {
-    flex: 1;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 28px;
-  }
-
-  &__send-btn {
-    background-color: #3B82F6;
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 28px;
-    display: flex;
-    align-items: center;
-  }
+  &__title { font-size: 30px; color: #1f2937; max-width: 620px; }
+  &__new, &__image-btn { color: #2563eb; font-size: 26px; }
+  &__sessions { background: #fff; max-height: 300px; overflow-y: auto; }
+  &__session-item { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
+  &__session-item--active { background: #eff6ff; }
+  &__empty { display: block; padding: 24px; color: #9ca3af; text-align: center; }
+  &__book-form { padding: 12px 20px; background: #fff; }
+  &__book-input { display: block; padding: 12px; margin-bottom: 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 26px; }
+  &__messages { flex: 1; padding: 16px 20px; }
+  &__image-preview { display: flex; align-items: center; gap: 12px; padding: 8px 20px; background: #fff; color: #2563eb; }
+  &__image-preview image { width: 90px; height: 90px; }
+  &__context { min-height: 58px; margin: 0 20px 8px; padding: 10px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 24px; }
+  &__input-bar { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: #fff; border-top: 1px solid #e5e7eb; }
+  &__input { flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 28px; }
+  &__send-btn { padding: 12px 20px; color: #fff; background: #2563eb; border-radius: 8px; font-size: 26px; }
+  &__send-btn--disabled { background: #9ca3af; }
 }

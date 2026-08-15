@@ -6,10 +6,9 @@
 import { MemoryRepository } from '../mock/memoryRepository'
 import { bookMain } from './index'
 import { ErrorCode } from '../../../src/types/common'
+import type { ApiResponse, PaginatedData } from '../../../src/types/common'
 import { seedUsers, seedBooks, SEED_ADMIN_OPENID, SEED_USER_OPENID } from '../mock/seedData'
 import type { Repository } from '../interfaces/repository'
-import type { ApiResponse } from '../../../src/types/common'
-import type { PaginatedData } from '../../../src/types/common'
 import type { Book } from '../../../src/types/book'
 
 let repo: Repository

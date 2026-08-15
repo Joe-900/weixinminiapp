@@ -1,73 +1,12 @@
-.notes {
-  padding: 20px;
-  min-height: 100vh;
-  background-color: #f5f5f5;
-
-  &__stat {
-    display: flex;
-    justify-content: space-around;
-    background-color: #fff;
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 20px;
-  }
-
-  &__stat-item {
-    text-align: center;
-  }
-
-  &__stat-number {
-    font-size: 48px;
-    font-weight: 700;
-    color: #3B82F6;
-    display: block;
-  }
-
-  &__stat-label {
-    font-size: 24px;
-    color: #999;
-  }
-
-  &__checkin {
-    display: flex;
-    gap: 12px;
-    background-color: #fff;
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    align-items: center;
-  }
-
-  &__checkin-input {
-    flex: 1;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 28px;
-  }
-
-  &__checkin-btn {
-    background-color: #10B981;
-    color: #fff;
-    font-size: 28px;
-    padding: 12px 24px;
-    border-radius: 8px;
-  }
-
-  &__add {
-    background-color: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-
-  &__add-textarea {
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 28px;
-    width: 100%;
-    min-height: 120px;
-    margin-bottom: 12px;
-  }
+.notes { min-height: 100vh; padding: 20px; background: #f5f7fb;
+  &__stat { display: flex; gap: 12px; margin-bottom: 16px; }
+  &__stat-item { flex: 1; padding: 18px; text-align: center; background: #fff; border-radius: 12px; color: #6b7280; font-size: 23px; }
+  &__stat-number { display: block; color: #2563eb; font-size: 38px; font-weight: 700; }
+  &__book, &__checkin, &__add { margin-bottom: 16px; padding: 16px; background: #fff; border-radius: 12px; }
+  &__label { display: block; margin-bottom: 8px; color: #6b7280; font-size: 23px; }
+  &__book-input, &__checkin-input { padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 26px; }
+  &__checkin { display: flex; gap: 12px; align-items: center; }
+  &__checkin-input { flex: 1; }
+  &__checkin-btn, &__add button { color: #fff; background: #2563eb; font-size: 25px; }
+  &__add-textarea { display: block; width: 100%; min-height: 140px; margin-bottom: 12px; padding: 12px; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 8px; font-size: 26px; }
 }

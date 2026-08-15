@@ -6,8 +6,19 @@ export {
   AiSession,
   AiMessage,
   AiMessageRole,
+  BookContextInput,
+  AiImageInput,
   ChatParams,
   ChatResult,
+  OpenAIContentPart,
+  OpenAITextContentPart,
+  OpenAIImageContentPart,
   OpenAIChatMessage,
+  OpenAIMultimodalChatMessage,
 } from './ai'
+export { ReadingEvent, ReadingEventType, ReadingPlan, ReadingStat, ReadingEventParams, ReadingPlanCreateParams, RankingEntry, RankingResult } from './reading'
+export { ClassGroup, CommunityMember, CommunityGroupType, CommunityMemberRole, CommunityGroupParams, CommunityJoinParams } from './community'
+export { ReadingTask, TaskSubmission, TaskFeedback, TaskCreateParams, TaskSubmitParams, TaskFeedbackParams, TaskDetail } from './task'
+export { Reservation, ReservationStatus, Availability, ReservationProviderResult } from './reservation'
+export { LibraryMetadata, LibrarySearchParams, LibraryImportResult } from './library'
 export { RunMode, CURRENT_MODE } from './config'

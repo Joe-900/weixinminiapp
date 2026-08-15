@@ -7,18 +7,28 @@
 import Taro from '@tarojs/taro'
 import { CURRENT_MODE } from '../types/config'
 import { getMockDeps } from './mockBridge'
+import type { AiImageInput } from '../types/ai'
 
-export async function uploadCover(filePath: string): Promise<string> {
+async function uploadFile(filePath: string, cloudPath: string): Promise<string> {
   if (CURRENT_MODE === 'local') {
-    const { storage } = getMockDeps() as { storage: { upload: (filePath: string, cloudPath: string) => Promise<string> } }
-    const cloudPath = `covers/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`
+    const { storage } = getMockDeps() as {
+      storage: { upload: (path: string, target: string) => Promise<string> }
+    }
     return storage.upload(filePath, cloudPath)
   }
 
-  const uploadRes = await Taro.cloud.uploadFile({
-    cloudPath: `covers/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`,
-    filePath,
-  })
-
+  const uploadRes = await Taro.cloud.uploadFile({ cloudPath, filePath })
   return uploadRes.fileID
+}
+
+export async function uploadCover(filePath: string): Promise<string> {
+  const cloudPath = `covers/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`
+  return uploadFile(filePath, cloudPath)
+}
+
+export async function uploadAiImage(filePath: string, mimeType = 'image/jpeg'): Promise<AiImageInput> {
+  const extension = mimeType === 'image/png' ? 'png' : 'jpg'
+  const cloudPath = `ai-images/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`
+  const fileId = await uploadFile(filePath, cloudPath)
+  return { fileId, mimeType, name: cloudPath.split('/').pop() }
 }

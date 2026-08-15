@@ -72,6 +72,20 @@ export async function handleCreate(
     isbn: params.isbn,
     cover: params.cover,
     summary: params.summary,
+    edition: params.edition,
+    publisher: params.publisher,
+    publishedAt: params.publishedAt,
+    callNumber: params.callNumber,
+    subjectTerms: params.subjectTerms,
+    libraryName: params.libraryName,
+    holdingsCount: params.holdingsCount,
+    availableCount: params.availableCount,
+    materialType: params.materialType,
+    sourceRecordId: params.sourceRecordId,
+    detailUrl: params.detailUrl,
+    librarySource: params.librarySource,
+    collectionStatus: params.collectionStatus,
+    location: params.location,
     status: 'online',
     addedBy: auth.openid,
     createdAt: now,
@@ -106,6 +120,20 @@ export async function handleUpdate(
   if (params.isbn !== undefined) updates.isbn = params.isbn
   if (params.summary !== undefined) updates.summary = params.summary
   if (params.cover !== undefined) updates.cover = params.cover
+  if (params.edition !== undefined) updates.edition = params.edition
+  if (params.publisher !== undefined) updates.publisher = params.publisher
+  if (params.publishedAt !== undefined) updates.publishedAt = params.publishedAt
+  if (params.callNumber !== undefined) updates.callNumber = params.callNumber
+  if (params.subjectTerms !== undefined) updates.subjectTerms = params.subjectTerms
+  if (params.libraryName !== undefined) updates.libraryName = params.libraryName
+  if (params.holdingsCount !== undefined) updates.holdingsCount = params.holdingsCount
+  if (params.availableCount !== undefined) updates.availableCount = params.availableCount
+  if (params.materialType !== undefined) updates.materialType = params.materialType
+  if (params.sourceRecordId !== undefined) updates.sourceRecordId = params.sourceRecordId
+  if (params.detailUrl !== undefined) updates.detailUrl = params.detailUrl
+  if (params.librarySource !== undefined) updates.librarySource = params.librarySource
+  if (params.collectionStatus !== undefined) updates.collectionStatus = params.collectionStatus
+  if (params.location !== undefined) updates.location = params.location
 
   await repo.updateBook(params.bookId, updates)
   return success('ok')

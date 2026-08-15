@@ -1,0 +1,16 @@
+{
+  "miniprogramRoot": "./dist",
+  "projectname": "reading-companion",
+  "description": "校园阅读伴读小程序",
+  "appid": "touristappid",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "compileHotReLoad": true,
+    "postcss": true,
+    "minified": false
+  },
+  "compileType": "miniprogram",
+  "cloudfunctionRoot": "cloud/functions"
+}

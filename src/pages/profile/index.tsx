@@ -1,39 +1,33 @@
-/**
- * @file 个人中心页面
- * @description 用户信息展示、管理员入口（按角色条件显示）
- */
-
-import { View, Text, Button } from '@tarojs/components'
+import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useUserStore } from '../../store/userStore'
 import './index.scss'
 
+const ROLE_LABEL = {
+  user: 'Reader',
+  student: 'Student',
+  teacher: 'Teacher',
+  admin: 'Administrator',
+}
+
 export default function Profile() {
   const { nickname, role } = useUserStore()
-
-  function goToAdmin() {
-    Taro.navigateTo({ url: '/pages/admin/index' })
-  }
-
-  function goToNotes() {
-    Taro.navigateTo({ url: '/pages/notes/index' })
-  }
+  const go = (page: string) => Taro.navigateTo({ url: `/pages/${page}/index` })
 
   return (
     <View className='profile'>
       <View className='profile__card'>
-        <Text className='profile__nickname'>{nickname || '阅读者'}</Text>
-        <Text className='profile__role'>{role === 'admin' ? '管理员' : '普通用户'}</Text>
+        <Text className='profile__nickname'>{nickname || 'Reader'}</Text>
+        <Text className='profile__role'>{ROLE_LABEL[role]}</Text>
       </View>
-
       <View className='profile__actions'>
-        <Button className='profile__btn' onClick={goToNotes}>我的笔记</Button>
-
-        {role === 'admin' && (
-          <Button className='profile__btn profile__btn--admin' onClick={goToAdmin}>
-            书籍管理
-          </Button>
-        )}
+        <Button className='profile__btn' onClick={() => go('notes')}>Notes and check-ins</Button>
+        <Button className='profile__btn' onClick={() => go('reading')}>Reading plans</Button>
+        <Button className='profile__btn' onClick={() => go('reservations')}>Reservations</Button>
+        <Button className='profile__btn' onClick={() => go('community')}>Classes and groups</Button>
+        <Button className='profile__btn' onClick={() => go('tasks')}>Reading tasks</Button>
+        <Button className='profile__btn' onClick={() => go('ranking')}>Behavior ranking</Button>
+        {role === 'admin' && <Button className='profile__btn profile__btn--admin' onClick={() => go('admin')}>Book metadata management</Button>}
       </View>
     </View>
   )

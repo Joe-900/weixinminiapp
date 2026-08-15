@@ -6,11 +6,10 @@
 import { MemoryRepository } from '../mock/memoryRepository'
 import { noteMain } from './index'
 import { ErrorCode } from '../../../src/types/common'
+import type { ApiResponse, PaginatedData } from '../../../src/types/common'
 import { seedUsers, SEED_USER_OPENID, SEED_ADMIN_OPENID } from '../mock/seedData'
 import type { Repository } from '../interfaces/repository'
-import type { ApiResponse } from '../../../src/types/common'
 import type { Note, CheckinStat } from '../../../src/types/note'
-import type { PaginatedData } from '../../../src/types/common'
 
 let repo: Repository
 

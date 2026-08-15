@@ -6,6 +6,8 @@
 import type { ApiResponse } from '../../../src/types/common'
 import type { Repository } from '../interfaces/repository'
 import type { AiClient } from '../interfaces/aiClient'
+import type { Storage } from '../interfaces/storage'
+import type { AiImageInput, BookContextInput } from '../../../src/types/ai'
 import { handleChat, handleLoadHistory, handleListSessions } from './aiService'
 import { authenticate } from '../common/auth'
 import { fail } from '../common/response'
@@ -15,7 +17,10 @@ import { validateParams } from '../common/validate'
 interface AiEvent {
   action?: string
   bookId?: string
+  book?: BookContextInput
   question?: string
+  context?: string
+  image?: AiImageInput
   sessionId?: string
   limit?: number
   [key: string]: unknown
@@ -31,6 +36,7 @@ export async function aiMain(
   repo: Repository,
   aiClient: AiClient,
   env?: Record<string, string | undefined>,
+  storage?: Storage,
 ): Promise<ApiResponse<unknown>> {
   const openid = context.OPENID ?? ''
 
@@ -45,10 +51,13 @@ export async function aiMain(
       if (authResult.error) return authResult.error
 
       return handleChat(repo, aiClient, openid, {
-        bookId: event.bookId ?? '',
+        bookId: event.bookId,
+        book: event.book,
         question: event.question ?? '',
+        context: event.context,
+        image: event.image,
         sessionId: event.sessionId,
-      }, env)
+      }, env, storage)
     }
 
     case 'loadHistory': {

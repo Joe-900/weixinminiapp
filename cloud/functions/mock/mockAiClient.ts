@@ -5,7 +5,7 @@
  */
 
 import type { AiClient } from '../interfaces/aiClient'
-import type { OpenAIChatMessage } from '../../../src/types/ai'
+import type { OpenAIChatMessage, OpenAIMultimodalChatMessage } from '../../../src/types/ai'
 
 export class MockAiClient implements AiClient {
   private shouldFail = false
@@ -24,13 +24,25 @@ export class MockAiClient implements AiClient {
 
     let bookTitle = 'Unknown Book'
     if (systemMsg) {
-      const titleMatch = systemMsg.content.match(/"([^"]+)"/)
+      const systemContent = typeof systemMsg.content === 'string' ? systemMsg.content : ''
+      const titleMatch = systemContent.match(/title:\s*([^;]+)/i) ?? systemContent.match(/"([^"]+)"/)
       if (titleMatch) {
         bookTitle = titleMatch[1]
       }
     }
 
-    const questionText = userMsg?.content ?? ''
+    const questionText = typeof userMsg?.content === 'string' ? userMsg.content : '[image question]'
     return `Received question about "${bookTitle}": ${questionText}. This is a local mock reply.`
+  }
+
+  async chatMultimodal(messages: OpenAIMultimodalChatMessage[]): Promise<string> {
+    const textMessages: OpenAIChatMessage[] = messages.map((message) => ({
+      role: message.role,
+      content: typeof message.content === 'string'
+        ? message.content
+        : message.content.filter((part) => part.type === 'text').map((part) => part.text).join('\n'),
+    }))
+    const reply = await this.chat(textMessages)
+    return `${reply} Image context received.`
   }
 }

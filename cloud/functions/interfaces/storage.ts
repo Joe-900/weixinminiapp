@@ -1,7 +1,5 @@
 /**
- * @file 文件存储抽象接口（Storage�?
- * @description 定义文件上传与获取链接的抽象接口
- * 线上实现基于云存储，本地实现返回模拟 fileID
+ * 文件存储抽象接口。
  */
 
 export interface Storage {

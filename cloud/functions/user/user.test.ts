@@ -8,8 +8,7 @@ import { userMain } from './index'
 import { ErrorCode } from '../../../src/types/common'
 import { seedUsers, SEED_USER_OPENID } from '../mock/seedData'
 import type { Repository } from '../interfaces/repository'
-import type { LoginResult } from '../../../src/types/user'
-import type { User } from '../../../src/types/user'
+import type { LoginResult, User } from '../../../src/types/user'
 import type { ApiResponse } from '../../../src/types/common'
 
 let repo: Repository

@@ -1,14 +1,14 @@
 /**
- * @file 基于云存储的 Storage 实现
- * @description 线上模式使用微信云存储上传文�?
- * 需按官方最新文档核实：微信云开发存�?API
+ * 基于微信云存储的 Storage 实现。
  */
 
 import type { Storage } from '../interfaces/storage'
 
 interface CloudStorageApi {
   uploadFile(params: { cloudPath: string; filePath: string }): Promise<{ fileID: string }>
-  getTempFileURL(params: { fileList: string[] }): Promise<{ fileList: { tempFileURL: string }[] }>
+  getTempFileURL(params: { fileList: string[] }): Promise<{
+    fileList: Array<{ fileID: string; tempFileURL: string; status: number }>
+  }>
 }
 
 export class CloudStorage implements Storage {
@@ -25,6 +25,10 @@ export class CloudStorage implements Storage {
 
   async getTempFileURL(fileID: string): Promise<string> {
     const res = await this.storage.getTempFileURL({ fileList: [fileID] })
-    return res.fileList[0].tempFileURL
+    const first = res.fileList[0]
+    if (!first || first.status !== 0 || !first.tempFileURL) {
+      throw new Error(`Unable to resolve cloud file URL: ${fileID}`)
+    }
+    return first.tempFileURL
   }
 }

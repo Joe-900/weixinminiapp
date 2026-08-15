@@ -21,6 +21,8 @@ export const MOCK_LOGIN_ROLE: UserRole = 'admin'
 const OPENID_MAP: Record<UserRole, string> = {
   admin: SEED_ADMIN_OPENID,
   user: SEED_USER_OPENID,
+  student: SEED_USER_OPENID,
+  teacher: SEED_ADMIN_OPENID,
 }
 
 export const MOCK_LOGIN_OPENID = OPENID_MAP[MOCK_LOGIN_ROLE]
@@ -39,7 +41,7 @@ export const seedUsers: User[] = [
     openid: SEED_USER_OPENID,
     nickname: '阅读者',
     avatar: '',
-    role: 'user',
+  role: 'user',
     createdAt: Date.now() - 43200000,
   },
 ]

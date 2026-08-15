@@ -1,21 +1,22 @@
-/**
- * @file 本地Mock桥接（仅前端使用）
- * @description 本地模式直接调用mock业务函数，返回统一信封
- * 所有mock代码位于src/mock/，避免cloud/被编译到小程序产物
- */
+/** Local, network-free implementation of the cloud-function contract. */
 
+import type { ApiResponse, PaginatedData } from '../types/common'
 import { ErrorCode, ERROR_MESSAGE_MAP } from '../types/common'
-import type { ApiResponse } from '../types/common'
+import type { Book } from '../types/book'
+import type { BookContextInput, AiImageInput, OpenAIChatMessage, OpenAIMultimodalChatMessage } from '../types/ai'
+import type { User } from '../types/user'
+import type { ReadingEvent, ReadingEventType } from '../types/reading'
+import type { CommunityGroupType } from '../types/community'
+import type { LibraryMetadata } from '../types/library'
 import { MemoryRepository } from '../mock/memoryRepository'
 import { LocalStorage } from '../mock/localStorage'
 import { MockAiClient } from '../mock/mockAiClient'
 import { seedUsers, seedBooks, MOCK_LOGIN_OPENID } from '../mock/seedData'
-import type { Book } from '../types/book'
-import type { OpenAIChatMessage } from '../types/ai'
 
 const repo = new MemoryRepository()
 const storage = new LocalStorage()
 const aiClient = new MockAiClient()
+const MOCK_CTX = { OPENID: MOCK_LOGIN_OPENID }
 
 function initSeedData(): void {
   repo.seedUsers(seedUsers)
@@ -32,267 +33,741 @@ export function resetMockData(): void {
   initSeedData()
 }
 
-const MOCK_CTX = { OPENID: MOCK_LOGIN_OPENID }
-
-function success<T>(data: T, message = '成功'): ApiResponse<T> {
-  return { code: 0, message, data }
+function success<T>(data: T, message = 'Success'): ApiResponse<T> {
+  return { code: ErrorCode.SUCCESS, message, data }
 }
 
-function fail<T = null>(code: number, message?: string): ApiResponse<T> {
-  return { code, message: message ?? ERROR_MESSAGE_MAP[code] ?? '未知错误', data: null }
+function fail<T = null>(code: ErrorCode, message?: string): ApiResponse<T> {
+  return { code, message: message ?? ERROR_MESSAGE_MAP[code] ?? 'Unknown error', data: null }
 }
 
-function validateParams(params: Record<string, unknown>, rules: Array<{ name: string; type: string; required: boolean }>): ApiResponse<null> | null {
+function validateParams(
+  params: Record<string, unknown>,
+  rules: Array<{ name: string; type: 'string' | 'number' | 'boolean'; required: boolean }>,
+): ApiResponse<null> | null {
   for (const rule of rules) {
     const value = params[rule.name]
     if (rule.required && (value === undefined || value === null || value === '')) {
-      return { code: ErrorCode.BAD_REQUEST, message: `${rule.name}字段为必填项`, data: null }
+      return fail(ErrorCode.BAD_REQUEST, `${rule.name} is required`)
     }
     if (value !== undefined && value !== null && typeof value !== rule.type) {
-      return { code: ErrorCode.BAD_REQUEST, message: `${rule.name}字段类型错误`, data: null }
+      return fail(ErrorCode.BAD_REQUEST, `${rule.name} must be ${rule.type}`)
     }
   }
   return null
 }
 
-async function mockUserMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
-  const openid = MOCK_CTX.OPENID
-  const action = data.action as string
+async function getCurrentUser(): Promise<User | null> {
+  return repo.findUserByOpenid(MOCK_CTX.OPENID)
+}
 
+async function mockUserMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+  const action = data.action as string
   if (action === 'login') {
-    if (!openid) return fail(ErrorCode.UNAUTHORIZED, '无法获取用户身份')
-    let user = await repo.findUserByOpenid(openid)
+    let user = await getCurrentUser()
     if (!user) {
-      user = await repo.createUser({ openid, nickname: '', avatar: '', role: 'user', createdAt: Date.now() })
+      user = await repo.createUser({
+        openid: MOCK_CTX.OPENID,
+        nickname: '',
+        avatar: '',
+        role: 'user',
+        createdAt: Date.now(),
+      })
     }
     return success({ openid: user.openid, role: user.role, nickname: user.nickname, avatar: user.avatar })
   }
-
   if (action === 'profile') {
-    const v = validateParams(data, [
+    const validationError = validateParams(data, [
       { name: 'nickname', type: 'string', required: true },
       { name: 'avatar', type: 'string', required: true },
     ])
-    if (v) return v
-    const user = await repo.findUserByOpenid(openid)
-    if (!user) return fail(ErrorCode.UNAUTHORIZED, '用户不存在')
-    const updated = await repo.updateUser(openid, { nickname: data.nickname as string, avatar: data.avatar as string })
-    return success(updated)
+    if (validationError) return validationError
+    if (!(await getCurrentUser())) return fail(ErrorCode.UNAUTHORIZED)
+    return success(await repo.updateUser(MOCK_CTX.OPENID, {
+      nickname: data.nickname as string,
+      avatar: data.avatar as string,
+    }))
   }
-
-  return fail(ErrorCode.BAD_REQUEST, `未知操作：${action}`)
+  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${action}`)
 }
 
 async function mockBookMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
   const action = data.action as string
-  const user = await repo.findUserByOpenid(MOCK_CTX.OPENID)
+  const user = await getCurrentUser()
   if (!user) return fail(ErrorCode.UNAUTHORIZED)
 
   if (action === 'list') {
     const page = (data.page as number) ?? 1
     const pageSize = (data.pageSize as number) ?? 20
-    const status = (data.status as string) ?? 'online'
-    const result = await repo.listBooks(page, pageSize, data.keyword as string, status)
-    return success({ list: result.list, total: result.total, page, pageSize })
+    const result = await repo.listBooks(page, pageSize, data.keyword as string | undefined, (data.status as string) ?? 'online')
+    return success({ ...result, page, pageSize })
   }
-
   if (action === 'detail') {
     const bookId = data.bookId as string
-    if (!bookId) return fail(ErrorCode.BAD_REQUEST, 'bookId为必填项')
+    if (!bookId) return fail(ErrorCode.BAD_REQUEST, 'bookId is required')
     const book = await repo.findBookById(bookId)
-    if (!book) return fail(ErrorCode.NOT_FOUND, '书籍不存在')
-    return success(book)
+    return book ? success(book) : fail(ErrorCode.NOT_FOUND, 'Book not found')
   }
-
   if (action === 'create') {
-    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN, '仅管理员可操作')
-    const v = validateParams(data, [
+    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN, 'Admin only')
+    const validationError = validateParams(data, [
       { name: 'title', type: 'string', required: true },
       { name: 'author', type: 'string', required: true },
       { name: 'isbn', type: 'string', required: true },
       { name: 'summary', type: 'string', required: true },
       { name: 'cover', type: 'string', required: true },
     ])
-    if (v) return v
-    const bookId = `book_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+    if (validationError) return validationError
+    const bookId = `book_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     const now = Date.now()
     await repo.createBook({
-      bookId, title: data.title as string, author: data.author as string,
-      isbn: data.isbn as string, cover: data.cover as string, summary: data.summary as string,
-      status: 'online', addedBy: user.openid, createdAt: now, updatedAt: now,
+      bookId,
+      title: data.title as string,
+      author: data.author as string,
+      isbn: data.isbn as string,
+      cover: data.cover as string,
+      summary: data.summary as string,
+      edition: data.edition as string | undefined,
+      publisher: data.publisher as string | undefined,
+      publishedAt: data.publishedAt as string | undefined,
+      callNumber: data.callNumber as string | undefined,
+      subjectTerms: data.subjectTerms as string | undefined,
+      libraryName: data.libraryName as string | undefined,
+      holdingsCount: data.holdingsCount as number | undefined,
+      availableCount: data.availableCount as number | undefined,
+      materialType: data.materialType as string | undefined,
+      sourceRecordId: data.sourceRecordId as string | undefined,
+      detailUrl: data.detailUrl as string | undefined,
+      librarySource: data.librarySource as string | undefined,
+      collectionStatus: data.collectionStatus as string | undefined,
+      location: data.location as string | undefined,
+      status: 'online',
+      addedBy: user.openid,
+      createdAt: now,
+      updatedAt: now,
     })
     return success(bookId)
   }
-
   if (action === 'update') {
-    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN, '仅管理员可操作')
-    const v = validateParams(data, [{ name: 'bookId', type: 'string', required: true }])
-    if (v) return v
-    const book = await repo.findBookById(data.bookId as string)
-    if (!book) return fail(ErrorCode.NOT_FOUND, '书籍不存在')
-    const updates: Partial<Book> = { updatedAt: Date.now() }
-    if (data.title) updates.title = data.title as string
-    if (data.author) updates.author = data.author as string
-    if (data.isbn) updates.isbn = data.isbn as string
-    if (data.summary) updates.summary = data.summary as string
-    if (data.cover) updates.cover = data.cover as string
-    await repo.updateBook(data.bookId as string, updates)
-    return success('ok')
-  }
-
-  if (action === 'offline') {
-    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN, '仅管理员可操作')
+    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN, 'Admin only')
     const bookId = data.bookId as string
-    if (!bookId) return fail(ErrorCode.BAD_REQUEST, 'bookId为必填项')
-    const book = await repo.findBookById(bookId)
-    if (!book) return fail(ErrorCode.NOT_FOUND, '书籍不存在')
-    await repo.updateBook(bookId, { status: 'offline', updatedAt: Date.now() })
+    if (!bookId) return fail(ErrorCode.BAD_REQUEST, 'bookId is required')
+    if (!(await repo.findBookById(bookId))) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+    const updates: Partial<Book> = {}
+    const keys: Array<keyof Book> = [
+      'title', 'author', 'isbn', 'cover', 'summary', 'edition', 'publisher', 'librarySource', 'collectionStatus', 'location',
+      'publishedAt', 'callNumber', 'subjectTerms', 'libraryName', 'holdingsCount', 'availableCount', 'materialType', 'sourceRecordId', 'detailUrl',
+    ]
+    for (const key of keys) {
+      const value = data[key]
+      if (typeof value === 'string' || typeof value === 'number') {
+        ;(updates as Record<string, unknown>)[key] = value
+      }
+    }
+    await repo.updateBook(bookId, updates)
     return success('ok')
   }
-
-  if (action === 'online') {
-    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN, '仅管理员可操作')
+  if (action === 'offline' || action === 'online') {
+    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN, 'Admin only')
     const bookId = data.bookId as string
-    if (!bookId) return fail(ErrorCode.BAD_REQUEST, 'bookId为必填项')
-    const book = await repo.findBookById(bookId)
-    if (!book) return fail(ErrorCode.NOT_FOUND, '书籍不存在')
-    await repo.updateBook(bookId, { status: 'online', updatedAt: Date.now() })
+    if (!bookId) return fail(ErrorCode.BAD_REQUEST, 'bookId is required')
+    if (!(await repo.findBookById(bookId))) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+    await repo.updateBook(bookId, { status: action })
     return success('ok')
   }
-
-  return fail(ErrorCode.BAD_REQUEST, `未知操作：${action}`)
+  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${action}`)
 }
 
 async function mockAiMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
   const action = data.action as string
-  const openid = MOCK_CTX.OPENID
-  const user = await repo.findUserByOpenid(openid)
+  const user = await getCurrentUser()
   if (!user) return fail(ErrorCode.UNAUTHORIZED)
 
   if (action === 'chat') {
-    const v = validateParams(data, [
-      { name: 'bookId', type: 'string', required: true },
-      { name: 'question', type: 'string', required: true },
-    ])
-    if (v) return v
-
-    const bookId = data.bookId as string
-    const question = data.question as string
-
-    if (question.length > 1000) return fail(ErrorCode.AI_LIMIT, '问题过长')
-
-    const todayCount = await repo.countTodayChats(openid)
-    if (todayCount >= 50) return fail(ErrorCode.AI_LIMIT, '已达到每日使用上限')
-
-    const book = await repo.findBookById(bookId)
-    if (!book) return fail(ErrorCode.NOT_FOUND, '书籍不存在')
-
-    let sessionId = data.sessionId as string | undefined
-    if (!sessionId) {
-      const session = await repo.createSession({
-        openid, bookId, title: `关于《${book.title}》的对话`, createdAt: Date.now(),
-      })
-      sessionId = session.sessionId
+    const question = typeof data.question === 'string' ? data.question.trim() : ''
+    const bookInput = data.book && typeof data.book === 'object' ? data.book as BookContextInput : undefined
+    const bookId = typeof data.bookId === 'string' ? data.bookId : undefined
+    const image = data.image && typeof data.image === 'object' ? data.image as AiImageInput : undefined
+    if (!question) return fail(ErrorCode.BAD_REQUEST, 'question is required')
+    if (!bookId && !bookInput?.title?.trim()) return fail(ErrorCode.BAD_REQUEST, 'book.title or bookId is required')
+    if (question.length + (typeof data.context === 'string' ? data.context.length : 0) > 1000) {
+      return fail(ErrorCode.AI_LIMIT, 'Question is too long')
+    }
+    if (await repo.countTodayChats(user.openid) >= 50) return fail(ErrorCode.AI_LIMIT, 'Daily limit reached')
+    if (image && (!image.fileId || !image.mimeType?.startsWith('image/'))) {
+      return fail(ErrorCode.BAD_REQUEST, 'Invalid image input')
     }
 
-    const historyMessages = await repo.getSessionMessages(sessionId, 10)
-    const messages: OpenAIChatMessage[] = [
-      { role: 'system', content: `你是校园阅读伴读助手，服务于中学生读者。当前书籍信息如下：书名《${book.title}》，作者${book.author}，简介：${book.summary}。你的任务是基于上述书目信息，引导学生思考、激发阅读兴趣、解答与本书相关的阅读疑问。重要限制：你没有读过本书全文，只掌握以上书目信息，不要编造书中具体情节。回答风格：友善、鼓励、贴近中学生认知水平。` },
-      ...historyMessages.map((m) => ({ role: m.role, content: m.content })),
-      { role: 'user', content: question },
+    let book: Book | null = bookId ? await repo.findBookById(bookId) : null
+    if (bookId && !book) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+    if (!book && bookInput?.title) {
+      const syntheticId = `metadata_${encodeURIComponent(bookInput.title).slice(0, 80)}`
+      const now = Date.now()
+      book = {
+        _id: syntheticId,
+        bookId: syntheticId,
+        title: bookInput.title,
+        author: bookInput.author ?? '',
+        edition: bookInput.edition,
+        isbn: bookInput.isbn ?? '',
+        cover: '',
+        summary: '',
+        status: 'online',
+        addedBy: 'metadata-input',
+        createdAt: now,
+        updatedAt: now,
+      }
+    }
+    if (!book) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+    if (bookId && bookInput?.title && book.title !== bookInput.title) {
+      return fail(ErrorCode.BAD_REQUEST, 'book metadata does not match bookId')
+    }
+
+    let sessionId = typeof data.sessionId === 'string' ? data.sessionId : ''
+    let session = sessionId ? await repo.findSessionById(sessionId) : null
+    if (sessionId && (!session || session.openid !== user.openid)) return fail(ErrorCode.ACCESS_DENIED)
+    if (session && session.bookId !== book.bookId) return fail(ErrorCode.BAD_REQUEST, 'Session belongs to another book')
+    if (!session) {
+      session = (await repo.listSessions(user.openid)).find((item) => item.bookId === book!.bookId) ?? null
+    }
+    if (!session) {
+      session = await repo.createSession({
+        openid: user.openid,
+        bookId: book.bookId,
+        title: `Chat about ${book.title}`,
+        createdAt: Date.now(),
+      })
+    }
+    sessionId = session.sessionId
+
+    const contextText = typeof data.context === 'string' && data.context.trim()
+      ? `${question}\n\nContext supplied by the reader:\n${data.context.trim()}`
+      : question
+    const history = await repo.getSessionMessages(sessionId, 10)
+    const system = `You are a careful reading companion. The platform has metadata but no full book text. title: ${book.title}; author: ${book.author || 'unknown'}; edition: ${book.edition || 'unknown'}; ISBN: ${book.isbn || 'unknown'}; summary: ${book.summary || 'not provided'}. Do not invent unsupported quotations or plot details.`
+    const messages: OpenAIMultimodalChatMessage[] = [
+      { role: 'system', content: system },
+      ...history.map((item) => ({ role: item.role, content: item.content })),
+      {
+        role: 'user',
+        content: image
+          ? [
+              { type: 'text', text: contextText },
+              { type: 'image_url', image_url: { url: await storage.getTempFileURL(image.fileId) } },
+            ]
+          : contextText,
+      },
     ]
-
-    await repo.addMessage({ sessionId, openid, role: 'user', content: question, createdAt: Date.now() })
-
+    await repo.addMessage({
+      sessionId,
+      openid: user.openid,
+      role: 'user',
+      content: contextText,
+      imageFileId: image?.fileId,
+      createdAt: Date.now(),
+    })
     let reply: string
     try {
-      reply = await aiClient.chat(messages)
+      reply = image
+        ? await aiClient.chatMultimodal(messages)
+        : await aiClient.chat(messages as OpenAIChatMessage[])
     } catch {
-      return fail(ErrorCode.AI_ERROR, '伴读助手暂时无法使用')
+      return fail(ErrorCode.AI_ERROR, 'AI service unavailable')
     }
-
-    await repo.addMessage({ sessionId, openid, role: 'assistant', content: reply, createdAt: Date.now() })
-    return success({ reply, sessionId })
+    await repo.addMessage({ sessionId, openid: user.openid, role: 'assistant', content: reply, createdAt: Date.now() })
+    return success({ reply, sessionId, usedImage: Boolean(image) })
   }
 
   if (action === 'loadHistory') {
     const sessionId = data.sessionId as string
-    if (!sessionId) return fail(ErrorCode.BAD_REQUEST, 'sessionId为必填项')
+    if (!sessionId) return fail(ErrorCode.BAD_REQUEST, 'sessionId is required')
     const session = await repo.findSessionById(sessionId)
-    if (!session || session.openid !== openid) return fail(ErrorCode.ACCESS_DENIED)
-    const messages = await repo.getSessionMessages(sessionId, data.limit as number ?? 10)
-    return success(messages)
+    if (!session || session.openid !== user.openid) return fail(ErrorCode.ACCESS_DENIED)
+    return success(await repo.getSessionMessages(sessionId, (data.limit as number) ?? 10))
   }
-
-  if (action === 'listSessions') {
-    const sessions = await repo.listSessions(openid)
-    return success(sessions)
-  }
-
-  return fail(ErrorCode.BAD_REQUEST, `未知操作：${action}`)
+  if (action === 'listSessions') return success(await repo.listSessions(user.openid))
+  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${action}`)
 }
 
 async function mockNoteMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
   const action = data.action as string
-  const openid = MOCK_CTX.OPENID
-  const user = await repo.findUserByOpenid(openid)
+  const user = await getCurrentUser()
   if (!user) return fail(ErrorCode.UNAUTHORIZED)
 
   if (action === 'addNote') {
-    const v = validateParams(data, [
+    const validationError = validateParams(data, [
       { name: 'bookId', type: 'string', required: true },
       { name: 'content', type: 'string', required: true },
     ])
-    if (v) return v
-    const note = await repo.addNote({ openid, bookId: data.bookId as string, content: data.content as string, createdAt: Date.now() })
-    return success(note)
+    if (validationError) return validationError
+    return success(await repo.addNote({
+      openid: user.openid,
+      bookId: data.bookId as string,
+      content: data.content as string,
+      createdAt: Date.now(),
+    }))
   }
-
   if (action === 'listNote') {
     const page = (data.page as number) ?? 1
     const pageSize = (data.pageSize as number) ?? 20
-    const result = await repo.listNotes(openid, page, pageSize)
-    return success({ list: result.list, total: result.total, page, pageSize })
+    const result = await repo.listNotes(user.openid, page, pageSize)
+    return success({ ...result, page, pageSize })
   }
-
   if (action === 'deleteNote') {
     const noteId = data.noteId as string
-    if (!noteId) return fail(ErrorCode.BAD_REQUEST, 'noteId为必填项')
+    if (!noteId) return fail(ErrorCode.BAD_REQUEST, 'noteId is required')
     const note = await repo.findNoteById(noteId)
-    if (!note) return fail(ErrorCode.NOT_FOUND, '笔记不存在')
-    if (note.openid !== openid) return fail(ErrorCode.ACCESS_DENIED)
-    await repo.deleteNote(noteId, openid)
+    if (!note) return fail(ErrorCode.NOT_FOUND, 'Note not found')
+    if (note.openid !== user.openid) return fail(ErrorCode.ACCESS_DENIED)
+    await repo.deleteNote(noteId, user.openid)
     return success('ok')
   }
-
   if (action === 'checkIn') {
-    const v = validateParams(data, [
+    const validationError = validateParams(data, [
       { name: 'bookId', type: 'string', required: true },
       { name: 'minutes', type: 'number', required: true },
     ])
-    if (v) return v
-    const today = new Date().toISOString().split('T')[0]
-    await repo.addCheckin({ openid, bookId: data.bookId as string, minutes: data.minutes as number, checkinDate: today })
+    if (validationError) return validationError
+    const minutes = data.minutes as number
+    if (minutes < 1 || minutes > 1440) return fail(ErrorCode.BAD_REQUEST, 'Invalid minutes')
+    const bookId = data.bookId as string
+    await repo.addCheckin({
+      openid: user.openid,
+      bookId,
+      minutes,
+      checkinDate: new Date().toISOString().slice(0, 10),
+    })
+    await repo.addReadingEvent({
+      openid: user.openid,
+      bookId,
+      eventType: 'checkin',
+      duration: minutes,
+      source: 'system',
+      createdAt: Date.now(),
+    })
     return success('ok')
   }
+  if (action === 'checkInStat') return success(await repo.getCheckinStat(user.openid))
+  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${action}`)
+}
 
-  if (action === 'checkInStat') {
-    const stat = await repo.getCheckinStat(openid)
-    return success(stat)
+async function mockReadingMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+  const user = await getCurrentUser()
+  if (!user) return fail(ErrorCode.UNAUTHORIZED)
+  const action = data.action as string
+  if (action === 'createPlan') {
+    const bookId = data.bookId as string
+    if (!bookId) return fail(ErrorCode.BAD_REQUEST, 'bookId is required')
+    if (!(await repo.findBookById(bookId))) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+    const now = Date.now()
+    const plan = await repo.createReadingPlan({
+      openid: user.openid,
+      bookId,
+      targetDate: data.targetDate as string | undefined,
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+    })
+    await repo.addReadingEvent({ openid: user.openid, bookId, eventType: 'plan_started', source: 'system', createdAt: now })
+    return success(plan)
   }
+  if (action === 'listPlans') return success(await repo.listReadingPlans(user.openid))
+  if (action === 'completePlan') {
+    const planId = data.planId as string
+    const plan = (await repo.listReadingPlans(user.openid)).find((item) => item.planId === planId)
+    if (!plan) return fail(ErrorCode.NOT_FOUND, 'Reading plan not found')
+    if (plan.status === 'completed') return success(plan)
+    const updated = await repo.updateReadingPlan(planId, user.openid, { status: 'completed' })
+    await repo.addReadingEvent({
+      openid: user.openid,
+      bookId: plan.bookId,
+      eventType: 'plan_completed',
+      source: 'system',
+      createdAt: Date.now(),
+    })
+    return success(updated)
+  }
+  if (action === 'recordParticipation') {
+    const eventType = data.eventType as ReadingEventType
+    const bookId = data.bookId as string
+    if (!bookId || (eventType !== 'discussion' && eventType !== 'group_activity')) {
+      return fail(ErrorCode.FORBIDDEN, 'Only participation events can be user-recorded')
+    }
+    const groupId = data.groupId as string | undefined
+    if (groupId && !(await repo.findCommunityMember(groupId, user.openid))) return fail(ErrorCode.ACCESS_DENIED)
+    return success(await repo.addReadingEvent({
+      openid: user.openid,
+      bookId,
+      eventType,
+      source: 'user',
+      groupId,
+      classId: data.classId as string | undefined,
+      createdAt: Date.now(),
+    }))
+  }
+  if (action === 'listEvents') return success(await repo.listReadingEvents(user.openid, data.bookId as string | undefined))
+  if (action === 'stat') return success(await repo.getReadingStat(user.openid))
+  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${action}`)
+}
 
-  return fail(ErrorCode.BAD_REQUEST, `未知操作：${action}`)
+async function canManageGroup(user: User, groupId: string): Promise<boolean> {
+  const group = await repo.findCommunityGroup(groupId)
+  if (!group) return false
+  if (user.role === 'admin' || group.ownerOpenid === user.openid) return true
+  const member = await repo.findCommunityMember(groupId, user.openid)
+  return member?.role === 'owner' || member?.role === 'teacher'
+}
+
+async function mockCommunityMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+  const user = await getCurrentUser()
+  if (!user) return fail(ErrorCode.UNAUTHORIZED)
+  const action = data.action as string
+  if (action === 'create') {
+    const name = typeof data.name === 'string' ? data.name.trim() : ''
+    const type = data.type as CommunityGroupType
+    if (!name || (type !== 'class' && type !== 'reading_group')) return fail(ErrorCode.BAD_REQUEST)
+    if (type === 'class' && user.role !== 'teacher' && user.role !== 'admin') return fail(ErrorCode.FORBIDDEN)
+    const group = await repo.createCommunityGroup({
+      name,
+      type,
+      ownerOpenid: user.openid,
+      inviteCode: Math.random().toString(36).slice(2, 8).toUpperCase(),
+      createdAt: Date.now(),
+    })
+    await repo.addCommunityMember({
+      groupId: group.groupId,
+      openid: user.openid,
+      role: type === 'class' ? 'teacher' : 'owner',
+      joinedAt: Date.now(),
+    })
+    return success(group)
+  }
+  if (action === 'join') {
+    const inviteCode = typeof data.inviteCode === 'string' ? data.inviteCode.trim().toUpperCase() : ''
+    if (!inviteCode) return fail(ErrorCode.BAD_REQUEST, 'inviteCode is required')
+    const group = await repo.findCommunityGroupByInviteCode(inviteCode)
+    if (!group) return fail(ErrorCode.NOT_FOUND, 'Group not found')
+    const existing = await repo.findCommunityMember(group.groupId, user.openid)
+    return success(existing ?? await repo.addCommunityMember({
+      groupId: group.groupId,
+      openid: user.openid,
+      role: 'member',
+      joinedAt: Date.now(),
+    }))
+  }
+  if (action === 'list') return success(await repo.listCommunityGroups(user.openid))
+  if (action === 'members') {
+    const groupId = data.groupId as string
+    if (!groupId) return fail(ErrorCode.BAD_REQUEST, 'groupId is required')
+    if (!(await repo.findCommunityMember(groupId, user.openid))) return fail(ErrorCode.ACCESS_DENIED)
+    return success(await repo.listCommunityMembers(groupId))
+  }
+  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${action}`)
+}
+
+async function mockTaskMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+  const user = await getCurrentUser()
+  if (!user) return fail(ErrorCode.UNAUTHORIZED)
+  const action = data.action as string
+  if (action === 'create') {
+    const groupId = data.groupId as string
+    const title = typeof data.title === 'string' ? data.title.trim() : ''
+    const description = typeof data.description === 'string' ? data.description.trim() : ''
+    if (!groupId || !title || !description) return fail(ErrorCode.BAD_REQUEST)
+    if (!(await canManageGroup(user, groupId))) return fail(ErrorCode.FORBIDDEN)
+    const bookId = data.bookId as string | undefined
+    if (bookId && !(await repo.findBookById(bookId))) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+    return success(await repo.createTask({
+      groupId,
+      teacherOpenid: user.openid,
+      bookId,
+      title,
+      description,
+      dueAt: data.dueAt as number | undefined,
+      createdAt: Date.now(),
+      status: 'published',
+    }))
+  }
+  if (action === 'list') {
+    const groupIds = (await repo.listCommunityGroups(user.openid)).map((group) => group.groupId)
+    return success(await repo.listTasksForUser(user.openid, groupIds))
+  }
+  if (action === 'detail') {
+    const taskId = data.taskId as string
+    const task = await repo.findTask(taskId)
+    if (!task) return fail(ErrorCode.NOT_FOUND, 'Task not found')
+    if (!(await repo.findCommunityMember(task.groupId, user.openid))) return fail(ErrorCode.ACCESS_DENIED)
+    const submission = await repo.findTaskSubmission(taskId, user.openid)
+    return success({ task, submission, feedback: submission ? await repo.listTaskFeedback(submission.submissionId) : [] })
+  }
+  if (action === 'submit') {
+    const taskId = data.taskId as string
+    const task = await repo.findTask(taskId)
+    if (!task) return fail(ErrorCode.NOT_FOUND, 'Task not found')
+    if (!(await repo.findCommunityMember(task.groupId, user.openid))) return fail(ErrorCode.ACCESS_DENIED)
+    const text = typeof data.text === 'string' ? data.text.trim() : undefined
+    const question = typeof data.question === 'string' ? data.question.trim() : undefined
+    const imageFileId = data.imageFileId as string | undefined
+    if (!text && !question && !imageFileId) return fail(ErrorCode.BAD_REQUEST, 'Submission is empty')
+    const now = Date.now()
+    const existing = await repo.findTaskSubmission(taskId, user.openid)
+    const submission = existing
+      ? await repo.updateTaskSubmission(existing.submissionId, { text, question, imageFileId, status: 'submitted' })
+      : await repo.createTaskSubmission({
+          taskId,
+          openid: user.openid,
+          text,
+          question,
+          imageFileId,
+          status: 'submitted',
+          createdAt: now,
+          updatedAt: now,
+        })
+    if (!existing && task.bookId) {
+      await repo.addReadingEvent({
+        openid: user.openid,
+        bookId: task.bookId,
+        eventType: 'task_submitted',
+        source: 'system',
+        taskId,
+        groupId: task.groupId,
+        classId: task.groupId,
+        createdAt: now,
+      })
+    }
+    return success(submission)
+  }
+  if (action === 'submissions') {
+    const taskId = data.taskId as string
+    const task = await repo.findTask(taskId)
+    if (!task) return fail(ErrorCode.NOT_FOUND)
+    if (!(await canManageGroup(user, task.groupId))) return fail(ErrorCode.FORBIDDEN)
+    return success(await repo.listTaskSubmissions(taskId))
+  }
+  if (action === 'feedback') {
+    const submissionId = data.submissionId as string
+    const comment = typeof data.comment === 'string' ? data.comment.trim() : ''
+    if (!submissionId || !comment || typeof data.confirmed !== 'boolean') return fail(ErrorCode.BAD_REQUEST)
+    const submission = await repo.findTaskSubmissionById(submissionId)
+    if (!submission) return fail(ErrorCode.NOT_FOUND)
+    const task = await repo.findTask(submission.taskId)
+    if (!task || !(await canManageGroup(user, task.groupId))) return fail(ErrorCode.FORBIDDEN)
+    const confirmed = data.confirmed as boolean
+    const score = data.score as number | undefined
+    if (score !== undefined && (score < 0 || score > 100)) return fail(ErrorCode.BAD_REQUEST)
+    const prior = await repo.listTaskFeedback(submissionId)
+    const feedback = await repo.addTaskFeedback({
+      submissionId,
+      teacherOpenid: user.openid,
+      comment,
+      score,
+      confirmed,
+      createdAt: Date.now(),
+    })
+    await repo.updateTaskSubmission(submissionId, { status: confirmed ? 'reviewed' : 'returned' })
+    if (confirmed && task.bookId && !prior.some((item) => item.confirmed)) {
+      await repo.addReadingEvent({
+        openid: submission.openid,
+        bookId: task.bookId,
+        eventType: 'teacher_confirmed',
+        source: 'teacher',
+        points: score,
+        taskId: task.taskId,
+        groupId: task.groupId,
+        classId: task.groupId,
+        createdAt: Date.now(),
+      })
+    }
+    return success(feedback)
+  }
+  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${action}`)
+}
+
+async function mockReservationMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+  const user = await getCurrentUser()
+  if (!user) return fail(ErrorCode.UNAUTHORIZED)
+  const action = data.action as string
+  if (action === 'availability') {
+    const book = await repo.findBookById(data.bookId as string)
+    if (!book) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+    const available = book.collectionStatus?.toLowerCase() !== 'unavailable'
+    return success({ bookId: book.bookId, available, location: book.location, message: 'Local mock only' })
+  }
+  if (action === 'reserve') {
+    const bookId = data.bookId as string
+    const book = await repo.findBookById(bookId)
+    if (!book) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+    const existing = (await repo.listReservations(user.openid)).find(
+      (item) => item.bookId === bookId && (item.status === 'pending' || item.status === 'confirmed'),
+    )
+    if (existing) return success(existing)
+    if (book.collectionStatus?.toLowerCase() === 'unavailable') return fail(ErrorCode.BAD_REQUEST, 'Book unavailable')
+    const now = Date.now()
+    return success(await repo.createReservation({
+      openid: user.openid,
+      bookId,
+      provider: 'mock-library',
+      status: 'confirmed',
+      externalId: `mock_${bookId}_${now}`,
+      message: 'Local mock reservation; no real request was sent',
+      createdAt: now,
+      updatedAt: now,
+    }))
+  }
+  if (action === 'cancel') {
+    const reservationId = data.reservationId as string
+    const reservation = await repo.findReservation(reservationId)
+    if (!reservation) return fail(ErrorCode.NOT_FOUND)
+    if (reservation.openid !== user.openid) return fail(ErrorCode.ACCESS_DENIED)
+    return success(await repo.updateReservation(reservationId, user.openid, {
+      status: 'cancelled',
+      message: 'Local mock reservation cancelled',
+    }))
+  }
+  if (action === 'list') return success(await repo.listReservations(user.openid))
+  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${action}`)
+}
+
+const EVENT_SCORE: Record<ReadingEventType, number> = {
+  checkin: 1,
+  plan_started: 0,
+  plan_completed: 5,
+  task_submitted: 2,
+  teacher_confirmed: 10,
+  group_activity: 2,
+  discussion: 1,
+}
+
+async function mockRankingMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+  const user = await getCurrentUser()
+  if (!user) return fail(ErrorCode.UNAUTHORIZED)
+  if (data.action !== 'list') return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${data.action as string}`)
+  const groupId = data.groupId as string | undefined
+  let memberOpenids: Set<string> | null = null
+  if (groupId) {
+    if (!(await repo.findCommunityMember(groupId, user.openid))) return fail(ErrorCode.ACCESS_DENIED)
+    memberOpenids = new Set((await repo.listCommunityMembers(groupId)).map((member) => member.openid))
+  }
+  const events = await repo.listAllReadingEvents(groupId)
+  const grouped = new Map<string, ReadingEvent[]>()
+  for (const event of events) {
+    if (memberOpenids && !memberOpenids.has(event.openid)) continue
+    const current = grouped.get(event.openid) ?? []
+    current.push(event)
+    grouped.set(event.openid, current)
+  }
+  const users = new Map((await repo.listUsers()).map((item) => [item.openid, item]))
+  const entries = Array.from(grouped.entries()).map(([openid, userEvents]) => {
+    const checkinDays = new Set<string>()
+    let score = 0
+    let validEventCount = 0
+    for (const event of userEvents) {
+      const verified = event.eventType === 'teacher_confirmed'
+        ? event.source === 'teacher'
+        : event.eventType === 'discussion' || event.eventType === 'group_activity'
+          ? true
+          : event.source === 'system'
+      if (!verified) continue
+      if (event.eventType === 'checkin') {
+        const key = `${event.bookId}:${new Date(event.createdAt).toISOString().slice(0, 10)}`
+        if (checkinDays.has(key)) continue
+        checkinDays.add(key)
+      }
+      score += EVENT_SCORE[event.eventType]
+      if (event.eventType === 'teacher_confirmed' && event.points !== undefined) score += Math.max(0, Math.min(100, event.points)) / 10
+      validEventCount += 1
+    }
+    return { rank: 0, openid, nickname: users.get(openid)?.nickname || 'Reader', score, validEventCount }
+  }).filter((entry) => entry.validEventCount > 0)
+    .sort((a, b) => b.score - a.score || b.validEventCount - a.validEventCount)
+    .map((entry, index) => ({ ...entry, rank: index + 1 }))
+  return success({ scope: groupId ? 'group' : 'global', groupId, generatedAt: Date.now(), entries })
+}
+
+async function mockLibraryMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+  const user = await getCurrentUser()
+  if (!user) return fail(ErrorCode.UNAUTHORIZED)
+  if (data.action === 'search') {
+    const page = (data.page as number) ?? 1
+    const pageSize = (data.pageSize as number) ?? 20
+    if (typeof data.isbn === 'string' && data.isbn) {
+      const book = await repo.findBookByIsbn(data.isbn.replace(/[-\s]/g, ''))
+      const list = book ? [book] : []
+      return success<PaginatedData<Book>>({ list, total: list.length, page, pageSize })
+    }
+    const result = await repo.listBooks(page, pageSize, data.keyword as string | undefined, 'online')
+    return success<PaginatedData<Book>>({ ...result, page, pageSize })
+  }
+  if (data.action === 'import') {
+    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN)
+    if (!Array.isArray(data.items) || data.items.length === 0) return fail(ErrorCode.BAD_REQUEST, 'items is required')
+    const bookIds: string[] = []
+    let skipped = 0
+    for (const raw of data.items) {
+      if (!raw || typeof raw !== 'object') {
+        skipped += 1
+        continue
+      }
+      const item = raw as LibraryMetadata
+      const title = item.title?.trim()
+      const source = item.librarySource?.trim()
+      const isbn = item.isbn?.replace(/[-\s]/g, '') ?? ''
+      if (!title || !source || (isbn && await repo.findBookByIsbn(isbn))) {
+        skipped += 1
+        continue
+      }
+      const bookId = `book_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+      const now = Date.now()
+      await repo.createBook({
+        bookId,
+        title,
+        author: item.author?.trim() ?? '',
+        isbn,
+        edition: item.edition?.trim(),
+        publisher: item.publisher?.trim(),
+        publishedAt: item.publishedAt?.trim(),
+        callNumber: item.callNumber?.trim(),
+        subjectTerms: item.subjectTerms?.trim(),
+        libraryName: item.libraryName?.trim(),
+        holdingsCount: item.holdingsCount,
+        availableCount: item.availableCount,
+        materialType: item.materialType?.trim(),
+        sourceRecordId: item.sourceRecordId?.trim(),
+        detailUrl: item.detailUrl?.trim(),
+        cover: item.cover?.trim() ?? '',
+        summary: item.summary?.trim() ?? '',
+        librarySource: source,
+        collectionStatus: item.collectionStatus?.trim(),
+        location: item.location?.trim(),
+        status: 'online',
+        addedBy: user.openid,
+        createdAt: now,
+        updatedAt: now,
+      })
+      bookIds.push(bookId)
+    }
+    return success({ imported: bookIds.length, skipped, bookIds })
+  }
+  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${data.action as string}`)
 }
 
 export async function callMockFunction<T = unknown>(
   functionName: string,
   data: Record<string, unknown>,
 ): Promise<ApiResponse<T>> {
+  let response: ApiResponse<unknown>
   switch (functionName) {
-    case 'user': return mockUserMain(data) as Promise<ApiResponse<T>>
-    case 'book': return mockBookMain(data) as Promise<ApiResponse<T>>
-    case 'ai': return mockAiMain(data) as Promise<ApiResponse<T>>
-    case 'note': return mockNoteMain(data) as Promise<ApiResponse<T>>
-    default: return { code: 5000, message: `未知云函数：${functionName}`, data: null }
+    case 'user': response = await mockUserMain(data); break
+    case 'book': response = await mockBookMain(data); break
+    case 'ai': response = await mockAiMain(data); break
+    case 'note': response = await mockNoteMain(data); break
+    case 'reading': response = await mockReadingMain(data); break
+    case 'community': response = await mockCommunityMain(data); break
+    case 'task': response = await mockTaskMain(data); break
+    case 'reservation': response = await mockReservationMain(data); break
+    case 'ranking': response = await mockRankingMain(data); break
+    case 'library': response = await mockLibraryMain(data); break
+    default: response = fail(ErrorCode.INTERNAL_ERROR, `Unknown cloud function: ${functionName}`)
   }
+  return response as ApiResponse<T>
 }
