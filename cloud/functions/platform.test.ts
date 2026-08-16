@@ -34,6 +34,7 @@ describe('platform domains', () => {
     expect(mapped).toMatchObject({
       title: 'A book',
       isbn: '978-1',
+      publisher: 'Publisher',
       callNumber: 'B821',
       holdingsCount: 2,
       availableCount: 0,

@@ -66,16 +66,18 @@ describe('parseLibraryRowsFromExcel', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const XLSX = require('xlsx')
     const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ top_category_code: 'A', books: 1 }]), 'Summary')
     const ws = XLSX.utils.json_to_sheet([
-      { title: '朝闻道', authors: '刘慈欣', isbn_issn: 'X1', holdings_count: 4 },
-      { title: '球状闪电', authors: '刘慈欣', isbn_issn: 'X2' },
+      { rec_ctrl_id: 'r1', title: '朝闻道', authors: '刘慈欣', isbn_issn: 'X1', publisher: '出版社', holdings_count: 4 },
+      { rec_ctrl_id: 'r2', title: '球状闪电', authors: '刘慈欣', isbn_issn: 'X2' },
     ])
-    XLSX.utils.book_append_sheet(wb, ws, 'books')
+    XLSX.utils.book_append_sheet(wb, ws, 'All Books')
     const buffer = XLSX.write(wb, { type: 'array' }) as ArrayBuffer
     const rows = parseLibraryRowsFromExcel(buffer)
     expect(rows).toHaveLength(2)
     expect(rows[0].title).toBe('朝闻道')
     expect(rows[0].holdings_count).toBe(4)
+    expect(rows[0].publisher).toBe('出版社')
   })
 })
 

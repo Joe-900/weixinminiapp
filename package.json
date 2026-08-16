@@ -26,6 +26,7 @@
     "typecheck": "tsc --noEmit",
     "test": "jest --config jest.config.ts",
     "test:watch": "jest --config jest.config.ts --watch",
+    "import:bupt": "node scripts/import-bupt-metadata.js",
     "build:cloud": "node scripts/build-cloud-functions.js",
     "build:cloud:check": "node scripts/build-cloud-functions.js --check"
   },

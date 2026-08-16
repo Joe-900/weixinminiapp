@@ -171,7 +171,12 @@ export function parseLibraryRowsFromExcel(buffer: ArrayBuffer): BuptLibraryBookR
   const XLSX = loadXlsx()
   if (!XLSX) throw new Error('Excel 解析库不可用，请改用 JSON 或 CSV 文件')
   const workbook = XLSX.read(buffer, { type: 'array' })
-  const sheetName = workbook.SheetNames[0]
+  const sheetName = workbook.SheetNames.find((name) => name.trim().toLowerCase() === 'all books')
+    ?? workbook.SheetNames.find((name) => {
+      const firstRow = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[name], { defval: '' })[0]
+      return firstRow !== undefined && Object.keys(firstRow).some((key) => normalizeHeaderKey(key) === 'title')
+    })
+    ?? workbook.SheetNames[0]
   if (!sheetName) return []
   const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' })
   return rawRows.map(normalizeRowKeys)

@@ -48,6 +48,7 @@ export function mapBuptLibraryRow(
     title,
     author: row.authors?.trim(),
     isbn: row.isbn_issn?.trim(),
+    publisher: row.publisher?.trim(),
     publishedAt: row.publish_date?.trim(),
     callNumber: row.classno_abs?.trim(),
     subjectTerms: row.subject_terms?.trim(),
