@@ -99,6 +99,7 @@ export default function AiChat() {
   }
 
   async function handleSend() {
+    if (loading) return
     const title = book.title.trim()
     const text = question.trim()
     if (!title || (!text && !image)) {
@@ -239,7 +240,7 @@ export default function AiChat() {
           onInput={(event) => setQuestion(event.detail.value)}
           onConfirm={handleSend}
         />
-        <View className={`ai-chat__send-btn ${loading ? 'ai-chat__send-btn--disabled' : ''}`} onClick={loading ? undefined : handleSend}>
+        <View className={`ai-chat__send-btn ${loading ? 'ai-chat__send-btn--disabled' : ''}`} onClick={handleSend}>
           <Text>{loading ? '…' : 'Send'}</Text>
         </View>
       </View>
