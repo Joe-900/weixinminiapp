@@ -6,7 +6,7 @@
   <title>阅读伴读｜学生端小程序演示</title>
   <link rel="stylesheet" href="demo.css">
 </head>
-<body data-profile-title="个人中心">
+<body data-role="student" data-profile-title="个人中心">
   <div class="preview-toolbar">
     <div><span class="preview-toolbar__title">小程序界面预览</span><span class="preview-toolbar__note">当前页面是静态前端演示，不连接后端</span></div>
     <nav class="role-switch" aria-label="切换演示身份">
@@ -130,6 +130,10 @@
             <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="ranking">行为排行榜</button>
           </div>
           <p class="profile-status" data-profile-status>点击功能入口查看静态页面跳转提示。</p>
+        </section>
+
+        <section class="mini-view" data-mini-view="profile-tool" hidden>
+          <div data-profile-tool-content></div>
         </section>
 
         <div class="mini-tab-status" data-tab-status>当前页面：书单首页</div>

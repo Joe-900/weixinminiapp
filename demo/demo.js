@@ -34,8 +34,9 @@
     });
     var backButton = document.querySelector('[data-mini-back]');
     if (backButton) {
-      backButton.disabled = viewName !== 'ai-chat' && viewName !== 'admin-management';
-      backButton.setAttribute('data-demo-action', viewName === 'admin-management' ? 'back-profile' : 'back-ai');
+      var canReturnToProfile = viewName === 'admin-management' || viewName === 'profile-tool';
+      backButton.disabled = viewName !== 'ai-chat' && !canReturnToProfile;
+      backButton.setAttribute('data-demo-action', canReturnToProfile ? 'back-profile' : 'back-ai');
     }
     if (title) updatePageTitle(title);
     updateText('[data-tab-status]', '当前页面：' + (title || '书单'));
@@ -125,6 +126,77 @@
     filterBooks();
   }
 
+  var profileToolLabels = {
+    notes: '笔记与打卡',
+    reading: '阅读计划',
+    reservations: '我的预约',
+    community: '班级与小组',
+    tasks: '阅读任务',
+    ranking: '行为排行榜',
+  };
+
+  function toolHeader(title) {
+    return '<div class="tool-page-head"><button class="mini-button mini-button--secondary" data-demo-action="back-profile">‹ 返回个人中心</button><h2 class="tool-page-head__title">' + title + '</h2></div>';
+  }
+
+  function profileToolMarkup(tool, role) {
+    var isReviewer = role === 'teacher' || role === 'admin';
+    if (tool === 'notes') {
+      return toolHeader('笔记与打卡') +
+        '<div class="tool-stat-grid"><div><strong>3</strong><span>连续打卡天数</span></div><div><strong>90</strong><span>累计阅读分钟</span></div></div>' +
+        '<div class="mini-card tool-card"><label class="tool-label" for="tool-note-book">当前书籍</label><input id="tool-note-book" class="tool-input" value="metadata_communist" placeholder="请输入书籍 ID（可从书籍详情页进入）"></div>' +
+        '<div class="mini-card tool-card"><div class="tool-inline"><input class="tool-input" value="30" type="number" aria-label="阅读分钟数"><button class="mini-button" data-demo-action="tool-checkin">完成打卡</button></div><p class="mini-status" data-tool-status>今天还没有打卡。</p></div>' +
+        '<div class="mini-card tool-card"><textarea class="tool-textarea" placeholder="写下阅读笔记">这是一条本地演示笔记。</textarea><button class="mini-button" data-demo-action="tool-save-note">保存笔记</button><p class="mini-status" data-tool-note-status></p></div>' +
+        '<div class="mini-card tool-list-item"><strong>示例笔记</strong><span>关于《共产党宣言》的核心观点</span><button class="mini-button mini-button--quiet" data-demo-action="tool-delete-note">删除</button></div>';
+    }
+    if (tool === 'reading') {
+      return toolHeader('阅读计划') +
+        '<div class="tool-stat-grid tool-stat-grid--four"><div><strong>2</strong><span>连续打卡</span></div><div><strong>90</strong><span>阅读分钟</span></div><div><strong>1</strong><span>完成计划</span></div><div><strong>4</strong><span>行为记录</span></div></div>' +
+        '<div class="mini-card tool-card"><div class="tool-inline"><input class="tool-input" value="metadata_communist" placeholder="书籍 ID"><button class="mini-button" data-demo-action="tool-start-reading">开始计划</button></div><p class="mini-status" data-tool-status>填写书籍 ID 后开始新的阅读计划。</p></div>' +
+        '<div class="mini-card tool-list-item"><div><strong>metadata_communist</strong><span>进行中</span></div><button class="mini-button mini-button--secondary" data-demo-action="tool-complete-plan">完成计划</button></div>';
+    }
+    if (tool === 'reservations') {
+      return toolHeader('我的预约') +
+        '<div class="tool-notice">当前使用安全的本地预约模拟，不会访问真实图书馆账号。</div>' +
+        '<div class="mini-card tool-list-item"><div><strong>metadata_communist</strong><span>pending · Mock Provider</span><span>示例预约已创建，等待馆藏确认。</span></div><button class="mini-button mini-button--quiet" data-demo-action="tool-cancel-reservation">取消预约</button></div>';
+    }
+    if (tool === 'community') {
+      var groupCreate = isReviewer ? '<button class="mini-button mini-button--secondary" data-demo-action="tool-create-group">创建班级</button>' : '';
+      return toolHeader('班级与小组') +
+        '<div class="tool-notice tool-notice--blue">本地演示已预置“示例阅读班”和“名著讨论小组”，可直接查看成员、任务和排行榜。</div>' +
+        '<div class="mini-card tool-card"><h3 class="tool-card__title">创建班级或阅读小组</h3><input class="tool-input" placeholder="请输入名称"><div class="tool-action-row"><button class="mini-button mini-button--secondary" data-demo-action="tool-create-group">阅读小组</button>' + groupCreate + '<button class="mini-button" data-demo-action="tool-create-group">创建</button></div><p class="mini-status" data-tool-status></p></div>' +
+        '<div class="mini-card tool-card"><h3 class="tool-card__title">通过邀请码加入</h3><input class="tool-input" placeholder="请输入邀请码，例如 READ2026"><button class="mini-button" data-demo-action="tool-join-group">加入</button><p class="mini-status" data-tool-status></p></div>' +
+        '<div class="mini-card tool-group"><div><strong>示例阅读班</strong><span>班级 · 邀请码 READ2026 · 2 名成员</span></div><div class="tool-action-row"><button class="mini-button mini-button--quiet" data-demo-action="tool-toggle-members">查看成员</button><button class="mini-button mini-button--quiet" data-demo-action="tool-open-task">任务</button><button class="mini-button mini-button--quiet" data-demo-action="tool-open-ranking">排行榜</button></div><div class="tool-members" data-tool-members hidden>管理员（教师）<br>阅读者（学生）</div></div>';
+    }
+    if (tool === 'tasks') {
+      var reviewerPanel = isReviewer ? '<div class="mini-card tool-card"><h3 class="tool-card__title">发布阅读任务</h3><input class="tool-input" value="《共产党宣言》人物讨论"><textarea class="tool-textarea">写下一个印象最深的观点，并说明理由。</textarea><button class="mini-button" data-demo-action="tool-publish-task">发布任务</button><p class="mini-status" data-tool-status></p></div>' : '';
+      var taskAction = isReviewer
+        ? '<div class="tool-action-row"><button class="mini-button" data-demo-action="tool-review-confirm">确认完成</button><button class="mini-button mini-button--danger" data-demo-action="tool-review-return">退回修改</button></div>'
+        : '<textarea class="tool-textarea" placeholder="写下你的阅读回答或问题"></textarea><button class="mini-button" data-demo-action="tool-submit-task">提交回答</button>';
+      return toolHeader('阅读任务') +
+        '<div class="mini-card tool-card"><div class="tool-inline"><span class="tool-label">当前分组</span><button class="mini-button mini-button--secondary">示例阅读班</button></div></div>' + reviewerPanel +
+        '<div class="mini-card tool-card"><strong class="tool-card__title">《共产党宣言》人物讨论</strong><span class="tool-muted">进行中 · 截止：2026-08-23</span><p class="tool-description">写下一个印象最深的观点，并说明理由。</p><div class="tool-task-area">' + taskAction + '</div><p class="mini-status" data-tool-status></p></div>';
+    }
+    return toolHeader('行为排行榜') +
+      '<div class="tool-notice">排行榜只统计服务端记录的打卡、完成计划、任务提交、教师确认和小组参与，不代表整本书的理解能力排名。</div>' +
+      '<div class="mini-card tool-card"><div class="tool-inline"><button class="mini-button mini-button--secondary">查看范围：全平台</button><button class="mini-button" data-demo-action="tool-refresh-ranking">刷新</button></div></div>' +
+      '<div class="mini-card tool-ranking-row"><strong>第 1 名</strong><span>阅读者<br><small>3 条有效记录</small></span><b>16 分</b></div>' +
+      '<div class="mini-card tool-ranking-row"><strong>第 2 名</strong><span>另一位同学<br><small>1 条任务提交</small></span><b>8 分</b></div><p class="mini-status" data-tool-status></p>';
+  }
+
+  function openProfileTool(tool) {
+    var label = profileToolLabels[tool] || '功能页面';
+    var host = document.querySelector('[data-profile-tool-content]');
+    var role = document.body.getAttribute('data-role') || 'student';
+    if (host) host.innerHTML = profileToolMarkup(tool, role);
+    updateText('[data-profile-status]', '已打开“' + label + '”（静态演示，真实版本进入对应小程序页面）。');
+    setView('profile-tool', label);
+    document.querySelectorAll('[data-tab-button]').forEach(function (button) {
+      button.classList.toggle('active', button.getAttribute('data-tab-button') === '我的');
+    });
+    showToast('已打开“' + label + '”页面。');
+  }
+
   document.addEventListener('click', function (event) {
     var tab = event.target.closest('[data-tab-button]');
     if (tab) {
@@ -137,18 +209,8 @@
 
     var action = target.getAttribute('data-demo-action');
     if (action === 'open-profile-tool') {
-      var profileToolLabels = {
-        notes: '笔记与打卡',
-        reading: '阅读计划',
-        reservations: '我的预约',
-        community: '班级与小组',
-        tasks: '阅读任务',
-        ranking: '行为排行榜',
-      };
       var profileTool = target.getAttribute('data-profile-tool') || '';
-      var profileToolLabel = profileToolLabels[profileTool] || '功能页面';
-      updateText('[data-profile-status]', '已打开“' + profileToolLabel + '”（静态演示，真实版本进入对应小程序页面）。');
-      showToast('已打开“' + profileToolLabel + '”入口。');
+      openProfileTool(profileTool);
       return;
     }
     if (action === 'open-admin') {
@@ -179,6 +241,90 @@
       if (saveForm) saveForm.hidden = true;
       updateText('[data-admin-status]', '已保存书籍信息（静态演示，未写入后端）。');
       showToast('书籍信息已在当前页面模拟保存。');
+      return;
+    }
+    if (action === 'tool-checkin') {
+      updateText('[data-tool-status]', '已完成一次本地打卡（静态演示，未写入后端）。');
+      showToast('打卡状态已更新。');
+      return;
+    }
+    if (action === 'tool-save-note') {
+      updateText('[data-tool-note-status]', '笔记已保存到当前页面（静态演示）。');
+      showToast('笔记已保存。');
+      return;
+    }
+    if (action === 'tool-delete-note') {
+      var note = target.closest('.tool-list-item');
+      if (note) note.remove();
+      showToast('笔记已从当前页面移除。');
+      return;
+    }
+    if (action === 'tool-start-reading') {
+      updateText('[data-tool-status]', '已开始新的阅读计划（静态演示）。');
+      showToast('阅读计划已开始。');
+      return;
+    }
+    if (action === 'tool-complete-plan') {
+      target.textContent = '已完成';
+      target.disabled = true;
+      updateText('[data-tool-status]', '阅读计划已完成（静态演示）。');
+      showToast('计划完成状态已更新。');
+      return;
+    }
+    if (action === 'tool-cancel-reservation') {
+      target.textContent = '已取消';
+      target.disabled = true;
+      showToast('预约已取消（静态演示）。');
+      return;
+    }
+    if (action === 'tool-create-group') {
+      updateText('[data-tool-status]', '已创建阅读小组（静态演示，未写入后端）。');
+      showToast('小组创建状态已更新。');
+      return;
+    }
+    if (action === 'tool-join-group') {
+      updateText('[data-tool-status]', '已加入示例阅读班（静态演示）。');
+      showToast('已加入示例阅读班。');
+      return;
+    }
+    if (action === 'tool-toggle-members') {
+      var members = target.closest('.tool-group')?.querySelector('[data-tool-members]');
+      if (members) members.hidden = !members.hidden;
+      return;
+    }
+    if (action === 'tool-open-task') {
+      openProfileTool('tasks');
+      return;
+    }
+    if (action === 'tool-open-ranking') {
+      openProfileTool('ranking');
+      return;
+    }
+    if (action === 'tool-publish-task') {
+      updateText('[data-tool-status]', '任务已发布（静态演示，未写入后端）。');
+      showToast('阅读任务已发布。');
+      return;
+    }
+    if (action === 'tool-submit-task') {
+      target.textContent = '已提交';
+      target.disabled = true;
+      updateText('[data-tool-status]', '学生回答已提交（静态演示）。');
+      showToast('任务回答已提交。');
+      return;
+    }
+    if (action === 'tool-review-confirm') {
+      updateText('[data-tool-status]', '教师已确认完成，已生成行为记录（静态演示）。');
+      showToast('已确认完成。');
+      return;
+    }
+    if (action === 'tool-review-return') {
+      updateText('[data-tool-status]', '已退回修改，等待学生重新提交（静态演示）。');
+      showToast('已退回修改。');
+      return;
+    }
+    if (action === 'tool-refresh-ranking') {
+      updateText('[data-tool-status]', '排行已刷新（静态演示数据没有变化）。');
+      showToast('排行榜已刷新。');
       return;
     }
     if (action === 'open-ai' || action === 'ask-ai') {
