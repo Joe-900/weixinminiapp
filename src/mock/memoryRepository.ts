@@ -234,6 +234,24 @@ export class MemoryRepository implements MockRepository {
       .sort((a, b) => b.createdAt - a.createdAt)
   }
 
+  async findReadingEvent(eventId: string): Promise<ReadingEvent | null> {
+    return this.readingEvents.get(eventId) ?? null
+  }
+
+  async invalidateReadingEvent(eventId: string, operator: string, reason: string): Promise<ReadingEvent | null> {
+    const existing = this.readingEvents.get(eventId)
+    if (!existing) return null
+    const updated: ReadingEvent = {
+      ...existing,
+      invalidated: true,
+      invalidatedAt: Date.now(),
+      invalidatedBy: operator,
+      invalidateReason: reason,
+    }
+    this.readingEvents.set(eventId, updated)
+    return updated
+  }
+
   async getReadingStat(openid: string): Promise<ReadingStat> {
     const events = await this.listReadingEvents(openid)
     const checkins = Array.from(this.checkins.values()).filter((item) => item.openid === openid)

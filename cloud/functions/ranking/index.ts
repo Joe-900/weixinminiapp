@@ -4,11 +4,13 @@ import { authenticate } from '../common/auth'
 import { ErrorCode } from '../../../src/types/common'
 import { fail } from '../common/response'
 import { validateParams } from '../common/validate'
-import { handleRanking } from './rankingService'
+import { handleInvalidateEvent, handleRanking } from './rankingService'
 
 interface RankingEvent {
   action?: string
   groupId?: string
+  eventId?: string
+  reason?: string
   [key: string]: unknown
 }
 
@@ -22,8 +24,18 @@ export async function rankingMain(
   const openid = context.OPENID ?? ''
   const authResult = await authenticate(repo, openid)
   if (authResult.error) return authResult.error
-  if (event.action === 'list') return handleRanking(repo, openid, event.groupId)
-  return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${event.action}`)
+
+  switch (event.action) {
+    case 'list':
+      return handleRanking(repo, openid, event.groupId)
+    case 'invalidate':
+      return handleInvalidateEvent(repo, authResult.auth!, {
+        eventId: event.eventId ?? '',
+        reason: event.reason ?? '',
+      })
+    default:
+      return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${event.action}`)
+  }
 }
 
 export { main } from './main'

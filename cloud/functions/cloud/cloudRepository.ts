@@ -262,6 +262,33 @@ export class CloudRepository implements Repository {
     return Array.from(new Map(events.map((event) => [event.eventId, event])).values())
   }
 
+  async findReadingEvent(eventId: string): Promise<ReadingEvent | null> {
+    const result = await this.db.collection('reading_event').where({ eventId }).limit(1).get()
+    return (result.data[0] as unknown as ReadingEvent | undefined) ?? null
+  }
+
+  async invalidateReadingEvent(eventId: string, operator: string, reason: string): Promise<ReadingEvent | null> {
+    const existing = await this.findReadingEvent(eventId)
+    if (!existing) return null
+    const now = Date.now()
+    const updated: ReadingEvent = {
+      ...existing,
+      invalidated: true,
+      invalidatedAt: now,
+      invalidatedBy: operator,
+      invalidateReason: reason,
+    }
+    await this.db.collection('reading_event').where({ eventId }).update({
+      data: {
+        invalidated: true,
+        invalidatedAt: now,
+        invalidatedBy: operator,
+        invalidateReason: reason,
+      },
+    })
+    return updated
+  }
+
   async getReadingStat(openid: string): Promise<ReadingStat> {
     const [events, checkins, plans] = await Promise.all([
       this.listReadingEvents(openid),

@@ -641,6 +641,17 @@ const EVENT_SCORE: Record<ReadingEventType, number> = {
 async function mockRankingMain(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
   const user = await getCurrentUser()
   if (!user) return fail(ErrorCode.UNAUTHORIZED)
+  if (data.action === 'invalidate') {
+    if (user.role !== 'admin' && user.role !== 'teacher') return fail(ErrorCode.FORBIDDEN, 'Only admin or teacher')
+    const eventId = data.eventId as string | undefined
+    const reason = typeof data.reason === 'string' ? data.reason.trim() : ''
+    if (!eventId || !reason) return fail(ErrorCode.BAD_REQUEST, 'eventId and reason are required')
+    const event = await repo.findReadingEvent(eventId)
+    if (!event) return fail(ErrorCode.NOT_FOUND, 'Event not found')
+    if (event.invalidated) return success(event)
+    const updated = await repo.invalidateReadingEvent(eventId, user.openid, reason)
+    return updated ? success(updated) : fail(ErrorCode.NOT_FOUND, 'Event not found')
+  }
   if (data.action !== 'list') return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${data.action as string}`)
   const groupId = data.groupId as string | undefined
   let memberOpenids: Set<string> | null = null
@@ -651,6 +662,7 @@ async function mockRankingMain(data: Record<string, unknown>): Promise<ApiRespon
   const events = await repo.listAllReadingEvents(groupId)
   const grouped = new Map<string, ReadingEvent[]>()
   for (const event of events) {
+    if (event.invalidated) continue
     if (memberOpenids && !memberOpenids.has(event.openid)) continue
     const current = grouped.get(event.openid) ?? []
     current.push(event)

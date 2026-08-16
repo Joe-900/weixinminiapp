@@ -20,6 +20,17 @@ export interface ReadingEvent {
   classId?: string
   groupId?: string
   createdAt: number
+  /** 作废状态：作废事件不参与排行榜计算（可追溯，支持申诉后恢复） */
+  invalidated?: boolean
+  invalidatedAt?: number
+  invalidatedBy?: string
+  invalidateReason?: string
+}
+
+/** 作废事件请求 */
+export interface InvalidateEventParams {
+  eventId: string
+  reason: string
 }
 
 export interface ReadingPlan {

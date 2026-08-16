@@ -42,6 +42,8 @@ export interface MockRepository {
   addReadingEvent(event: Omit<ReadingEvent, '_id' | 'eventId'>): Promise<ReadingEvent>
   listReadingEvents(openid: string, bookId?: string): Promise<ReadingEvent[]>
   listAllReadingEvents(groupId?: string): Promise<ReadingEvent[]>
+  findReadingEvent(eventId: string): Promise<ReadingEvent | null>
+  invalidateReadingEvent(eventId: string, operator: string, reason: string): Promise<ReadingEvent | null>
   getReadingStat(openid: string): Promise<ReadingStat>
   createReadingPlan(plan: Omit<ReadingPlan, '_id' | 'planId'>): Promise<ReadingPlan>
   listReadingPlans(openid: string): Promise<ReadingPlan[]>
