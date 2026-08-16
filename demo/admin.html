@@ -6,7 +6,7 @@
   <title>阅读伴读｜管理员端小程序演示</title>
   <link rel="stylesheet" href="demo.css">
 </head>
-<body data-profile-title="我的">
+<body data-profile-title="个人中心">
   <div class="preview-toolbar">
     <div><span class="preview-toolbar__title">小程序界面预览</span><span class="preview-toolbar__note">当前页面是静态前端演示，不连接后端</span></div>
     <nav class="role-switch" aria-label="切换演示身份">
@@ -22,7 +22,7 @@
       <header class="mini-navbar">
         <button class="mini-navbar__back" data-mini-back data-demo-action="back-ai" disabled aria-label="返回">‹</button>
         <h1 class="mini-navbar__title" data-mini-title>书单首页</h1>
-        <span class="mini-navbar__right"><span class="role-pill">管理员</span></span>
+        <span class="mini-navbar__right"><span class="mini-menu-dots" aria-hidden="true">•••　◉</span><span class="role-pill sr-only">当前身份：管理员</span></span>
       </header>
 
       <main class="mini-content">
@@ -57,10 +57,37 @@
         </section>
 
         <section class="mini-view" data-mini-view="profile" hidden>
-          <div class="mini-section__header"><h2 class="mini-section__title">我的</h2><span class="mini-badge">管理员</span></div>
-          <div class="mini-card"><div class="mini-list__item"><div><div class="mini-list__title">平台管理</div><div class="mini-list__detail">书目元数据 80 条　·　平台用户 3 人　·　运行模式 Mock</div></div><span class="mini-badge mini-badge--gray">本地</span></div></div>
+          <div class="profile-card">
+            <strong class="profile-card__nickname">管理员</strong>
+            <span class="profile-card__role">管理员</span>
+          </div>
+          <div class="profile-actions">
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="notes">笔记与打卡</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="reading">阅读计划</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="reservations">我的预约</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="community">班级与小组</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="tasks">阅读任务</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="ranking">行为排行榜</button>
+            <button class="profile-button profile-button--admin" data-demo-action="open-admin">图书元数据管理</button>
+          </div>
+          <p class="profile-status" data-profile-status>点击功能入口查看静态页面跳转提示。</p>
+        </section>
 
-          <section class="mini-section">
+        <section class="mini-view" data-mini-view="admin-management" hidden>
+          <div class="admin-page-head"><h2 class="admin-page-head__title">书籍管理</h2><button class="mini-button mini-button--secondary" data-demo-action="back-profile">返回个人中心</button></div>
+          <div class="admin-page-actions"><button class="mini-button" data-demo-action="admin-add-book">＋ 新增书籍</button><span class="mini-badge mini-badge--gray">管理员权限</span></div>
+          <div class="mini-filter-row admin-status-filter"><button class="mini-button mini-button--secondary">全部</button><button class="mini-button mini-button--quiet">已上架</button><button class="mini-button mini-button--quiet">已下架</button></div>
+          <div class="admin-book-row"><div><strong>共产党宣言</strong><span>已上架</span></div><div><button class="mini-button mini-button--quiet">编辑</button><button class="mini-button mini-button--quiet">下架</button></div></div>
+          <div class="admin-book-row"><div><strong>马克思主义宝库</strong><span>已上架</span></div><div><button class="mini-button mini-button--quiet">编辑</button><button class="mini-button mini-button--quiet">下架</button></div></div>
+          <div class="admin-book-row"><div><strong>马克思恩格斯文集．1</strong><span>已下架</span></div><div><button class="mini-button mini-button--quiet">编辑</button><button class="mini-button mini-button--quiet">上架</button></div></div>
+          <div class="mini-card admin-book-form" data-admin-form hidden>
+            <div class="mini-field"><label for="admin-new-title">书名</label><input id="admin-new-title" placeholder="书名"></div>
+            <div class="mini-field"><label for="admin-new-author">作者</label><input id="admin-new-author" placeholder="作者"></div>
+            <div class="mini-field"><label for="admin-new-isbn">ISBN</label><input id="admin-new-isbn" placeholder="ISBN"></div>
+            <div class="mini-action-row"><button class="mini-button" data-demo-action="admin-save-book">保存</button><button class="mini-button mini-button--quiet" data-demo-action="admin-cancel-book">取消</button></div>
+            <p class="mini-status" data-admin-status></p>
+          </div>
+          <section class="mini-section admin-import-section">
             <div class="mini-section__header"><h2 class="mini-section__title">图书馆元数据导入</h2><span class="mini-badge">仅元数据</span></div>
             <div class="mini-card mini-card--blue">
               <div class="mini-list__title">北京邮电大学图书馆公开 OPAC</div>
@@ -71,16 +98,7 @@
               <div class="mini-card" data-fields hidden style="margin-top:9px;padding:9px;background:#fff;border-color:#dce8f8"><div class="mini-list__detail">保留：书名、作者、ISBN、出版社、出版时间、分类号、主题词、馆藏数量、可借数量、馆藏位置、来源记录号、详情链接。</div><div class="mini-list__detail">排除：barcode、register_no、circulation_status、raw_text 和正文。</div></div>
             </div>
           </section>
-
-          <section class="mini-section">
-            <div class="mini-section__header"><h2 class="mini-section__title">书目样例</h2><span class="mini-badge mini-badge--gray">3 条</span></div>
-            <div class="mini-card"><div class="mini-table-wrap"><table class="mini-table"><thead><tr><th>书名</th><th>作者</th><th>ISBN</th><th>馆藏</th></tr></thead><tbody><tr><td>共产党宣言</td><td>马克思，恩格斯</td><td>978-7-01-018971-0</td><td>10 / 6</td></tr><tr><td>《资本论》选读</td><td>马克思</td><td>7-5615-1601-0</td><td>2 / 2</td></tr><tr><td>马克思恩格斯论中国</td><td>马克思，恩格斯</td><td>978-7-01-018997-0</td><td>4 / 3</td></tr></tbody></table></div></div>
-          </section>
-
-          <section class="mini-section">
-            <div class="mini-section__header"><h2 class="mini-section__title">角色与服务</h2><span class="mini-badge mini-badge--warn">待配置</span></div>
-            <div class="mini-card"><ul class="mini-list"><li class="mini-list__item"><div><div class="mini-list__title">教师与班级</div><div class="mini-list__detail">可查看分组并处理教师权限</div></div><a class="mini-button mini-button--quiet" href="teacher.html">教师视角</a></li><li class="mini-list__item"><div><div class="mini-list__title">AI Provider</div><div class="mini-list__detail">OpenAI 兼容配置尚未填写</div></div><span class="mini-badge mini-badge--warn">未配置</span></li><li class="mini-list__item"><div><div class="mini-list__title">图书馆预约</div><div class="mini-list__detail">当前只展示 Mock Provider</div></div><span class="mini-badge mini-badge--gray">Mock</span></li></ul></div>
-          </section>
+          <p class="mini-status mini-status--muted">书籍管理页面对应当前小程序的 /pages/admin/index，按钮仅为静态演示。</p>
         </section>
 
         <div class="mini-tab-status" data-tab-status>当前页面：书单首页</div>

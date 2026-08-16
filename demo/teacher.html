@@ -6,7 +6,7 @@
   <title>阅读伴读｜教师端小程序演示</title>
   <link rel="stylesheet" href="demo.css">
 </head>
-<body data-profile-title="我的">
+<body data-profile-title="个人中心">
   <div class="preview-toolbar">
     <div><span class="preview-toolbar__title">小程序界面预览</span><span class="preview-toolbar__note">当前页面是静态前端演示，不连接后端</span></div>
     <nav class="role-switch" aria-label="切换演示身份">
@@ -22,7 +22,7 @@
       <header class="mini-navbar">
         <button class="mini-navbar__back" data-mini-back data-demo-action="back-ai" disabled aria-label="返回">‹</button>
         <h1 class="mini-navbar__title" data-mini-title>书单首页</h1>
-        <span class="mini-navbar__right"><span class="role-pill">教师</span></span>
+        <span class="mini-navbar__right"><span class="mini-menu-dots" aria-hidden="true">•••　◉</span><span class="role-pill sr-only">当前身份：教师</span></span>
       </header>
 
       <main class="mini-content">
@@ -66,47 +66,19 @@
         </section>
 
         <section class="mini-view" data-mini-view="profile" hidden>
-          <div class="mini-section__header"><h2 class="mini-section__title">我的</h2><span class="mini-badge">教师</span></div>
-          <div class="mini-card"><div class="mini-list__item"><div><div class="mini-list__title">教师工作台</div><div class="mini-list__detail">负责班级 1 个　·　成员 12 人　·　待批改 1 份</div></div><span class="mini-badge mini-badge--gray">本周</span></div></div>
-
-          <section class="mini-section">
-            <div class="mini-section__header"><h2 class="mini-section__title">我的班级与小组</h2><span class="mini-badge">可管理</span></div>
-            <div class="mini-card mini-card--blue">
-              <div class="mini-list__item"><div><div class="mini-list__title">示例阅读班</div><div class="mini-list__detail">邀请码 READ2026　·　成员 12 人</div></div><button class="mini-button mini-button--quiet" data-demo-action="view-members">展开成员</button></div>
-              <div class="mini-chip-row" data-members hidden><span class="mini-chip">李老师 · 教师</span><span class="mini-chip">阅读者 · 学生</span><span class="mini-chip">管理员 · 管理员</span></div>
-              <div class="mini-action-row"><button class="mini-button mini-button--secondary" data-demo-action="create-group">创建小组</button></div>
-              <p class="mini-status" data-create-group-status></p>
-            </div>
-          </section>
-
-          <section class="mini-section">
-            <div class="mini-section__header"><h2 class="mini-section__title">发布阅读任务</h2><span class="mini-badge">教师操作</span></div>
-            <div class="mini-card">
-              <div class="mini-field"><label for="task-title">任务标题</label><input id="task-title" value="《共产党宣言》人物讨论"></div>
-              <div class="mini-field"><label for="task-group">发布到</label><input id="task-group" value="示例阅读班" readonly></div>
-              <div class="mini-field"><label for="task-description">任务要求</label><textarea id="task-description">写下一个印象最深的观点，并说明理由。</textarea></div>
-              <div class="mini-action-row"><button class="mini-button" data-demo-action="publish-task">发布任务</button></div>
-              <p class="mini-status" data-publish-status></p>
-            </div>
-          </section>
-
-          <section class="mini-section">
-            <div class="mini-section__header"><h2 class="mini-section__title">学生提交与反馈</h2><span class="mini-badge mini-badge--warn">待处理 1 份</span></div>
-            <div class="mini-card">
-              <div class="mini-list__title">阅读者 · 《共产党宣言》人物讨论</div>
-              <div class="mini-list__detail">提交时间：2026-08-16 14:20</div>
-              <p class="mini-list__detail">学生回答：我想从书中的核心观点和现实生活的联系开始讨论。</p>
-              <div class="mini-field"><label for="teacher-feedback">教师反馈</label><textarea id="teacher-feedback">观点清晰，可以继续补充一个具体例子。</textarea></div>
-              <div class="mini-field"><label for="teacher-score">评分（0-100）</label><input id="teacher-score" type="number" value="90"></div>
-              <div class="mini-action-row"><button class="mini-button" data-demo-action="confirm-task">确认完成</button><button class="mini-button mini-button--danger" data-demo-action="return-task">退回修改</button></div>
-              <p class="mini-status" data-review-status></p>
-            </div>
-          </section>
-
-          <section class="mini-section">
-            <div class="mini-section__header"><h2 class="mini-section__title">班级行为排行</h2><span class="mini-badge mini-badge--gray">服务端事件</span></div>
-            <div class="mini-card"><ul class="mini-list"><li class="mini-list__item"><div><div class="mini-list__title">第 1 名　阅读者</div><div class="mini-list__detail">3 条有效记录</div></div><strong>16 分</strong></li><li class="mini-list__item"><div><div class="mini-list__title">第 2 名　另一位同学</div><div class="mini-list__detail">1 条任务提交</div></div><strong>8 分</strong></li></ul><p class="mini-status mini-status--muted">排行反映行为参与，不代表整本书理解能力。</p></div>
-          </section>
+          <div class="profile-card">
+            <strong class="profile-card__nickname">教师</strong>
+            <span class="profile-card__role">教师</span>
+          </div>
+          <div class="profile-actions">
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="notes">笔记与打卡</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="reading">阅读计划</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="reservations">我的预约</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="community">班级与小组</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="tasks">阅读任务</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="ranking">行为排行榜</button>
+          </div>
+          <p class="profile-status" data-profile-status>点击功能入口查看静态页面跳转提示。</p>
         </section>
 
         <div class="mini-tab-status" data-tab-status>当前页面：书单首页</div>

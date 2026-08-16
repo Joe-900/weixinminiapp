@@ -6,7 +6,7 @@
   <title>阅读伴读｜学生端小程序演示</title>
   <link rel="stylesheet" href="demo.css">
 </head>
-<body data-profile-title="我的">
+<body data-profile-title="个人中心">
   <div class="preview-toolbar">
     <div><span class="preview-toolbar__title">小程序界面预览</span><span class="preview-toolbar__note">当前页面是静态前端演示，不连接后端</span></div>
     <nav class="role-switch" aria-label="切换演示身份">
@@ -22,7 +22,7 @@
       <header class="mini-navbar">
         <button class="mini-navbar__back" data-mini-back data-demo-action="back-ai" disabled aria-label="返回">‹</button>
         <h1 class="mini-navbar__title" data-mini-title>书单首页</h1>
-        <span class="mini-navbar__right"><span class="role-pill">学生</span></span>
+        <span class="mini-navbar__right"><span class="mini-menu-dots" aria-hidden="true">•••　◉</span><span class="role-pill sr-only">当前身份：学生</span></span>
       </header>
 
       <main class="mini-content">
@@ -117,32 +117,19 @@
         </section>
 
         <section class="mini-view" data-mini-view="profile" hidden>
-          <div class="mini-section__header"><h2 class="mini-section__title">我的</h2><span class="mini-badge">学生</span></div>
-          <div class="mini-card">
-            <div class="mini-list__item"><div><div class="mini-list__title">阅读统计</div><div class="mini-list__detail">今日阅读 32 分钟　·　行为积分 18 分</div></div><span class="mini-badge mini-badge--gray">本周</span></div>
-            <div class="mini-list__item"><div><div class="mini-list__title">阅读计划</div><div class="mini-list__detail">《共产党宣言》　·　进行中</div></div><button class="mini-button mini-button--quiet" data-demo-action="add-plan">加入计划</button></div>
-            <p class="mini-status" data-plan-status></p>
+          <div class="profile-card">
+            <strong class="profile-card__nickname">学生</strong>
+            <span class="profile-card__role">学生</span>
           </div>
-          <section class="mini-section">
-            <div class="mini-section__header"><h2 class="mini-section__title">班级与小组</h2><span class="mini-badge mini-badge--gray">示例数据</span></div>
-            <div class="mini-card mini-card--blue">
-              <div class="mini-list__item"><div><div class="mini-list__title">示例阅读班</div><div class="mini-list__detail">教师：李老师　·　成员 12 人　·　邀请码 READ2026</div></div><button class="mini-button mini-button--quiet" data-demo-action="view-members">成员</button></div>
-              <div class="mini-chip-row" data-members hidden><span class="mini-chip">李老师 · 教师</span><span class="mini-chip">阅读者 · 学生</span></div>
-              <div class="mini-action-row"><button class="mini-button mini-button--secondary" data-demo-action="join-group">加入班级</button></div>
-              <p class="mini-status" data-group-status></p>
-            </div>
-          </section>
-          <section class="mini-section">
-            <div class="mini-section__header"><h2 class="mini-section__title">待完成任务</h2><span class="mini-badge mini-badge--warn" data-submission-status>未提交</span></div>
-            <div class="mini-card">
-              <div class="mini-list__title">《共产党宣言》人物讨论</div>
-              <div class="mini-list__detail">截止 2026-08-23　·　文字或问题</div>
-              <div class="mini-action-row"><button class="mini-button" data-demo-action="view-task">查看任务</button></div>
-              <div class="mini-field"><label for="student-answer">我的回答</label><textarea id="student-answer">我想从书中的核心观点和现实生活的联系开始讨论。</textarea></div>
-              <div class="mini-action-row"><button class="mini-button mini-button--secondary" data-demo-action="submit-answer">提交回答</button></div>
-              <p class="mini-status" data-task-status></p>
-            </div>
-          </section>
+          <div class="profile-actions">
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="notes">笔记与打卡</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="reading">阅读计划</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="reservations">我的预约</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="community">班级与小组</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="tasks">阅读任务</button>
+            <button class="profile-button" data-demo-action="open-profile-tool" data-profile-tool="ranking">行为排行榜</button>
+          </div>
+          <p class="profile-status" data-profile-status>点击功能入口查看静态页面跳转提示。</p>
         </section>
 
         <div class="mini-tab-status" data-tab-status>当前页面：书单首页</div>

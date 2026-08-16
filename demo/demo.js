@@ -33,7 +33,10 @@
       view.hidden = view.getAttribute('data-mini-view') !== viewName;
     });
     var backButton = document.querySelector('[data-mini-back]');
-    if (backButton) backButton.disabled = viewName !== 'ai-chat';
+    if (backButton) {
+      backButton.disabled = viewName !== 'ai-chat' && viewName !== 'admin-management';
+      backButton.setAttribute('data-demo-action', viewName === 'admin-management' ? 'back-profile' : 'back-ai');
+    }
     if (title) updatePageTitle(title);
     updateText('[data-tab-status]', '当前页面：' + (title || '书单'));
   }
@@ -133,6 +136,51 @@
     if (!target) return;
 
     var action = target.getAttribute('data-demo-action');
+    if (action === 'open-profile-tool') {
+      var profileToolLabels = {
+        notes: '笔记与打卡',
+        reading: '阅读计划',
+        reservations: '我的预约',
+        community: '班级与小组',
+        tasks: '阅读任务',
+        ranking: '行为排行榜',
+      };
+      var profileTool = target.getAttribute('data-profile-tool') || '';
+      var profileToolLabel = profileToolLabels[profileTool] || '功能页面';
+      updateText('[data-profile-status]', '已打开“' + profileToolLabel + '”（静态演示，真实版本进入对应小程序页面）。');
+      showToast('已打开“' + profileToolLabel + '”入口。');
+      return;
+    }
+    if (action === 'open-admin') {
+      setView('admin-management', '书籍管理');
+      showToast('已进入书籍管理页面。');
+      return;
+    }
+    if (action === 'back-profile') {
+      setView('profile', '个人中心');
+      document.querySelectorAll('[data-tab-button]').forEach(function (button) {
+        button.classList.toggle('active', button.getAttribute('data-tab-button') === '我的');
+      });
+      showToast('已返回个人中心。');
+      return;
+    }
+    if (action === 'admin-add-book') {
+      var adminForm = document.querySelector('[data-admin-form]');
+      if (adminForm) adminForm.hidden = false;
+      return;
+    }
+    if (action === 'admin-cancel-book') {
+      var cancelForm = document.querySelector('[data-admin-form]');
+      if (cancelForm) cancelForm.hidden = true;
+      return;
+    }
+    if (action === 'admin-save-book') {
+      var saveForm = document.querySelector('[data-admin-form]');
+      if (saveForm) saveForm.hidden = true;
+      updateText('[data-admin-status]', '已保存书籍信息（静态演示，未写入后端）。');
+      showToast('书籍信息已在当前页面模拟保存。');
+      return;
+    }
     if (action === 'open-ai' || action === 'ask-ai') {
       showChat(action === 'ask-ai' ? '已准备图片提问流程（当前不会上传文件）' : '已打开示例伴读会话');
       showToast(action === 'ask-ai' ? '请在下方选择图片并补充问题，静态演示不会调用 AI。' : '已进入伴读会话，真实版本会在这里加载历史消息。');
