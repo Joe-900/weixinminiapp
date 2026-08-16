@@ -22,7 +22,22 @@
     if (element) element.textContent = text;
   }
 
+  function switchTab(target) {
+    var buttons = document.querySelectorAll('[data-tab-button]');
+    buttons.forEach(function (button) {
+      button.classList.toggle('active', button.getAttribute('data-tab-button') === target);
+    });
+    updateText('[data-tab-status]', '当前页面：' + target);
+    showToast('已切换到“' + target + '”页面（静态演示）。');
+  }
+
   document.addEventListener('click', function (event) {
+    var tab = event.target.closest('[data-tab-button]');
+    if (tab) {
+      switchTab(tab.getAttribute('data-tab-button'));
+      return;
+    }
+
     var target = event.target.closest('[data-demo-action]');
     if (!target) return;
 

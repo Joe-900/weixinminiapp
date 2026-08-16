@@ -3,78 +3,95 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>阅读伴读｜管理员端静态演示</title>
+  <title>阅读伴读｜管理员端小程序演示</title>
   <link rel="stylesheet" href="demo.css">
 </head>
 <body>
-  <div class="demo-shell">
-    <header class="topbar">
-      <a class="brand" href="student.html"><span class="brand-mark">读</span><span><span class="brand-name">阅读伴读</span><span class="brand-note">　静态前端演示</span></span></a>
-      <nav class="role-switch" aria-label="切换演示身份"><a href="student.html">学生</a><a href="teacher.html">教师</a><a class="active" href="admin.html">管理员</a></nav>
-    </header>
+  <div class="preview-toolbar">
+    <div><span class="preview-toolbar__title">小程序界面预览</span><span class="preview-toolbar__note">当前页面是静态前端演示，不连接后端</span></div>
+    <nav class="role-switch" aria-label="切换演示身份">
+      <a href="student.html">学生</a>
+      <a href="teacher.html">教师</a>
+      <a class="active" href="admin.html">管理员</a>
+    </nav>
+  </div>
 
-    <main>
-      <section class="page-header">
-        <div><p class="eyebrow">管理员端</p><h1>平台管理概览</h1><p>查看书籍元数据来源、导入状态、用户角色和平台功能入口。</p></div>
-        <span class="role-pill">当前身份：管理员</span>
-      </section>
+  <div class="phone-frame">
+    <div class="mini-app">
+      <div class="mini-statusbar"><span>09:41</span><span class="mini-statusbar__right">▮▮▮　▰</span></div>
+      <header class="mini-navbar">
+        <span class="mini-navbar__back">‹</span>
+        <h1 class="mini-navbar__title">管理</h1>
+        <span class="mini-navbar__right"><span class="role-pill">当前身份：管理员</span></span>
+      </header>
 
-      <div class="notice"><strong>数据边界</strong><span>书库只保存书籍元数据。当前页面的 12,950 条统计来自来源转换验证，演示表格只展示少量样例，不包含正文、扫描件或逐册条码。</span></div>
+      <main class="mini-content">
+        <div class="mini-greeting">
+          <p class="mini-greeting__eyebrow">平台管理</p>
+          <h2 class="mini-greeting__title">书库和权限概览</h2>
+          <p class="mini-greeting__detail">书库只保存公开元数据，真实导入和权限校验由后端完成。</p>
+        </div>
 
-      <section class="metric-grid" aria-label="管理员概览">
-        <div class="metric"><span class="metric-label">来源元数据</span><strong class="metric-value">12,950</strong><span class="metric-detail">All Books 可转换记录</span></div>
-        <div class="metric"><span class="metric-label">本地样例</span><strong class="metric-value" data-import-count>80</strong><span class="metric-detail">已注入 Mock 的真实样例</span></div>
-        <div class="metric"><span class="metric-label">平台用户</span><strong class="metric-value">2</strong><span class="metric-detail">管理员、普通读者</span></div>
-        <div class="metric"><span class="metric-label">当前运行</span><strong class="metric-value">本地</strong><span class="metric-detail">未连接 CloudBase</span></div>
-      </section>
+        <div class="mini-notice"><strong>数据边界</strong>样例来自 yifanchen12/- 的 All Books 元数据，不包含正文、扫描件、条码或逐册流通字段。</div>
 
-      <div class="content-grid">
-        <section class="card">
-          <div class="card-header"><div><h2>图书馆元数据来源</h2><p class="card-subtitle">来源项目整理了北京邮电大学图书馆公开 OPAC 数据。</p></div><span class="status status--green">仅元数据</span></div>
-          <div class="book-source">来源项目：<a href="https://github.com/yifanchen12/-" target="_blank" rel="noreferrer">https://github.com/yifanchen12/-</a></div>
-          <div class="book-source">工作表：All Books　批量大小：500 条　生成批次：26 个　排除：Holdings 逐册字段</div>
-          <div class="action-row"><button class="button" data-demo-action="simulate-import">模拟导入 20 条</button><button class="button button--secondary" data-demo-action="show-fields">查看字段范围</button><button class="button button--quiet" data-demo-action="refresh-catalog">刷新目录</button></div>
-          <p class="inline-status" data-import-status>尚未执行模拟导入</p>
-          <div class="review-box" data-fields hidden>
-            <div class="list-detail">保留：书名、作者、ISBN、出版社、出版时间、分类号、主题词、馆藏数量、可借数量、馆藏位置、来源记录号、详情链接。</div>
-            <div class="list-detail">排除：barcode、register_no、circulation_status、shelf_status、location_url、raw_text，以及所有正文内容。</div>
+        <div class="mini-kpi-grid" aria-label="管理员概览">
+          <div class="mini-kpi"><span class="mini-kpi__label">来源记录</span><strong class="mini-kpi__value">12,950</strong><span class="mini-kpi__detail">条</span></div>
+          <div class="mini-kpi"><span class="mini-kpi__label">本地样例</span><strong class="mini-kpi__value" data-import-count>80</strong><span class="mini-kpi__detail">条</span></div>
+          <div class="mini-kpi"><span class="mini-kpi__label">平台用户</span><strong class="mini-kpi__value">2</strong><span class="mini-kpi__detail">人</span></div>
+          <div class="mini-kpi"><span class="mini-kpi__label">运行模式</span><strong class="mini-kpi__value">本地</strong><span class="mini-kpi__detail">Mock</span></div>
+        </div>
+
+        <section class="mini-section">
+          <div class="mini-section__header"><h2 class="mini-section__title">图书馆元数据导入</h2><span class="mini-badge">仅元数据</span></div>
+          <div class="mini-card mini-card--blue">
+            <div class="mini-list__title">北京邮电大学图书馆公开 OPAC</div>
+            <div class="mini-list__detail">来源项目：<a href="https://github.com/yifanchen12/-" target="_blank" rel="noreferrer">yifanchen12/-</a></div>
+            <div class="mini-list__detail">All Books · 26 批 · 每批最多 500 条 · 排除 Holdings</div>
+            <div class="mini-action-row"><button class="mini-button" data-demo-action="simulate-import">模拟导入 20 条</button><button class="mini-button mini-button--secondary" data-demo-action="show-fields">字段范围</button><button class="mini-button mini-button--quiet" data-demo-action="refresh-catalog">刷新目录</button></div>
+            <p class="mini-status" data-import-status>尚未执行模拟导入</p>
+            <div class="mini-card" data-fields hidden style="margin-top:9px;padding:9px;background:#fff;border-color:#dce8f8">
+              <div class="mini-list__detail">保留：书名、作者、ISBN、出版社、出版时间、分类号、主题词、馆藏数量、可借数量、馆藏位置、来源记录号、详情链接。</div>
+              <div class="mini-list__detail" style="margin-top:5px">排除：barcode、register_no、circulation_status、shelf_status、location_url、raw_text 和正文。</div>
+            </div>
           </div>
         </section>
 
-        <section class="card">
-          <div class="card-header"><div><h2>角色与功能入口</h2><p class="card-subtitle">管理员拥有平台管理权限，但学生和教师功能仍按各自角色执行。</p></div><span class="status status--gray">权限演示</span></div>
-          <ul class="list">
-            <li class="list-item"><div><div class="list-title">书籍元数据管理</div><div class="list-detail">导入、预览、上架和下架书籍元数据</div></div><span class="status status--green">可用</span></li>
-            <li class="list-item"><div><div class="list-title">班级与小组</div><div class="list-detail">可查看平台分组，并处理管理员权限</div></div><a class="button button--quiet" href="teacher.html">打开教师视角</a></li>
-            <li class="list-item"><div><div class="list-title">行为排行榜</div><div class="list-detail">只能读取服务端行为事件，不接受前端自报分数</div></div><span class="status status--green">可用</span></li>
-          </ul>
-        </section>
-
-        <section class="card">
-          <div class="card-header"><div><h2>书目样例</h2><p class="card-subtitle">以下字段来自来源项目的公开书目记录。</p></div><span class="status status--gray">3 条样例</span></div>
-          <div class="table-wrap">
-            <table class="table">
-              <thead><tr><th>书名</th><th>作者</th><th>ISBN</th><th>出版社</th><th>馆藏</th></tr></thead>
-              <tbody>
-                <tr><td>共产党宣言</td><td>(德) 马克思, 恩格斯著</td><td>978-7-01-018971-0</td><td>人民出版社</td><td>10 / 6</td></tr>
-                <tr><td>《资本论》选读</td><td>马克思</td><td>7-5615-1601-0</td><td>厦门大学出版社</td><td>2 / 2</td></tr>
-                <tr><td>马克思恩格斯论中国</td><td>(德) 马克思, 恩格斯著</td><td>978-7-01-018997-0</td><td>人民出版社</td><td>4 / 3</td></tr>
-              </tbody>
-            </table>
+        <section class="mini-section">
+          <div class="mini-section__header"><h2 class="mini-section__title">书目样例</h2><span class="mini-badge mini-badge--gray">3 条</span></div>
+          <div class="mini-card">
+            <div class="mini-table-wrap">
+              <table class="mini-table">
+                <thead><tr><th>书名</th><th>作者</th><th>ISBN</th><th>馆藏</th></tr></thead>
+                <tbody>
+                  <tr><td>共产党宣言</td><td>(德) 马克思, 恩格斯</td><td>978-7-01-018971-0</td><td>10 / 6</td></tr>
+                  <tr><td>《资本论》选读</td><td>马克思</td><td>7-5615-1601-0</td><td>2 / 2</td></tr>
+                  <tr><td>马克思恩格斯论中国</td><td>(德) 马克思, 恩格斯</td><td>978-7-01-018997-0</td><td>4 / 3</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
-        <section class="card">
-          <div class="card-header"><div><h2>外部服务状态</h2><p class="card-subtitle">静态页只展示配置边界，不发送任何外部请求。</p></div><span class="status status--amber">待配置</span></div>
-          <ul class="list">
-            <li class="list-item"><div><div class="list-title">AI Provider</div><div class="list-detail">OpenAI 兼容 baseURL、API Key、模型名</div></div><span class="status status--amber">未配置</span></li>
-            <li class="list-item"><div><div class="list-title">CloudBase</div><div class="list-detail">正式 AppID 和环境 ID</div></div><span class="status status--amber">未配置</span></li>
-            <li class="list-item"><div><div class="list-title">图书馆预约</div><div class="list-detail">当前仅允许 Mock Provider</div></div><span class="status status--gray">Mock</span></li>
-          </ul>
+        <section class="mini-section">
+          <div class="mini-section__header"><h2 class="mini-section__title">角色与服务</h2><span class="mini-badge mini-badge--warn">待配置</span></div>
+          <div class="mini-card">
+            <ul class="mini-list">
+              <li class="mini-list__item"><div><div class="mini-list__title">教师与班级</div><div class="mini-list__detail">可查看分组并处理管理员权限</div></div><a class="mini-button mini-button--quiet" href="teacher.html">教师视角</a></li>
+              <li class="mini-list__item"><div><div class="mini-list__title">AI Provider</div><div class="mini-list__detail">OpenAI 兼容配置尚未填写</div></div><span class="mini-badge mini-badge--warn">未配置</span></li>
+              <li class="mini-list__item"><div><div class="mini-list__title">图书馆预约</div><div class="mini-list__detail">当前只展示 Mock Provider</div></div><span class="mini-badge mini-badge--gray">Mock</span></li>
+            </ul>
+          </div>
         </section>
-      </div>
-      <p class="footer-note">演示范围：管理员、教师、学生三种身份的界面边界，以及图书馆元数据字段范围。页面可以直接双击打开，不依赖 Node、微信开发者工具或任何后端服务。</p>
-    </main>
+
+        <div class="mini-tab-status" data-tab-status>当前页面：书库</div>
+      </main>
+
+      <nav class="mini-tabbar" aria-label="小程序底部导航">
+        <button class="mini-tab active" data-tab-button="书库"><span class="mini-tab__icon">▤</span><span>书库</span></button>
+        <button class="mini-tab" data-tab-button="权限"><span class="mini-tab__icon">◇</span><span>权限</span></button>
+        <button class="mini-tab" data-tab-button="我的"><span class="mini-tab__icon">◎</span><span>我的</span></button>
+      </nav>
+    </div>
   </div>
   <script src="demo.js"></script>
 </body>
