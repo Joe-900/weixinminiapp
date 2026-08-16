@@ -25,7 +25,9 @@
     "lint:fix": "eslint src cloud --ext .ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
     "test": "jest --config jest.config.ts",
-    "test:watch": "jest --config jest.config.ts --watch"
+    "test:watch": "jest --config jest.config.ts --watch",
+    "build:cloud": "node scripts/build-cloud-functions.js",
+    "build:cloud:check": "node scripts/build-cloud-functions.js --check"
   },
   "browserslist": [
     "last 3 versions",
