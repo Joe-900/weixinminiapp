@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>阅读伴读｜教师端静态演示</title>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+  <div class="demo-shell">
+    <header class="topbar">
+      <a class="brand" href="student.html"><span class="brand-mark">读</span><span><span class="brand-name">阅读伴读</span><span class="brand-note">　静态前端演示</span></span></a>
+      <nav class="role-switch" aria-label="切换演示身份"><a href="student.html">学生</a><a class="active" href="teacher.html">教师</a><a href="admin.html">管理员</a></nav>
+    </header>
+
+    <main>
+      <section class="page-header">
+        <div><p class="eyebrow">教师端</p><h1>班级阅读工作台</h1><p>管理负责的班级和小组，发布阅读任务，查看学生提交并给出反馈。</p></div>
+        <span class="role-pill">当前身份：教师</span>
+      </section>
+
+      <div class="notice"><strong>权限说明</strong><span>教师只能处理自己负责的班级或小组。当前页面使用固定演示数据，所有按钮只更新页面状态，不写入数据库。</span></div>
+
+      <section class="metric-grid" aria-label="教师概览">
+        <div class="metric"><span class="metric-label">负责班级</span><strong class="metric-value">1 个</strong><span class="metric-detail">示例阅读班</span></div>
+        <div class="metric"><span class="metric-label">班级成员</span><strong class="metric-value">2 人</strong><span class="metric-detail">1 名教师，1 名学生</span></div>
+        <div class="metric"><span class="metric-label">进行中任务</span><strong class="metric-value">2 项</strong><span class="metric-detail">本周需要关注</span></div>
+        <div class="metric"><span class="metric-label">待批改提交</span><strong class="metric-value">1 份</strong><span class="metric-detail">来自阅读者</span></div>
+      </section>
+
+      <div class="content-grid">
+        <section class="card">
+          <div class="card-header"><div><h2>我的班级与小组</h2><p class="card-subtitle">通过成员关系限制可见范围，前端隐藏按钮不是权限边界。</p></div><span class="status status--green">可管理</span></div>
+          <div class="review-box">
+            <div class="review-head"><div><h3>示例阅读班</h3><div class="list-detail">邀请码：READ2026　成员：2 人</div></div><span class="status status--gray">班级</span></div>
+            <div class="member-list"><span class="member">管理员 · 教师</span><span class="member">阅读者 · 学生</span></div>
+            <div class="action-row"><button class="button button--quiet" data-demo-action="view-members">收起/展开成员</button><a class="button button--secondary" href="student.html">查看学生视角</a></div>
+            <div class="member-list" data-members hidden><span class="member">管理员 · 教师</span><span class="member">阅读者 · 学生</span></div>
+          </div>
+          <div class="review-box">
+            <div class="review-head"><div><h3>名著讨论小组</h3><div class="list-detail">邀请码：BOOK2026　成员：2 人</div></div><span class="status status--gray">阅读小组</span></div>
+            <div class="action-row"><button class="button button--quiet" data-demo-action="view-members">查看成员</button><button class="button button--secondary" data-demo-action="create-group">创建新小组</button></div>
+            <div class="inline-status" data-create-group-status></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><div><h2>发布阅读任务</h2><p class="card-subtitle">任务可以关联书籍元数据，学生提交文字、问题或图片。</p></div><span class="status status--green">教师操作</span></div>
+          <div class="field-grid">
+            <div class="field"><label for="task-title">任务标题</label><input id="task-title" value="《共产党宣言》人物讨论"></div>
+            <div class="field"><label for="task-group">发布到</label><input id="task-group" value="示例阅读班" readonly></div>
+          </div>
+          <div class="field" style="margin-top:12px"><label for="task-description">任务要求</label><input id="task-description" value="写下一个印象最深的观点，并说明理由。"></div>
+          <div class="action-row"><button class="button" data-demo-action="publish-task">发布任务</button></div>
+          <div class="inline-status" data-publish-status></div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><div><h2>学生提交与反馈</h2><p class="card-subtitle">选择一份提交后，可以确认完成或退回修改。</p></div><span class="status status--amber">待处理 1 份</span></div>
+          <div class="review-box">
+            <div class="review-head"><div><h3>阅读者 · 《共产党宣言》人物讨论</h3><div class="list-detail">提交时间：2026-08-16 14:20</div></div><span class="status status--amber">待批改</span></div>
+            <p class="review-text">学生回答：我想从书中的核心观点和现实生活的联系开始讨论。</p>
+            <div class="field"><label for="teacher-feedback">教师反馈</label><input id="teacher-feedback" value="观点清晰，可以继续补充一个具体例子。"></div>
+            <div class="field" style="margin-top:10px"><label for="teacher-score">评分（0-100）</label><input id="teacher-score" type="number" value="90"></div>
+            <div class="action-row"><button class="button" data-demo-action="confirm-task">确认完成</button><button class="button button--danger" data-demo-action="return-task">退回修改</button></div>
+            <div class="inline-status" data-review-status></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><div><h2>班级行为排行</h2><p class="card-subtitle">只统计打卡、任务提交、教师确认和小组参与等有效行为。</p></div><a class="button button--secondary" href="admin.html">查看管理员页</a></div>
+          <ul class="list">
+            <li class="list-item"><div><div class="list-title">第 1 名　管理员</div><div class="list-detail">1 条有效记录 · 教师确认不计入学生成绩</div></div><strong>10 分</strong></li>
+            <li class="list-item"><div><div class="list-title">第 2 名　阅读者</div><div class="list-detail">1 条任务提交记录 · 等待教师确认</div></div><strong>2 分</strong></li>
+          </ul>
+        </section>
+      </div>
+      <p class="footer-note">演示范围：班级/小组成员、任务发布、提交查看、教师反馈、评分和确认。真实版本还需要云函数侧完成角色和成员权限校验。</p>
+    </main>
+  </div>
+  <script src="demo.js"></script>
+</body>
+</html>
