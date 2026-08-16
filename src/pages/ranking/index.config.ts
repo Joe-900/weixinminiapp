@@ -1,1 +1,1 @@
-export default definePageConfig({ navigationBarTitleText: 'Behavior ranking' })
+export default definePageConfig({ navigationBarTitleText: '行为排行榜' })

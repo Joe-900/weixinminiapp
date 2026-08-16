@@ -6,10 +6,15 @@
 
 import type { User, UserRole } from '../types/user'
 import type { Book } from '../types/book'
+import type { ClassGroup, CommunityMember } from '../types/community'
+import type { ReadingTask } from '../types/task'
+import type { ReadingEvent } from '../types/reading'
 import { toBuptSeedBooks } from './buptMetadataSeed'
 
 export const SEED_ADMIN_OPENID = 'admin_openid_001'
 export const SEED_USER_OPENID = 'user_openid_002'
+export const SEED_CLASS_GROUP_ID = 'class_demo_001'
+export const SEED_READING_GROUP_ID = 'reading_group_demo_001'
 
 /**
  * 本地Mock模式下的模拟登录身份
@@ -88,4 +93,114 @@ export const seedBooks: Book[] = [
     updatedAt: Date.now() - 86400000,
   },
   ...toBuptSeedBooks(SEED_ADMIN_OPENID),
+]
+
+export const seedGroups: ClassGroup[] = [
+  {
+    _id: SEED_CLASS_GROUP_ID,
+    groupId: SEED_CLASS_GROUP_ID,
+    name: '示例阅读班',
+    type: 'class',
+    ownerOpenid: SEED_ADMIN_OPENID,
+    inviteCode: 'READ2026',
+    createdAt: Date.now() - 86400000,
+  },
+  {
+    _id: SEED_READING_GROUP_ID,
+    groupId: SEED_READING_GROUP_ID,
+    name: '名著讨论小组',
+    type: 'reading_group',
+    ownerOpenid: SEED_ADMIN_OPENID,
+    inviteCode: 'BOOK2026',
+    createdAt: Date.now() - 43200000,
+  },
+]
+
+export const seedMembers: CommunityMember[] = [
+  {
+    _id: 'member_demo_admin_class',
+    memberId: 'member_demo_admin_class',
+    groupId: SEED_CLASS_GROUP_ID,
+    openid: SEED_ADMIN_OPENID,
+    role: 'teacher',
+    joinedAt: Date.now() - 86400000,
+  },
+  {
+    _id: 'member_demo_user_class',
+    memberId: 'member_demo_user_class',
+    groupId: SEED_CLASS_GROUP_ID,
+    openid: SEED_USER_OPENID,
+    role: 'member',
+    joinedAt: Date.now() - 82800000,
+  },
+  {
+    _id: 'member_demo_admin_group',
+    memberId: 'member_demo_admin_group',
+    groupId: SEED_READING_GROUP_ID,
+    openid: SEED_ADMIN_OPENID,
+    role: 'owner',
+    joinedAt: Date.now() - 43200000,
+  },
+  {
+    _id: 'member_demo_user_group',
+    memberId: 'member_demo_user_group',
+    groupId: SEED_READING_GROUP_ID,
+    openid: SEED_USER_OPENID,
+    role: 'member',
+    joinedAt: Date.now() - 39600000,
+  },
+]
+
+export const seedTasks: ReadingTask[] = [
+  {
+    _id: 'task_demo_class_001',
+    taskId: 'task_demo_class_001',
+    groupId: SEED_CLASS_GROUP_ID,
+    teacherOpenid: SEED_ADMIN_OPENID,
+    bookId: 'book_001',
+    title: '《西游记》人物讨论',
+    description: '结合你读过的内容，写下一个印象最深的人物和理由。',
+    dueAt: Date.now() + 7 * 86400000,
+    createdAt: Date.now() - 3600000,
+    status: 'published',
+  },
+  {
+    _id: 'task_demo_group_001',
+    taskId: 'task_demo_group_001',
+    groupId: SEED_READING_GROUP_ID,
+    teacherOpenid: SEED_ADMIN_OPENID,
+    bookId: 'book_002',
+    title: '《红楼梦》片段提问',
+    description: '记录一个你想和小组成员讨论的问题，可以附上图片或笔记。',
+    dueAt: Date.now() + 10 * 86400000,
+    createdAt: Date.now() - 1800000,
+    status: 'published',
+  },
+]
+
+export const seedReadingEvents: ReadingEvent[] = [
+  {
+    _id: 'event_demo_admin_checkin',
+    eventId: 'event_demo_admin_checkin',
+    openid: SEED_ADMIN_OPENID,
+    bookId: 'book_001',
+    eventType: 'checkin',
+    duration: 30,
+    source: 'system',
+    groupId: SEED_CLASS_GROUP_ID,
+    classId: SEED_CLASS_GROUP_ID,
+    createdAt: Date.now() - 7200000,
+  },
+  {
+    _id: 'event_demo_user_task',
+    eventId: 'event_demo_user_task',
+    openid: SEED_USER_OPENID,
+    bookId: 'book_001',
+    eventType: 'task_submitted',
+    source: 'system',
+    taskId: 'task_demo_class_001',
+    groupId: SEED_CLASS_GROUP_ID,
+    classId: SEED_CLASS_GROUP_ID,
+    createdAt: Date.now() - 3600000,
+  },
 ]

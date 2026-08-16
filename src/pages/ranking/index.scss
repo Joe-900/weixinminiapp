@@ -1,10 +1,10 @@
 .ranking-page { min-height: 100vh; padding: 20px; background: #f5f7fb;
   &__notice { display: block; margin-bottom: 14px; padding: 14px; color: #92400e; background: #fffbeb; border-radius: 10px; font-size: 22px; line-height: 1.5; }
-  &__filter { display: flex; gap: 10px; margin-bottom: 16px; padding: 14px; background: #fff; border-radius: 10px; }
-  &__filter input { flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; }
+  &__filter { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 14px; background: #fff; border-radius: 10px; }
+  &__picker { flex: 1; padding: 10px; color: #111827; background: #eff6ff; border-radius: 8px; font-size: 24px; }
   &__filter button { color: #fff; background: #2563eb; font-size: 23px; }
   &__entry { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; padding: 16px; background: #fff; border-radius: 10px; }
-  &__rank { width: 70px; color: #2563eb; font-size: 30px; font-weight: 700; }
+  &__rank { width: 110px; color: #2563eb; font-size: 26px; font-weight: 700; }
   &__person { flex: 1; }
   &__person text { display: block; color: #111827; font-size: 25px; }
   &__person text + text { margin-top: 4px; color: #9ca3af; font-size: 20px; }

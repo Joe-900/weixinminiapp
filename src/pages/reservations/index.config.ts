@@ -1,1 +1,1 @@
-export default definePageConfig({ navigationBarTitleText: 'My reservations' })
+export default definePageConfig({ navigationBarTitleText: '我的预约' })

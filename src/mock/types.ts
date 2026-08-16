@@ -80,4 +80,8 @@ export interface MockRepository {
   reset(): void
   seedUsers(users: User[]): void
   seedBooks(books: Book[]): void
+  seedGroups(groups: ClassGroup[]): void
+  seedMembers(members: CommunityMember[]): void
+  seedTasks(tasks: ReadingTask[]): void
+  seedReadingEvents(events: ReadingEvent[]): void
 }

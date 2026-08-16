@@ -1,1 +1,1 @@
-export default definePageConfig({ navigationBarTitleText: 'Reading tasks' })
+export default definePageConfig({ navigationBarTitleText: '阅读任务' })

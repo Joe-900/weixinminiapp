@@ -30,7 +30,7 @@ export default function Reading() {
 
   async function addPlan() {
     if (!bookId.trim()) {
-      Taro.showToast({ title: 'Book id is required', icon: 'none' })
+      Taro.showToast({ title: '请填写书籍 ID', icon: 'none' })
       return
     }
     const res = await createReadingPlan({ bookId: bookId.trim() })
@@ -47,17 +47,17 @@ export default function Reading() {
   return (
     <View className='reading-page'>
       <View className='reading-page__stats'>
-        <Text>Streak {stat.streakDays}</Text><Text>Minutes {stat.totalMinutes}</Text><Text>Plans done {stat.completedPlans}</Text><Text>Events {stat.eventCount}</Text>
+        <Text>连续打卡：{stat.streakDays} 天</Text><Text>阅读时长：{stat.totalMinutes} 分钟</Text><Text>已完成计划：{stat.completedPlans}</Text><Text>行为记录：{stat.eventCount}</Text>
       </View>
       <View className='reading-page__form'>
-        <Input value={bookId} placeholder='Book id' onInput={(event) => setBookId(event.detail.value)} />
-        <Button onClick={addPlan}>Start a plan</Button>
+        <Input value={bookId} placeholder='书籍 ID' onInput={(event) => setBookId(event.detail.value)} />
+        <Button onClick={addPlan}>开始计划</Button>
       </View>
-      <StateView loading={loading} empty={plans.length === 0} emptyText='No reading plans' />
+      <StateView loading={loading} empty={plans.length === 0} emptyText='还没有阅读计划' />
       {plans.map((plan) => (
         <View className='reading-page__plan' key={plan.planId}>
-          <Text>{plan.bookId}</Text><Text>{plan.status}</Text>
-          {plan.status !== 'completed' && <Button size='mini' onClick={() => complete(plan.planId)}>Complete</Button>}
+          <Text>{plan.bookId}</Text><Text>{plan.status === 'completed' ? '已完成' : '进行中'}</Text>
+          {plan.status !== 'completed' && <Button size='mini' onClick={() => complete(plan.planId)}>完成计划</Button>}
         </View>
       ))}
     </View>

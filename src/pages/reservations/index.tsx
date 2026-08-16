@@ -26,12 +26,12 @@ export default function Reservations() {
 
   return (
     <View className='reservations-page'>
-      <Text className='reservations-page__notice'>The current provider is a safe mock. No real library account is accessed.</Text>
-      <StateView loading={loading} empty={items.length === 0} emptyText='No reservations' />
+      <Text className='reservations-page__notice'>当前使用安全的本地预约模拟，不会访问真实图书馆账号。</Text>
+      <StateView loading={loading} empty={items.length === 0} emptyText='还没有预约记录' />
       {items.map((item) => (
         <View className='reservations-page__item' key={item.reservationId}>
           <View><Text>{item.bookId}</Text><Text>{item.status} · {item.provider}</Text><Text>{item.message}</Text></View>
-          {(item.status === 'pending' || item.status === 'confirmed') && <Button size='mini' onClick={() => cancel(item.reservationId)}>Cancel</Button>}
+          {(item.status === 'pending' || item.status === 'confirmed') && <Button size='mini' onClick={() => cancel(item.reservationId)}>取消预约</Button>}
         </View>
       ))}
     </View>

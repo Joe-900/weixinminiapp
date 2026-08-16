@@ -35,7 +35,7 @@ export default function BookDetail() {
   useEffect(() => {
     const bookId = routeBookId()
     if (!bookId) {
-      setError('Missing book id')
+      setError('缺少书籍 ID')
       setLoading(false)
       return
     }
@@ -59,7 +59,7 @@ export default function BookDetail() {
     setWorking(true)
     const res = await createReadingPlan({ bookId: book.bookId })
     setWorking(false)
-    if (isSuccess(res)) Taro.showToast({ title: 'Reading plan added', icon: 'success' })
+    if (isSuccess(res)) Taro.showToast({ title: '已加入阅读计划', icon: 'success' })
     else showErrorToast(res.code)
   }
 
@@ -69,13 +69,13 @@ export default function BookDetail() {
     const availabilityRes = await queryAvailability(book.bookId)
     if (!isSuccess(availabilityRes) || !availabilityRes.data?.available) {
       setWorking(false)
-      Taro.showToast({ title: availabilityRes.message || 'Book is unavailable', icon: 'none' })
+      Taro.showToast({ title: availabilityRes.message || '当前书籍不可预约', icon: 'none' })
       return
     }
-    setAvailability(availabilityRes.data.location || 'Available')
+    setAvailability(availabilityRes.data.location || '当前可预约')
     const res = await reserveBook(book.bookId)
     setWorking(false)
-    if (isSuccess(res)) Taro.showToast({ title: 'Reservation recorded', icon: 'success' })
+    if (isSuccess(res)) Taro.showToast({ title: '预约记录已保存', icon: 'success' })
     else showErrorToast(res.code)
   }
 
@@ -85,23 +85,23 @@ export default function BookDetail() {
 
   return (
     <View className='book-detail'>
-      {book.cover ? <Image className='book-detail__cover' src={book.cover} mode='aspectFit' /> : <View className='book-detail__cover-placeholder'>No cover</View>}
+      {book.cover ? <Image className='book-detail__cover' src={book.cover} mode='aspectFit' /> : <View className='book-detail__cover-placeholder'>暂无封面</View>}
       <View className='book-detail__info'>
         <Text className='book-detail__title'>{book.title}</Text>
-        <Text className='book-detail__meta'>Author: {book.author || 'Unknown'}</Text>
-        {book.edition && <Text className='book-detail__meta'>Edition: {book.edition}</Text>}
-        {book.publisher && <Text className='book-detail__meta'>Publisher: {book.publisher}</Text>}
-        {book.isbn && <Text className='book-detail__meta'>ISBN: {book.isbn}</Text>}
-        {book.librarySource && <Text className='book-detail__meta'>Source: {book.librarySource}</Text>}
-        {book.location && <Text className='book-detail__meta'>Location: {book.location}</Text>}
-        <Text className='book-detail__summary'>{book.summary || 'The platform stores metadata only; full text is not hosted here.'}</Text>
+        <Text className='book-detail__meta'>作者：{book.author || '未知'}</Text>
+        {book.edition && <Text className='book-detail__meta'>版本：{book.edition}</Text>}
+        {book.publisher && <Text className='book-detail__meta'>出版社：{book.publisher}</Text>}
+        {book.isbn && <Text className='book-detail__meta'>ISBN：{book.isbn}</Text>}
+        {book.librarySource && <Text className='book-detail__meta'>数据来源：{book.librarySource}</Text>}
+        {book.location && <Text className='book-detail__meta'>馆藏位置：{book.location}</Text>}
+        <Text className='book-detail__summary'>{book.summary || '平台仅保存图书元数据，不提供整本书正文。'}</Text>
       </View>
       {availability && <Text className='book-detail__availability'>{availability}</Text>}
       <View className='book-detail__actions'>
-        <Button onClick={openAi}>Ask AI about this book</Button>
-        <Button onClick={addPlan} disabled={working}>Add reading plan</Button>
-        <Button onClick={() => Taro.navigateTo({ url: `/pages/notes/index?bookId=${encodeURIComponent(book.bookId)}` })}>Write a note</Button>
-        <Button onClick={reserve} disabled={working}>Reserve (mock until library authorization)</Button>
+        <Button onClick={openAi}>询问 AI</Button>
+        <Button onClick={addPlan} disabled={working}>加入阅读计划</Button>
+        <Button onClick={() => Taro.navigateTo({ url: `/pages/notes/index?bookId=${encodeURIComponent(book.bookId)}` })}>记录笔记</Button>
+        <Button onClick={reserve} disabled={working}>预约（当前为本地模拟）</Button>
       </View>
     </View>
   )

@@ -19,7 +19,7 @@ function App({ children }: PropsWithChildren) {
       initializeCloud()
       silentLogin(setLoginInfo)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Cloud initialization failed'
+      const message = error instanceof Error ? error.message : '云端初始化失败'
       Taro.showToast({ title: message, icon: 'none', duration: 3000 })
     }
   }, [setLoginInfo])

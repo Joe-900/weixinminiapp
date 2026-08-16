@@ -54,6 +54,22 @@ export class MemoryRepository implements MockRepository {
     for (const b of books) this.books.set(b.bookId, b)
   }
 
+  seedGroups(groups: ClassGroup[]): void {
+    for (const group of groups) this.groups.set(group.groupId, group)
+  }
+
+  seedMembers(members: CommunityMember[]): void {
+    for (const member of members) this.members.set(member.memberId, member)
+  }
+
+  seedTasks(tasks: ReadingTask[]): void {
+    for (const task of tasks) this.tasks.set(task.taskId, task)
+  }
+
+  seedReadingEvents(events: ReadingEvent[]): void {
+    for (const event of events) this.readingEvents.set(event.eventId, event)
+  }
+
   async findUserByOpenid(openid: string): Promise<User | null> {
     return this.users.get(openid) ?? null
   }

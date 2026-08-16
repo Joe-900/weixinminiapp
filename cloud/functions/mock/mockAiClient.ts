@@ -22,7 +22,7 @@ export class MockAiClient implements AiClient {
     const systemMsg = messages.find((m) => m.role === 'system')
     const userMsg = messages.find((m) => m.role === 'user')
 
-    let bookTitle = 'Unknown Book'
+    let bookTitle = '未知书籍'
     if (systemMsg) {
       const systemContent = typeof systemMsg.content === 'string' ? systemMsg.content : ''
       const titleMatch = systemContent.match(/title:\s*([^;]+)/i) ?? systemContent.match(/"([^"]+)"/)
@@ -31,8 +31,8 @@ export class MockAiClient implements AiClient {
       }
     }
 
-    const questionText = typeof userMsg?.content === 'string' ? userMsg.content : '[image question]'
-    return `Received question about "${bookTitle}": ${questionText}. This is a local mock reply.`
+    const questionText = typeof userMsg?.content === 'string' ? userMsg.content : '[图片提问]'
+    return `关于《${bookTitle}》的问题：${questionText}。这是本地模拟回复。`
   }
 
   async chatMultimodal(messages: OpenAIMultimodalChatMessage[]): Promise<string> {
@@ -43,6 +43,6 @@ export class MockAiClient implements AiClient {
         : message.content.filter((part) => part.type === 'text').map((part) => part.text).join('\n'),
     }))
     const reply = await this.chat(textMessages)
-    return `${reply} Image context received.`
+    return `${reply} 已收到图片上下文。`
   }
 }

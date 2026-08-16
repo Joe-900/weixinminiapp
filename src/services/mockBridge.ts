@@ -2,7 +2,7 @@
 
 import type { ApiResponse, PaginatedData } from '../types/common'
 import { ErrorCode, ERROR_MESSAGE_MAP } from '../types/common'
-import type { Book } from '../types/book'
+import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../types/book'
 import type { BookContextInput, AiImageInput, OpenAIChatMessage, OpenAIMultimodalChatMessage } from '../types/ai'
 import type { User } from '../types/user'
 import type { ReadingEvent, ReadingEventType } from '../types/reading'
@@ -11,7 +11,7 @@ import type { LibraryImportFailure, LibraryMetadata } from '../types/library'
 import { MemoryRepository } from '../mock/memoryRepository'
 import { LocalStorage } from '../mock/localStorage'
 import { MockAiClient } from '../mock/mockAiClient'
-import { seedUsers, seedBooks, MOCK_LOGIN_OPENID } from '../mock/seedData'
+import { seedUsers, seedBooks, seedGroups, seedMembers, seedTasks, seedReadingEvents, MOCK_LOGIN_OPENID } from '../mock/seedData'
 
 const repo = new MemoryRepository()
 const storage = new LocalStorage()
@@ -21,6 +21,10 @@ const MOCK_CTX = { OPENID: MOCK_LOGIN_OPENID }
 function initSeedData(): void {
   repo.seedUsers(seedUsers)
   repo.seedBooks(seedBooks)
+  repo.seedGroups(seedGroups)
+  repo.seedMembers(seedMembers)
+  repo.seedTasks(seedTasks)
+  repo.seedReadingEvents(seedReadingEvents)
 }
 initSeedData()
 
@@ -99,7 +103,15 @@ async function mockBookMain(data: Record<string, unknown>): Promise<ApiResponse<
   if (action === 'list') {
     const page = (data.page as number) ?? 1
     const pageSize = (data.pageSize as number) ?? 20
-    const result = await repo.listBooks(page, pageSize, data.keyword as string | undefined, (data.status as string) ?? 'online')
+    const result = await repo.listBooks(
+      page,
+      pageSize,
+      data.keyword as string | undefined,
+      (data.status as string) ?? 'online',
+      data.keywordField as BookKeywordField | undefined,
+      data.sortBy as BookSortField | undefined,
+      data.sortOrder as BookSortOrder | undefined,
+    )
     return success({ ...result, page, pageSize })
   }
   if (action === 'detail') {

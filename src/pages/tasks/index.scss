@@ -1,13 +1,25 @@
 .tasks-page { min-height: 100vh; padding: 20px; background: #f5f7fb;
   &__card, &__group-form, &__task { margin-bottom: 14px; padding: 16px; background: #fff; border-radius: 12px; }
-  &__group-form { display: flex; align-items: center; gap: 10px; color: #6b7280; }
-  &__group-form input { flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; }
+  &__group-form { display: flex; align-items: center; gap: 12px; }
+  &__group-label { color: #6b7280; font-size: 24px; white-space: nowrap; }
+  &__group-picker { min-width: 360px; padding: 10px 12px; color: #111827; background: #eff6ff; border-radius: 8px; font-size: 25px; }
+  &__group-empty, &__muted { color: #9ca3af; font-size: 23px; }
   &__heading { display: block; margin-bottom: 12px; color: #111827; font-size: 28px; font-weight: 600; }
   &__card input, &__card textarea, &__submission input { display: block; width: 100%; box-sizing: border-box; margin-bottom: 10px; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 24px; }
   &__card textarea { min-height: 110px; }
-  &__card > button { color: #fff; background: #2563eb; font-size: 24px; }
-  &__task { display: flex; justify-content: space-between; font-size: 26px; }
-  &__description, &__feedback { display: block; margin-bottom: 12px; color: #4b5563; font-size: 24px; line-height: 1.5; }
+  &__card > button, &__student-form button { color: #fff; background: #2563eb; font-size: 24px; }
+  &__task { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  &__task-main { flex: 1; min-width: 0; }
+  &__task-title, &__task-meta { display: block; }
+  &__task-title { color: #111827; font-size: 26px; }
+  &__task-meta { margin-top: 5px; color: #6b7280; font-size: 21px; }
+  &__task-arrow { color: #2563eb; font-size: 23px; }
+  &__description, &__feedback, &__submission-text { display: block; margin-bottom: 12px; color: #4b5563; font-size: 24px; line-height: 1.5; }
+  &__section-label { display: block; margin: 14px 0 8px; color: #374151; font-size: 24px; font-weight: 600; }
+  &__feedback-list, &__review-list { margin-top: 14px; padding-top: 8px; border-top: 1px solid #e5e7eb; }
+  &__feedback { padding: 10px; color: #1e40af; background: #eff6ff; border-radius: 8px; }
   &__submission { margin-top: 14px; padding-top: 14px; border-top: 1px solid #e5e7eb; }
   &__review-buttons { display: flex; gap: 8px; }
+  &__review-buttons button { color: #fff; background: #059669; font-size: 22px; }
+  &__review-buttons button + button { background: #d97706; }
 }

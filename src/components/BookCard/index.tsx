@@ -18,7 +18,7 @@ export default function BookCard({ book, onClick }: BookCardProps) {
       <Image className='book-card__cover' src={book.cover} mode='aspectFill' />
       <View className='book-card__info'>
         <Text className='book-card__title'>{book.title}</Text>
-        <Text className='book-card__author'>{book.author}</Text>
+        <Text className='book-card__author'>作者：{book.author || '未知'}</Text>
       </View>
     </View>
   )

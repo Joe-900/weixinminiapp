@@ -1,1 +1,1 @@
-export default definePageConfig({ navigationBarTitleText: 'Classes and groups' })
+export default definePageConfig({ navigationBarTitleText: '班级与小组' })
