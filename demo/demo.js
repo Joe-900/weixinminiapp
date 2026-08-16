@@ -22,13 +22,104 @@
     if (element) element.textContent = text;
   }
 
+  function updatePageTitle(title) {
+    var titleElement = document.querySelector('[data-mini-title]');
+    if (titleElement) titleElement.textContent = title;
+  }
+
+  function setView(viewName, title) {
+    var views = document.querySelectorAll('[data-mini-view]');
+    views.forEach(function (view) {
+      view.hidden = view.getAttribute('data-mini-view') !== viewName;
+    });
+    var backButton = document.querySelector('[data-mini-back]');
+    if (backButton) backButton.disabled = viewName !== 'ai-chat';
+    if (title) updatePageTitle(title);
+    updateText('[data-tab-status]', '当前页面：' + (title || '书单'));
+  }
+
   function switchTab(target) {
     var buttons = document.querySelectorAll('[data-tab-button]');
     buttons.forEach(function (button) {
       button.classList.toggle('active', button.getAttribute('data-tab-button') === target);
     });
-    updateText('[data-tab-status]', '当前页面：' + target);
+
+    var view = 'books';
+    var title = '书单首页';
+    if (target === '伴读') {
+      view = 'ai-sessions';
+      title = 'AI伴读';
+    } else if (target === '我的') {
+      view = 'profile';
+      title = document.body.getAttribute('data-profile-title') || '我的';
+    }
+    setView(view, title);
     showToast('已切换到“' + target + '”页面（静态演示）。');
+  }
+
+  function showChat(message) {
+    setView('ai-chat', 'AI伴读');
+    document.querySelectorAll('[data-tab-button]').forEach(function (button) {
+      button.classList.toggle('active', button.getAttribute('data-tab-button') === '伴读');
+    });
+    if (message) updateText('[data-chat-status]', message);
+  }
+
+  function appendChatMessage(role, content) {
+    var list = document.querySelector('[data-chat-messages]');
+    if (!list) return;
+    var empty = list.querySelector('.ai-messages__empty');
+    if (empty) empty.remove();
+    var item = document.createElement('div');
+    item.className = 'chat-message chat-message--' + role;
+    item.textContent = content;
+    list.appendChild(item);
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function resetChatForm() {
+    var question = document.querySelector('[data-chat-question]');
+    var context = document.querySelector('[data-chat-context]');
+    var image = document.querySelector('[data-image-name]');
+    if (question) question.value = '';
+    if (context) context.value = '';
+    if (image) image.textContent = '未选择图片';
+    var preview = document.querySelector('[data-image-preview]');
+    if (preview) preview.hidden = true;
+  }
+
+  function filterBooks() {
+    var list = document.querySelector('[data-book-list]');
+    if (!list) return;
+    var search = (document.querySelector('[data-book-search]')?.value || '').trim().toLowerCase();
+    var field = document.querySelector('[data-book-field]')?.value || 'all';
+    var cards = Array.prototype.slice.call(list.querySelectorAll('[data-book-card]'));
+    var visible = 0;
+    cards.forEach(function (card) {
+      var title = (card.getAttribute('data-title') || '').toLowerCase();
+      var author = (card.getAttribute('data-author') || '').toLowerCase();
+      var value = field === 'title' ? title : field === 'author' ? author : title + ' ' + author;
+      var matches = !search || value.indexOf(search) !== -1;
+      card.hidden = !matches;
+      if (matches) visible += 1;
+    });
+    updateText('[data-filter-status]', search ? '已找到 ' + visible + ' 本匹配书籍' : '共 ' + visible + ' 本示例书籍');
+  }
+
+  function sortBooks() {
+    var list = document.querySelector('[data-book-list]');
+    var sort = document.querySelector('[data-book-sort]')?.value || 'recent';
+    if (!list) return;
+    var cards = Array.prototype.slice.call(list.querySelectorAll('[data-book-card]'));
+    cards.sort(function (left, right) {
+      var leftValue = left.getAttribute('data-' + sort) || '';
+      var rightValue = right.getAttribute('data-' + sort) || '';
+      return leftValue.localeCompare(rightValue, 'zh-CN', { numeric: true });
+    });
+    cards.forEach(function (card) { list.appendChild(card); });
+    var sortLabels = { recent: '最近加入', title: '书名 A-Z', author: '作者 A-Z' };
+    updateText('[data-order-status]', '当前顺序：' + (sortLabels[sort] || sortLabels.recent) + '。切换后会从第一页重新加载。');
+    filterBooks();
   }
 
   document.addEventListener('click', function (event) {
@@ -42,14 +133,61 @@
     if (!target) return;
 
     var action = target.getAttribute('data-demo-action');
-    if (action === 'open-ai') {
-      updateText('[data-ai-status]', '已打开《共产党宣言》的伴读会话（仅前端演示）');
-      showToast('已进入伴读会话，真实版本会在这里加载历史消息。');
+    if (action === 'open-ai' || action === 'ask-ai') {
+      showChat(action === 'ask-ai' ? '已准备图片提问流程（当前不会上传文件）' : '已打开示例伴读会话');
+      showToast(action === 'ask-ai' ? '请在下方选择图片并补充问题，静态演示不会调用 AI。' : '已进入伴读会话，真实版本会在这里加载历史消息。');
       return;
     }
-    if (action === 'ask-ai') {
-      updateText('[data-ai-status]', '已准备图片提问流程（当前不会上传文件）');
-      showToast('这是图片提问按钮，静态演示不会调用 AI 接口。');
+    if (action === 'apply-filter') {
+      filterBooks();
+      showToast('已应用书名 / 作者筛选。');
+      return;
+    }
+    if (action === 'new-ai') {
+      resetChatForm();
+      var chatList = document.querySelector('[data-chat-messages]');
+      if (chatList) chatList.innerHTML = '';
+      showChat('新建伴读：先填写书籍信息，再输入问题。');
+      showToast('已打开新建伴读页面。');
+      return;
+    }
+    if (action === 'open-session') {
+      showChat('已加载示例会话历史，可以继续提问。');
+      var sessionMessages = document.querySelector('[data-chat-messages]');
+      if (sessionMessages) {
+        sessionMessages.innerHTML = '';
+        appendChatMessage('user', '这本书的核心观点是什么？');
+        appendChatMessage('assistant', '这是静态演示回复：我会基于当前书籍元数据和你提供的上下文展开讨论。');
+      }
+      return;
+    }
+    if (action === 'back-ai') {
+      setView('ai-sessions', 'AI伴读');
+      document.querySelectorAll('[data-tab-button]').forEach(function (button) {
+        button.classList.toggle('active', button.getAttribute('data-tab-button') === '伴读');
+      });
+      showToast('已返回伴读会话列表。');
+      return;
+    }
+    if (action === 'send-ai') {
+      var question = document.querySelector('[data-chat-question]');
+      var context = document.querySelector('[data-chat-context]');
+      var text = question ? question.value.trim() : '';
+      var imageName = document.querySelector('[data-image-name]')?.textContent || '';
+      if (!text && imageName === '未选择图片') {
+        showToast('请输入问题或先选择图片。');
+        return;
+      }
+      appendChatMessage('user', text || '请解释我上传的图片内容。');
+      appendChatMessage('assistant', '这是静态演示回复：我会结合书名、作者、版本、上下文和图片内容回答。');
+      if (question) question.value = '';
+      if (context) context.value = '';
+      updateText('[data-chat-status]', '已完成一轮本地模拟对话，未发送到网络。');
+      showToast('已添加一轮本地模拟对话。');
+      return;
+    }
+    if (action === 'remove-image') {
+      resetChatForm();
       return;
     }
     if (action === 'add-plan') {
@@ -119,12 +257,27 @@
     }
   });
 
+  document.addEventListener('input', function (event) {
+    if (event.target.matches('[data-book-search]')) filterBooks();
+  });
+
   document.addEventListener('change', function (event) {
     var input = event.target.closest('[data-demo-file]');
-    if (!input || !input.files || !input.files[0]) return;
-    var fileName = input.files[0].name;
-    var output = document.querySelector(input.getAttribute('data-demo-file'));
-    if (output) output.textContent = '已选择：' + fileName + '（仅本地演示）';
-    showToast('图片已选择，静态演示不会上传文件。');
+    if (input && input.files && input.files[0]) {
+      var fileName = input.files[0].name;
+      var output = document.querySelector(input.getAttribute('data-demo-file'));
+      if (output) output.textContent = '已选择：' + fileName + '（仅本地演示）';
+      var preview = document.querySelector('[data-image-preview]');
+      if (preview) preview.hidden = false;
+      showToast('图片已选择，静态演示不会上传文件。');
+      return;
+    }
+    if (event.target.matches('[data-book-field]')) filterBooks();
+    if (event.target.matches('[data-book-sort]')) sortBooks();
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    filterBooks();
+    sortBooks();
   });
 })();

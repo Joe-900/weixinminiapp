@@ -14,8 +14,20 @@
     border-bottom: 1px solid #e5e7eb;
   }
 
-  &__title { max-width: 420px; color: #1f2937; font-size: 30px; font-weight: 600; }
-  &__header-button { margin: 0; color: #2563eb; background: #eff6ff; font-size: 23px; }
+  &__title {
+    flex: 1;
+    min-width: 0;
+    color: #1f2937;
+    font-size: 30px;
+    font-weight: 600;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__header-button { flex: 0 0 auto; margin: 0; color: #2563eb; background: #eff6ff; font-size: 23px; white-space: nowrap; }
+  &__back-button { min-width: 220px; text-align: left; }
+  &__new-button { min-width: 82px; }
   &__session-intro { padding: 18px 20px 8px; color: #6b7280; font-size: 24px; line-height: 1.5; }
   &__session-list { flex: 1; padding: 8px 20px 20px; box-sizing: border-box; }
   &__session-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 16px; margin-bottom: 10px; background: #fff; border-radius: 10px; }

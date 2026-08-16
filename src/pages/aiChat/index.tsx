@@ -198,6 +198,10 @@ export default function AiChat() {
   }
 
   function handleBackToSessions() {
+    setQuestion('')
+    setContext('')
+    setImage(null)
+    setImagePreview('')
     setView('sessions')
     loadSessions()
   }
@@ -233,9 +237,9 @@ export default function AiChat() {
   return (
     <View className='ai-chat'>
       <View className='ai-chat__header'>
-        <Button size='mini' className='ai-chat__header-button' onClick={handleBackToSessions}>会话列表</Button>
+        <Button size='mini' className='ai-chat__header-button ai-chat__back-button' onClick={handleBackToSessions}>‹ 返回会话列表</Button>
         <Text className='ai-chat__title'>{book.title ? `伴读：${book.title}` : '新建伴读'}</Text>
-        <Button size='mini' className='ai-chat__header-button' onClick={handleNewSession}>新建</Button>
+        <Button size='mini' className='ai-chat__header-button ai-chat__new-button' onClick={handleNewSession}>新建</Button>
       </View>
 
       {!bookId && (
