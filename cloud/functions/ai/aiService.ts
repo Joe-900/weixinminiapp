@@ -19,6 +19,7 @@ import type { Book } from '../../../src/types/book'
 import { success, fail } from '../common/response'
 import { ErrorCode } from '../../../src/types/common'
 import { validateParams } from '../common/validate'
+import { AiClientError } from '../cloud/aiClientError'
 
 const DEFAULT_HISTORY_LIMIT = 10
 const DEFAULT_DAILY_LIMIT = 50
@@ -196,7 +197,21 @@ export async function handleChat(
     } else {
       reply = await aiClient.chat(messages as OpenAIChatMessage[])
     }
-  } catch {
+  } catch (err) {
+    if (err instanceof AiClientError) {
+      switch (err.kind) {
+        case 'config_missing':
+          return fail(ErrorCode.AI_CONFIG_MISSING, 'AI service is not configured correctly')
+        case 'timeout':
+          return fail(ErrorCode.AI_TIMEOUT, 'AI request timed out, please try again')
+        case 'quota':
+          return fail(ErrorCode.AI_QUOTA_EXCEEDED, 'AI quota exceeded, please contact the administrator')
+        case 'invalid_response':
+          return fail(ErrorCode.AI_INVALID_RESPONSE, 'AI returned an invalid response')
+        default:
+          return fail(ErrorCode.AI_ERROR, 'AI service unavailable, please try again later')
+      }
+    }
     return fail(ErrorCode.AI_ERROR, 'AI service unavailable, please try again later')
   }
 

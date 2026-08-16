@@ -18,6 +18,10 @@ export enum ErrorCode {
   ACCESS_DENIED = 1005,
   AI_ERROR = 2001,
   AI_LIMIT = 2002,
+  AI_CONFIG_MISSING = 2003,
+  AI_TIMEOUT = 2004,
+  AI_QUOTA_EXCEEDED = 2005,
+  AI_INVALID_RESPONSE = 2006,
   INTERNAL_ERROR = 5000,
 }
 
@@ -30,6 +34,10 @@ export const ERROR_MESSAGE_MAP: Record<number, string> = {
   [ErrorCode.ACCESS_DENIED]: '越权访问',
   [ErrorCode.AI_ERROR]: '大模型调用失败',
   [ErrorCode.AI_LIMIT]: '触发用量限制',
+  [ErrorCode.AI_CONFIG_MISSING]: 'AI 服务未配置',
+  [ErrorCode.AI_TIMEOUT]: 'AI 请求超时',
+  [ErrorCode.AI_QUOTA_EXCEEDED]: 'AI 额度不足',
+  [ErrorCode.AI_INVALID_RESPONSE]: 'AI 返回异常',
   [ErrorCode.INTERNAL_ERROR]: '服务器内部错误',
 }
 
