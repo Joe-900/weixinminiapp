@@ -60,3 +60,5 @@ export async function userMain(
       return fail(ErrorCode.BAD_REQUEST, `未知�?action: ${event.action}`)
   }
 }
+
+export { main } from './main'

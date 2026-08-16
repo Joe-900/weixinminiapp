@@ -358,11 +358,13 @@ export class CloudRepository implements Repository {
 
   async listTasksForUser(openid: string, groupIds: string[]): Promise<ReadingTask[]> {
     if (groupIds.length === 0) return []
-    const result = await this.db.collection('reading_task').where({ groupId: { $in: groupIds }, status: 'published' }).get()
     const memberships = await Promise.all(groupIds.map((groupId) => this.listCommunityMembers(groupId)))
-    const isMember = memberships.reduce<CommunityMember[]>((all, list) => all.concat(list), [])
-      .some((member) => member.openid === openid)
-    return isMember ? result.data as unknown as ReadingTask[] : []
+    const memberGroupIds = groupIds.filter((groupId, index) =>
+      memberships[index].some((member) => member.openid === openid),
+    )
+    if (memberGroupIds.length === 0) return []
+    const result = await this.db.collection('reading_task').where({ groupId: { $in: memberGroupIds }, status: 'published' }).get()
+    return result.data as unknown as ReadingTask[]
   }
 
   async createTaskSubmission(submission: Omit<TaskSubmission, '_id' | 'submissionId'>): Promise<TaskSubmission> {

@@ -23,6 +23,14 @@ export async function handleCreateReadingPlan(
   ])
   if (validationError) return validationError
 
+  if (params.targetDate && Number.isNaN(Date.parse(params.targetDate))) {
+    return fail(ErrorCode.BAD_REQUEST, 'targetDate must be a valid date')
+  }
+  const today = new Date().toISOString().slice(0, 10)
+  if (params.targetDate && params.targetDate.slice(0, 10) < today) {
+    return fail(ErrorCode.BAD_REQUEST, 'targetDate must be today or later')
+  }
+
   const book = await repo.findBookById(params.bookId)
   if (!book) return fail(ErrorCode.NOT_FOUND, 'Book not found')
 
@@ -90,7 +98,8 @@ export async function handleRecordParticipation(
 
   const book = await repo.findBookById(params.bookId)
   if (!book) return fail(ErrorCode.NOT_FOUND, 'Book not found')
-  if (params.groupId && !(await repo.findCommunityMember(params.groupId, openid))) {
+  const membershipGroupId = params.groupId ?? params.classId
+  if (membershipGroupId && !(await repo.findCommunityMember(membershipGroupId, openid))) {
     return fail(ErrorCode.ACCESS_DENIED, 'Not a member of this group')
   }
 

@@ -84,3 +84,5 @@ export async function noteMain(
       return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${event.action}`)
   }
 }
+
+export { main } from './main'

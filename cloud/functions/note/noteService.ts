@@ -91,7 +91,7 @@ export async function handleCheckIn(
   )
   if (validationError) return validationError
 
-  if (minutes < 1 || minutes > 1440) {
+  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) {
     return fail(ErrorCode.BAD_REQUEST, 'minutes must be between 1 and 1440')
   }
 

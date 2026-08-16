@@ -25,3 +25,5 @@ export async function rankingMain(
   if (event.action === 'list') return handleRanking(repo, openid, event.groupId)
   return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${event.action}`)
 }
+
+export { main } from './main'

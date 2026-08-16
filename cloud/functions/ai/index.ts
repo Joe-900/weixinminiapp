@@ -78,3 +78,5 @@ export async function aiMain(
       return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${event.action}`)
   }
 }
+
+export { main } from './main'

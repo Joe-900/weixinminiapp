@@ -48,3 +48,5 @@ export async function communityMain(
       return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${event.action}`)
   }
 }
+
+export { main } from './main'
