@@ -6,6 +6,7 @@
 
 import type { User, UserRole } from '../types/user'
 import type { Book } from '../types/book'
+import { toBuptSeedBooks } from './buptMetadataSeed'
 
 export const SEED_ADMIN_OPENID = 'admin_openid_001'
 export const SEED_USER_OPENID = 'user_openid_002'
@@ -86,4 +87,5 @@ export const seedBooks: Book[] = [
     createdAt: Date.now() - 259200000,
     updatedAt: Date.now() - 86400000,
   },
+  ...toBuptSeedBooks(SEED_ADMIN_OPENID),
 ]

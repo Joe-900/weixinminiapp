@@ -167,20 +167,31 @@ export default function Admin() {
 
   async function handleImport() {
     if (!importPreview) return
-    const items = importPreview.valid.slice(0, MAX_IMPORT_COUNT)
+    const items = importPreview.valid
     if (items.length === 0) {
       Taro.showToast({ title: '没有可导入的记录', icon: 'none' })
       return
     }
     setImporting(true)
     try {
-      const res = await importLibraryMetadata(items)
-      if (isSuccess(res) && res.data) {
-        setImportResult(res.data)
-        Taro.showToast({ title: `导入成功 ${res.data.imported} 条`, icon: 'success' })
-      } else {
-        showErrorToast(res.code)
+      const aggregate: LibraryImportResult = { imported: 0, skipped: 0, bookIds: [], failures: [] }
+      for (let start = 0; start < items.length; start += MAX_IMPORT_COUNT) {
+        const res = await importLibraryMetadata(items.slice(start, start + MAX_IMPORT_COUNT))
+        if (!isSuccess(res) || !res.data) {
+          showErrorToast(res.code)
+          setImportResult(aggregate.imported > 0 || aggregate.skipped > 0 ? aggregate : null)
+          return
+        }
+        aggregate.imported += res.data.imported
+        aggregate.skipped += res.data.skipped
+        aggregate.bookIds.push(...res.data.bookIds)
+        aggregate.failures.push(...res.data.failures.map((failure) => ({
+          ...failure,
+          index: failure.index + start,
+        })))
+        setImportResult({ ...aggregate, bookIds: [...aggregate.bookIds], failures: [...aggregate.failures] })
       }
+      Taro.showToast({ title: `导入成功 ${aggregate.imported} 条`, icon: 'success' })
     } finally {
       setImporting(false)
     }
@@ -251,7 +262,7 @@ export default function Admin() {
             <View className='admin__import-panel'>
               <View className='admin__import-stats'>
                 总记录 {importPreview.rawCount} 条 · 缺书名 {importPreview.missingTitleCount} 条 · 可导入 {importPreview.valid.length} 条
-                {importPreview.exceedsLimit ? `（超过 ${MAX_IMPORT_COUNT} 条上限，仅导入前 ${MAX_IMPORT_COUNT} 条）` : ''}
+                {importPreview.exceedsLimit ? `（将按每批 ${MAX_IMPORT_COUNT} 条分批提交）` : ''}
               </View>
               {importPreview.duplicateIsbns.length > 0 && (
                 <View className='admin__import-warn'>
@@ -283,7 +294,7 @@ export default function Admin() {
                 disabled={importing}
                 onClick={handleImport}
               >
-                批量导入（{Math.min(importPreview.valid.length, MAX_IMPORT_COUNT)} 条）
+                批量导入（{importPreview.valid.length} 条）
               </Button>
               {importResult && (
                 <View className='admin__import-result'>
