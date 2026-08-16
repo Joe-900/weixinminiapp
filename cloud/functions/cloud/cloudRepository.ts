@@ -6,7 +6,7 @@
 
 import type { Repository, PageResult } from '../interfaces/repository'
 import type { User } from '../../../src/types/user'
-import type { Book } from '../../../src/types/book'
+import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../../../src/types/book'
 import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
 import type { AiSession, AiMessage } from '../../../src/types/ai'
 import type { ReadingEvent, ReadingPlan, ReadingStat } from '../../../src/types/reading'
@@ -75,6 +75,9 @@ export class CloudRepository implements Repository {
     pageSize: number,
     keyword?: string,
     status?: string,
+    keywordField: BookKeywordField = 'all',
+    sortBy: BookSortField = 'createdAt',
+    sortOrder: BookSortOrder = 'desc',
   ): Promise<PageResult<Book>> {
     const condition: Record<string, unknown> = {}
     if (status) condition.status = status
@@ -82,17 +85,20 @@ export class CloudRepository implements Repository {
     let query = this.db.collection('book').where(condition)
 
     if (keyword) {
-      query = this.db.collection('book').where({
-        ...condition,
-        title: { $regex: keyword, $options: 'i' },
-      })
+      const pattern = { $regex: keyword, $options: 'i' }
+      const keywordCondition = keywordField === 'author'
+        ? { author: pattern }
+        : keywordField === 'title'
+          ? { title: pattern }
+          : { $or: [{ title: pattern }, { author: pattern }] }
+      query = this.db.collection('book').where({ ...condition, ...keywordCondition })
     }
 
     const countRes = await query.count()
     const total = countRes.total
 
     const res = await query
-      .orderBy('createdAt', 'desc')
+      .orderBy(sortBy, sortOrder)
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .get()

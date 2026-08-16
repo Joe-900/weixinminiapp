@@ -3,7 +3,7 @@
  */
 
 import type { User } from '../../../src/types/user'
-import type { Book } from '../../../src/types/book'
+import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../../../src/types/book'
 import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
 import type { AiSession, AiMessage } from '../../../src/types/ai'
 import type { ReadingEvent, ReadingStat, ReadingPlan } from '../../../src/types/reading'
@@ -24,7 +24,15 @@ export interface Repository {
 
   findBookById(bookId: string): Promise<Book | null>
   findBookByIsbn(isbn: string): Promise<Book | null>
-  listBooks(page: number, pageSize: number, keyword?: string, status?: string): Promise<PageResult<Book>>
+  listBooks(
+    page: number,
+    pageSize: number,
+    keyword?: string,
+    status?: string,
+    keywordField?: BookKeywordField,
+    sortBy?: BookSortField,
+    sortOrder?: BookSortOrder,
+  ): Promise<PageResult<Book>>
   createBook(book: Omit<Book, '_id'>): Promise<Book>
   updateBook(bookId: string, updates: Partial<Book>): Promise<Book>
 

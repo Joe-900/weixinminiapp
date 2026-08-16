@@ -5,6 +5,10 @@
 
 export type BookStatus = 'online' | 'offline'
 
+export type BookKeywordField = 'all' | 'title' | 'author'
+export type BookSortField = 'createdAt' | 'title' | 'author' | 'availableCount'
+export type BookSortOrder = 'asc' | 'desc'
+
 export interface Book {
   _id: string
   bookId: string
@@ -37,6 +41,9 @@ export interface BookListParams {
   page: number
   pageSize: number
   keyword?: string
+  keywordField?: BookKeywordField
+  sortBy?: BookSortField
+  sortOrder?: BookSortOrder
 }
 
 export interface BookCreateParams {

@@ -54,6 +54,29 @@ describe('Book domain - list', () => {
     expect(result.data!.list.length).toBe(1)
     expect(result.data!.list[0].status).toBe('offline')
   })
+
+  test('list can fuzzy match author only', async () => {
+    const result = await bookMain(
+      { action: 'list', page: 1, pageSize: 10, keyword: 'chengen', keywordField: 'author' },
+      { OPENID: SEED_USER_OPENID },
+      repo,
+    ) as ApiResponse<PaginatedData<Book>>
+
+    expect(result.code).toBe(ErrorCode.SUCCESS)
+    expect(result.data!.list).toHaveLength(1)
+    expect(result.data!.list[0].title).toBe('Journey to the West')
+  })
+
+  test('list applies requested title sort before pagination', async () => {
+    const result = await bookMain(
+      { action: 'list', page: 1, pageSize: 10, sortBy: 'title', sortOrder: 'asc' },
+      { OPENID: SEED_USER_OPENID },
+      repo,
+    ) as ApiResponse<PaginatedData<Book>>
+
+    expect(result.code).toBe(ErrorCode.SUCCESS)
+    expect(result.data!.list.map((book) => book.title)).toEqual(['Dream of the Red Chamber', 'Journey to the West'])
+  })
 })
 
 describe('Book domain - detail', () => {

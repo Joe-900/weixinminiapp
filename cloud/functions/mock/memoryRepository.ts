@@ -5,7 +5,7 @@
 
 import type { Repository, PageResult } from '../interfaces/repository'
 import type { User } from '../../../src/types/user'
-import type { Book } from '../../../src/types/book'
+import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../../../src/types/book'
 import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
 import type { AiSession, AiMessage } from '../../../src/types/ai'
 import type { ReadingEvent, ReadingPlan, ReadingStat } from '../../../src/types/reading'
@@ -105,6 +105,9 @@ export class MemoryRepository implements Repository {
     pageSize: number,
     keyword?: string,
     status?: string,
+    keywordField: BookKeywordField = 'all',
+    sortBy: BookSortField = 'createdAt',
+    sortOrder: BookSortOrder = 'desc',
   ): Promise<PageResult<Book>> {
     let list = Array.from(this.books.values())
 
@@ -116,12 +119,18 @@ export class MemoryRepository implements Repository {
       const kw = keyword.toLowerCase()
       list = list.filter(
         (b) =>
-          b.title.toLowerCase().includes(kw) ||
-          b.author.toLowerCase().includes(kw),
+          (keywordField !== 'author' && b.title.toLowerCase().includes(kw)) ||
+          (keywordField !== 'title' && b.author.toLowerCase().includes(kw)),
       )
     }
 
-    list.sort((a, b) => b.createdAt - a.createdAt)
+    const direction = sortOrder === 'asc' ? 1 : -1
+    list.sort((a, b) => {
+      if (sortBy === 'title') return a.title.localeCompare(b.title, 'zh-Hans') * direction
+      if (sortBy === 'author') return a.author.localeCompare(b.author, 'zh-Hans') * direction
+      if (sortBy === 'availableCount') return ((a.availableCount ?? 0) - (b.availableCount ?? 0)) * direction
+      return (a.createdAt - b.createdAt) * direction
+    })
 
     const total = list.length
     const start = (page - 1) * pageSize

@@ -5,7 +5,14 @@
 
 import type { Repository } from '../interfaces/repository'
 import type { ApiResponse, PaginatedData } from '../../../src/types/common'
-import type { Book, BookCreateParams, BookUpdateParams } from '../../../src/types/book'
+import type {
+  Book,
+  BookCreateParams,
+  BookUpdateParams,
+  BookKeywordField,
+  BookSortField,
+  BookSortOrder,
+} from '../../../src/types/book'
 import { success, fail } from '../common/response'
 import { ErrorCode } from '../../../src/types/common'
 import { validateParams } from '../common/validate'
@@ -18,8 +25,11 @@ export async function handleList(
   pageSize: number,
   keyword?: string,
   status?: string,
+  keywordField?: BookKeywordField,
+  sortBy?: BookSortField,
+  sortOrder?: BookSortOrder,
 ): Promise<ApiResponse<PaginatedData<Book>>> {
-  const result = await repo.listBooks(page, pageSize, keyword, status)
+  const result = await repo.listBooks(page, pageSize, keyword, status, keywordField, sortBy, sortOrder)
   return success({
     list: result.list,
     total: result.total,

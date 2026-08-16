@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand'
-import type { Book } from '../types/book'
+import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../types/book'
 
 interface BookState {
   bookList: Book[]
@@ -13,9 +13,13 @@ interface BookState {
   pageSize: number
   loading: boolean
   keyword: string
+  keywordField: BookKeywordField
+  sortBy: BookSortField
+  sortOrder: BookSortOrder
   setBookList: (list: Book[], total: number, page: number) => void
   setLoading: (loading: boolean) => void
   setKeyword: (keyword: string) => void
+  setFilters: (keyword: string, keywordField: BookKeywordField, sortBy: BookSortField, sortOrder: BookSortOrder) => void
   resetList: () => void
 }
 
@@ -26,6 +30,9 @@ export const useBookStore = create<BookState>((set) => ({
   pageSize: 20,
   loading: false,
   keyword: '',
+  keywordField: 'all',
+  sortBy: 'createdAt',
+  sortOrder: 'desc',
 
   setBookList: (list, total, page) =>
     set({ bookList: list, total, page }),
@@ -34,5 +41,8 @@ export const useBookStore = create<BookState>((set) => ({
 
   setKeyword: (keyword) => set({ keyword, page: 1, bookList: [] }),
 
-  resetList: () => set({ bookList: [], total: 0, page: 1 }),
+  setFilters: (keyword, keywordField, sortBy, sortOrder) =>
+    set({ keyword, keywordField, sortBy, sortOrder, page: 1, bookList: [], total: 0 }),
+
+  resetList: () => set({ bookList: [], total: 0, page: 1, keyword: '', keywordField: 'all', sortBy: 'createdAt', sortOrder: 'desc' }),
 }))

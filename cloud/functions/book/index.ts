@@ -17,12 +17,16 @@ import { authenticate } from '../common/auth'
 import { fail } from '../common/response'
 import { ErrorCode } from '../../../src/types/common'
 import { validateParams } from '../common/validate'
+import type { BookKeywordField, BookSortField, BookSortOrder } from '../../../src/types/book'
 
 interface BookEvent {
   action?: string
   page?: number
   pageSize?: number
   keyword?: string
+  keywordField?: BookKeywordField
+  sortBy?: BookSortField
+  sortOrder?: BookSortOrder
   bookId?: string
   title?: string
   author?: string
@@ -74,6 +78,9 @@ export async function bookMain(
         event.pageSize ?? 20,
         event.keyword,
         event.status ?? 'online',
+        event.keywordField ?? 'all',
+        event.sortBy ?? 'createdAt',
+        event.sortOrder ?? 'desc',
       )
     }
 
