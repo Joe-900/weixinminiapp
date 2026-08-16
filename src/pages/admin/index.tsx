@@ -7,9 +7,19 @@ import { View, Text, Input, Textarea, Button } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect, useCallback } from 'react'
 import { bookList, bookCreate, bookUpdate, bookOffline, bookOnline } from '../../services/bookService'
+import { importLibraryMetadata } from '../../services/libraryService'
 import { isSuccess, showErrorToast } from '../../services/request'
 import AuthGuard from '../../components/AuthGuard'
 import StateView from '../../components/StateView'
+import {
+  computeImportPreview,
+  MAX_IMPORT_COUNT,
+  parseLibraryRowsFromExcel,
+  parseLibraryRowsFromText,
+} from '../../utils/libraryImport'
+import type { ImportPreview } from '../../utils/libraryImport'
+import type { LibraryImportResult } from '../../types/library'
+import type { BuptLibraryBookRow } from '../../utils/buptSourceAdapter'
 import type { Book } from '../../types/book'
 import './index.scss'
 
@@ -32,6 +42,10 @@ export default function Admin() {
   const [formIsbn, setFormIsbn] = useState('')
   const [formSummary, setFormSummary] = useState('')
   const [formCover, setFormCover] = useState('')
+  const [importPreview, setImportPreview] = useState<ImportPreview | null>(null)
+  const [importResult, setImportResult] = useState<LibraryImportResult | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState('')
 
   const loadBooks = useCallback(async () => {
     setLoading(true)
@@ -125,6 +139,53 @@ export default function Admin() {
     }
   }
 
+  async function handleChooseFile() {
+    try {
+      const res = await Taro.chooseMessageFile({
+        count: 1,
+        type: 'file',
+        extension: ['xlsx', 'xls', 'json', 'csv'],
+      })
+      const file = res.tempFiles[0]
+      if (!file) return
+      const fs = Taro.getFileSystemManager()
+      const name = file.name || ''
+      const lower = name.toLowerCase()
+      let rows: BuptLibraryBookRow[]
+      if (lower.endsWith('.xlsx') || lower.endsWith('.xls')) {
+        rows = parseLibraryRowsFromExcel(fs.readFileSync(file.path) as ArrayBuffer)
+      } else {
+        rows = parseLibraryRowsFromText(name, fs.readFileSync(file.path, 'utf8') as string)
+      }
+      setImportPreview(computeImportPreview(rows))
+      setImportResult(null)
+      setImportError(rows.length === 0 ? '文件中没有可识别的数据行' : '')
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : '文件解析失败')
+    }
+  }
+
+  async function handleImport() {
+    if (!importPreview) return
+    const items = importPreview.valid.slice(0, MAX_IMPORT_COUNT)
+    if (items.length === 0) {
+      Taro.showToast({ title: '没有可导入的记录', icon: 'none' })
+      return
+    }
+    setImporting(true)
+    try {
+      const res = await importLibraryMetadata(items)
+      if (isSuccess(res) && res.data) {
+        setImportResult(res.data)
+        Taro.showToast({ title: `导入成功 ${res.data.imported} 条`, icon: 'success' })
+      } else {
+        showErrorToast(res.code)
+      }
+    } finally {
+      setImporting(false)
+    }
+  }
+
   return (
     <AuthGuard requiredRole='admin'>
       <View className='admin'>
@@ -176,6 +237,73 @@ export default function Admin() {
             </View>
           </View>
         )}
+
+        <View className='admin__section'>
+          <Text className='admin__section-title'>图书馆元数据导入</Text>
+          <Text className='admin__section-note'>
+            仅导入图书元数据（书名/作者/ISBN/出版社/馆藏等），不导入正文或扫描件，raw_json 不会入库。
+          </Text>
+          <Button className='admin__file-btn' onClick={handleChooseFile}>选择 Excel / JSON 文件</Button>
+
+          {importError && <View className='admin__import-error'>{importError}</View>}
+
+          {importPreview && (
+            <View className='admin__import-panel'>
+              <View className='admin__import-stats'>
+                总记录 {importPreview.rawCount} 条 · 缺书名 {importPreview.missingTitleCount} 条 · 可导入 {importPreview.valid.length} 条
+                {importPreview.exceedsLimit ? `（超过 ${MAX_IMPORT_COUNT} 条上限，仅导入前 ${MAX_IMPORT_COUNT} 条）` : ''}
+              </View>
+              {importPreview.duplicateIsbns.length > 0 && (
+                <View className='admin__import-warn'>
+                  <Text>ISBN 重复提示：{importPreview.duplicateIsbns.join('、')}</Text>
+                </View>
+              )}
+              <View className='admin__import-list'>
+                {importPreview.valid.slice(0, 20).map((item, idx) => (
+                  <View key={`${item.isbn ?? ''}-${idx}`} className='admin__import-item'>
+                    <View className='admin__import-item-title'>{item.title}</View>
+                    <View className='admin__import-item-meta'>
+                      {item.author || '—'} · {item.isbn || '无 ISBN'}
+                    </View>
+                    <View className='admin__import-item-meta'>
+                      {item.publisher || '—'} · 馆藏 {item.holdingsCount ?? '—'} / 可借 {item.availableCount ?? '—'}
+                    </View>
+                    <View className='admin__import-item-meta'>
+                      索书号 {item.callNumber || '—'} · 来源 {item.librarySource}
+                    </View>
+                  </View>
+                ))}
+                {importPreview.valid.length > 20 && (
+                  <Text className='admin__import-more'>…… 共 {importPreview.valid.length} 条</Text>
+                )}
+              </View>
+              <Button
+                className='admin__import-btn'
+                loading={importing}
+                disabled={importing}
+                onClick={handleImport}
+              >
+                批量导入（{Math.min(importPreview.valid.length, MAX_IMPORT_COUNT)} 条）
+              </Button>
+              {importResult && (
+                <View className='admin__import-result'>
+                  <Text className='admin__import-result-ok'>
+                    成功 {importResult.imported} 条 · 跳过 {importResult.skipped} 条
+                  </Text>
+                  {importResult.failures.length > 0 && (
+                    <View className='admin__import-failures'>
+                      {importResult.failures.map((f) => (
+                        <Text key={`${f.index}-${f.reason}`} className='admin__import-failure'>
+                          第 {f.index + 1} 条：{f.reason}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
       </View>
     </AuthGuard>
   )

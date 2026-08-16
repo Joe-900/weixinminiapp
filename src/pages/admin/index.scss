@@ -111,4 +111,123 @@
     gap: 12px;
     margin-top: 12px;
   }
+
+  &__section {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 20px;
+  }
+
+  &__section-title {
+    font-size: 32px;
+    font-weight: 600;
+    color: #333;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  &__section-note {
+    font-size: 24px;
+    color: #999;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  &__file-btn {
+    background-color: #10b981;
+    color: #fff;
+    font-size: 28px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+
+  &__import-error {
+    font-size: 26px;
+    color: #dc2626;
+    background-color: #fef2f2;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__import-stats {
+    font-size: 26px;
+    color: #374151;
+    margin-bottom: 12px;
+  }
+
+  &__import-warn {
+    font-size: 24px;
+    color: #b45309;
+    background-color: #fffbeb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__import-list {
+    max-height: 480px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+  }
+
+  &__import-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 12px 0;
+  }
+
+  &__import-item-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  &__import-item-meta {
+    font-size: 24px;
+    color: #888;
+    display: block;
+  }
+
+  &__import-more {
+    font-size: 24px;
+    color: #999;
+    display: block;
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  &__import-btn {
+    background-color: #3B82F6;
+    color: #fff;
+    font-size: 28px;
+    border-radius: 8px;
+  }
+
+  &__import-result {
+    margin-top: 16px;
+  }
+
+  &__import-result-ok {
+    font-size: 28px;
+    font-weight: 600;
+    color: #16a34a;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  &__import-failures {
+    background-color: #f9fafb;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  &__import-failure {
+    font-size: 24px;
+    color: #b45309;
+    display: block;
+    margin-bottom: 4px;
+  }
 }

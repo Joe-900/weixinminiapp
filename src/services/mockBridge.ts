@@ -7,7 +7,7 @@ import type { BookContextInput, AiImageInput, OpenAIChatMessage, OpenAIMultimoda
 import type { User } from '../types/user'
 import type { ReadingEvent, ReadingEventType } from '../types/reading'
 import type { CommunityGroupType } from '../types/community'
-import type { LibraryMetadata } from '../types/library'
+import type { LibraryImportFailure, LibraryMetadata } from '../types/library'
 import { MemoryRepository } from '../mock/memoryRepository'
 import { LocalStorage } from '../mock/localStorage'
 import { MockAiClient } from '../mock/mockAiClient'
@@ -702,10 +702,11 @@ async function mockLibraryMain(data: Record<string, unknown>): Promise<ApiRespon
     if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN)
     if (!Array.isArray(data.items) || data.items.length === 0) return fail(ErrorCode.BAD_REQUEST, 'items is required')
     const bookIds: string[] = []
-    let skipped = 0
-    for (const raw of data.items) {
+    const failures: LibraryImportFailure[] = []
+    for (let i = 0; i < data.items.length; i += 1) {
+      const raw = data.items[i]
       if (!raw || typeof raw !== 'object') {
-        skipped += 1
+        failures.push({ index: i, reason: '数据格式错误' })
         continue
       }
       const item = raw as LibraryMetadata
@@ -713,7 +714,10 @@ async function mockLibraryMain(data: Record<string, unknown>): Promise<ApiRespon
       const source = item.librarySource?.trim()
       const isbn = item.isbn?.replace(/[-\s]/g, '') ?? ''
       if (!title || !source || (isbn && await repo.findBookByIsbn(isbn))) {
-        skipped += 1
+        failures.push({
+          index: i,
+          reason: !title ? '缺少书名' : !source ? '缺少来源(librarySource)' : `ISBN 已存在: ${isbn}`,
+        })
         continue
       }
       const bookId = `book_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -746,7 +750,7 @@ async function mockLibraryMain(data: Record<string, unknown>): Promise<ApiRespon
       })
       bookIds.push(bookId)
     }
-    return success({ imported: bookIds.length, skipped, bookIds })
+    return success({ imported: bookIds.length, skipped: failures.length, bookIds, failures })
   }
   return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${data.action as string}`)
 }

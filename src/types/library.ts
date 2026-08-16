@@ -31,8 +31,15 @@ export interface LibrarySearchParams {
   isbn?: string
 }
 
+export interface LibraryImportFailure {
+  /** 在提交数组中的下标（从 0 开始） */
+  index: number
+  reason: string
+}
+
 export interface LibraryImportResult {
   imported: number
   skipped: number
   bookIds: string[]
+  failures: LibraryImportFailure[]
 }

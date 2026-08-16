@@ -2,7 +2,7 @@ import type { Repository } from '../interfaces/repository'
 import type { AuthContext } from '../common/auth'
 import type { ApiResponse, PaginatedData } from '../../../src/types/common'
 import type { Book } from '../../../src/types/book'
-import type { LibraryImportResult, LibraryMetadata, LibrarySearchParams } from '../../../src/types/library'
+import type { LibraryImportFailure, LibraryImportResult, LibraryMetadata, LibrarySearchParams } from '../../../src/types/library'
 import { ErrorCode } from '../../../src/types/common'
 import { fail, success } from '../common/response'
 import { requireAdmin } from '../common/auth'
@@ -42,15 +42,15 @@ export async function handleImportLibraryMetadata(
   if (items.length > 500) return fail(ErrorCode.BAD_REQUEST, 'At most 500 metadata records per import')
 
   const bookIds: string[] = []
-  let skipped = 0
-  for (const rawItem of items) {
-    const item = normalizeLibraryMetadata(rawItem)
+  const failures: LibraryImportFailure[] = []
+  for (let i = 0; i < items.length; i += 1) {
+    const item = normalizeLibraryMetadata(items[i])
     if (!item.title || !item.librarySource) {
-      skipped += 1
+      failures.push({ index: i, reason: !item.title ? '缺少书名' : '缺少来源(librarySource)' })
       continue
     }
     if (item.isbn && await repo.findBookByIsbn(item.isbn)) {
-      skipped += 1
+      failures.push({ index: i, reason: `ISBN 已存在: ${item.isbn}` })
       continue
     }
 
@@ -84,7 +84,7 @@ export async function handleImportLibraryMetadata(
     })
     bookIds.push(bookId)
   }
-  return success({ imported: bookIds.length, skipped, bookIds })
+  return success({ imported: bookIds.length, skipped: failures.length, bookIds, failures })
 }
 
 export async function handleSearchLibraryMetadata(
