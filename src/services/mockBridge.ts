@@ -234,7 +234,7 @@ async function mockAiMain(data: Record<string, unknown>): Promise<ApiResponse<un
       session = await repo.createSession({
         openid: user.openid,
         bookId: book.bookId,
-        title: `Chat about ${book.title}`,
+        title: `关于《${book.title}》的伴读`,
         createdAt: Date.now(),
       })
     }

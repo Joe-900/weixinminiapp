@@ -6,26 +6,36 @@
 
   &__header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    padding: 18px 20px;
+    min-height: 72px;
+    padding: 12px 20px;
     background: #fff;
     border-bottom: 1px solid #e5e7eb;
   }
 
-  &__title { font-size: 30px; color: #1f2937; max-width: 620px; }
-  &__new, &__image-btn { color: #2563eb; font-size: 26px; }
-  &__sessions { background: #fff; max-height: 300px; overflow-y: auto; }
-  &__session-item { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
+  &__title { max-width: 420px; color: #1f2937; font-size: 30px; font-weight: 600; }
+  &__header-button { margin: 0; color: #2563eb; background: #eff6ff; font-size: 23px; }
+  &__session-intro { padding: 18px 20px 8px; color: #6b7280; font-size: 24px; line-height: 1.5; }
+  &__session-list { flex: 1; padding: 8px 20px 20px; box-sizing: border-box; }
+  &__session-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 16px; margin-bottom: 10px; background: #fff; border-radius: 10px; }
   &__session-item--active { background: #eff6ff; }
-  &__empty { display: block; padding: 24px; color: #9ca3af; text-align: center; }
-  &__book-form { padding: 12px 20px; background: #fff; }
+  &__session-main { flex: 1; min-width: 0; }
+  &__session-title, &__session-book { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__session-title { color: #111827; font-size: 27px; }
+  &__session-book { margin-top: 6px; color: #6b7280; font-size: 22px; }
+  &__session-time { color: #9ca3af; font-size: 20px; white-space: nowrap; }
+  &__empty { display: block; padding: 40px 24px; color: #9ca3af; text-align: center; font-size: 25px; }
+  &__book-form { padding: 14px 20px 4px; background: #fff; }
+  &__form-label { display: block; margin-bottom: 10px; color: #374151; font-size: 24px; }
   &__book-input { display: block; padding: 12px; margin-bottom: 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 26px; }
-  &__messages { flex: 1; padding: 16px 20px; }
-  &__image-preview { display: flex; align-items: center; gap: 12px; padding: 8px 20px; background: #fff; color: #2563eb; }
+  &__messages { flex: 1; padding: 16px 20px; box-sizing: border-box; }
+  &__image-preview { display: flex; align-items: center; gap: 12px; padding: 8px 20px; background: #fff; }
   &__image-preview image { width: 90px; height: 90px; }
+  &__image-preview button { color: #dc2626; background: #fef2f2; font-size: 22px; }
   &__context { min-height: 58px; margin: 0 20px 8px; padding: 10px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 24px; }
-  &__input-bar { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: #fff; border-top: 1px solid #e5e7eb; }
-  &__input { flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 28px; }
-  &__send-btn { padding: 12px 20px; color: #fff; background: #2563eb; border-radius: 8px; font-size: 26px; }
-  &__send-btn--disabled { background: #9ca3af; }
+  &__input-bar { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: #fff; border-top: 1px solid #e5e7eb; }
+  &__input { flex: 1; min-width: 0; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 27px; }
+  &__image-button, &__send-button { margin: 0; color: #fff; background: #2563eb; font-size: 22px; white-space: nowrap; }
+  &__send-button { background: #059669; }
 }

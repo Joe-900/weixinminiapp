@@ -134,7 +134,7 @@ export async function handleChat(
       session = await repo.createSession({
         openid,
         bookId: book.bookId,
-        title: `Chat about ${book.title}`,
+        title: `关于《${book.title}》的伴读`,
         createdAt: Date.now(),
       })
     }

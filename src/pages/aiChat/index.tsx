@@ -1,4 +1,4 @@
-import { Image, Input, ScrollView, Text, Textarea, View } from '@tarojs/components'
+import { Button, Image, Input, ScrollView, Text, Textarea, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useCallback, useEffect, useState } from 'react'
 import { aiChat, aiListSessions, aiLoadHistory } from '../../services/aiService'
@@ -12,6 +12,8 @@ import type { AiImageInput, AiSession, BookContextInput } from '../../types'
 import { ErrorCode } from '../../types/common'
 import './index.scss'
 
+type AiView = 'sessions' | 'chat'
+
 function decodeParam(value?: string): string {
   if (!value) return ''
   try {
@@ -19,6 +21,15 @@ function decodeParam(value?: string): string {
   } catch {
     return value
   }
+}
+
+function sessionBookTitle(session: AiSession): string {
+  const match = session.title.match(/《(.+?)》/)
+  return match?.[1] ?? session.title
+}
+
+function formatSessionTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 export default function AiChat() {
@@ -33,13 +44,13 @@ export default function AiChat() {
     loading,
     setLoading,
   } = useAiStore()
+  const [view, setView] = useState<AiView>('sessions')
   const [bookId, setBookId] = useState('')
   const [book, setBook] = useState<BookContextInput>({ title: '' })
   const [question, setQuestion] = useState('')
   const [context, setContext] = useState('')
   const [image, setImage] = useState<AiImageInput | null>(null)
   const [imagePreview, setImagePreview] = useState('')
-  const [showSessions, setShowSessions] = useState(false)
   const [loadingBook, setLoadingBook] = useState(false)
 
   const loadSessions = useCallback(async () => {
@@ -71,9 +82,14 @@ export default function AiChat() {
       edition: decodeParam(params?.edition) || undefined,
       isbn: decodeParam(params?.isbn) || undefined,
     }
-    setBookId(routeBookId)
-    if (routeBook.title) setBook(routeBook)
-    if (routeBookId) loadBook(routeBookId)
+    if (routeBookId || routeBook.title) {
+      setView('chat')
+      setBookId(routeBookId)
+      if (routeBook.title) setBook(routeBook)
+      if (routeBookId) loadBook(routeBookId)
+    } else {
+      setView('sessions')
+    }
     loadSessions()
   }, [loadBook, loadSessions])
 
@@ -87,14 +103,14 @@ export default function AiChat() {
       const file = result.tempFiles[0]
       if (!file?.tempFilePath) return
       setLoading(true)
-      const uploaded = await uploadAiImage(file.tempFilePath, file.fileType === 'image' ? 'image/jpeg' : 'image/jpeg')
+      const uploaded = await uploadAiImage(file.tempFilePath, 'image/jpeg')
       setImage(uploaded)
       setImagePreview(file.tempFilePath)
-      setLoading(false)
     } catch (error) {
-      setLoading(false)
-      const message = error instanceof Error ? error.message : 'Image selection failed'
+      const message = error instanceof Error ? error.message : '图片选择失败'
       Taro.showToast({ title: message, icon: 'none' })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -103,7 +119,7 @@ export default function AiChat() {
     const title = book.title.trim()
     const text = question.trim()
     if (!title || (!text && !image)) {
-      Taro.showToast({ title: 'Please provide a book title and a question or image', icon: 'none' })
+      Taro.showToast({ title: '请填写书名，并输入问题或上传图片', icon: 'none' })
       return
     }
 
@@ -111,7 +127,7 @@ export default function AiChat() {
     const params = {
       bookId: bookId || undefined,
       book: { ...book, title },
-      question: text || 'Please explain the text in this image in the context of this book.',
+      question: text || '请解释图片中的文字，并结合这本书的背景回答。',
       context: context.trim() || undefined,
       image: image ?? undefined,
       sessionId: currentSessionId || undefined,
@@ -127,7 +143,7 @@ export default function AiChat() {
         sessionId: res.data.sessionId,
         openid: '',
         role: 'user',
-        content: text || '[Image question]',
+        content: text || '[图片提问]',
         imageFileId: image?.fileId,
         createdAt: now,
       })
@@ -141,6 +157,7 @@ export default function AiChat() {
         createdAt: now,
       })
       setCurrentSession(res.data.sessionId)
+      setView('chat')
       setQuestion('')
       setContext('')
       setImage(null)
@@ -154,95 +171,127 @@ export default function AiChat() {
   }
 
   async function handleSelectSession(session: AiSession) {
+    setLoading(true)
     setCurrentSession(session.sessionId)
-    setShowSessions(false)
-    if (!bookId || bookId !== session.bookId) {
-      setBookId(session.bookId)
-      loadBook(session.bookId)
-    }
+    setMessages([])
+    setView('chat')
+    const syntheticBook = session.bookId.startsWith('metadata_')
+    setBookId(syntheticBook ? '' : session.bookId)
+    if (syntheticBook) setBook({ title: sessionBookTitle(session) })
+    else await loadBook(session.bookId)
     const res = await aiLoadHistory(session.sessionId)
     if (isSuccess(res) && res.data) setMessages(res.data)
+    else if (!isSuccess(res)) showErrorToast(res.code)
+    setLoading(false)
   }
 
   function handleNewSession() {
     setCurrentSession('')
     setMessages([])
+    setBookId('')
+    setBook({ title: '' })
     setImage(null)
     setImagePreview('')
-    setShowSessions(false)
+    setQuestion('')
+    setContext('')
+    setView('chat')
   }
 
-  return (
-    <View className='ai-chat'>
-      <View className='ai-chat__header'>
-        <Text className='ai-chat__title' onClick={() => setShowSessions(!showSessions)}>
-          {book.title ? `伴读：${book.title}` : 'AI 伴读'}
-        </Text>
-        <Text className='ai-chat__new' onClick={handleNewSession}>New</Text>
-      </View>
+  function handleBackToSessions() {
+    setView('sessions')
+    loadSessions()
+  }
 
-      {showSessions && (
-        <View className='ai-chat__sessions'>
-          {sessions.length === 0 && <Text className='ai-chat__empty'>No conversations yet</Text>}
+  if (view === 'sessions') {
+    return (
+      <View className='ai-chat ai-chat--sessions'>
+        <View className='ai-chat__header'>
+          <Text className='ai-chat__title'>AI 伴读</Text>
+          <Button size='mini' className='ai-chat__header-button' onClick={handleNewSession}>新建伴读</Button>
+        </View>
+        <View className='ai-chat__session-intro'>选择一个会话继续讨论，或新建一个书籍伴读会话。</View>
+        <ScrollView className='ai-chat__session-list' scrollY>
+          {sessions.length === 0 && <Text className='ai-chat__empty'>还没有伴读会话</Text>}
           {sessions.map((session) => (
             <View
               key={session.sessionId}
               className={`ai-chat__session-item ${currentSessionId === session.sessionId ? 'ai-chat__session-item--active' : ''}`}
               onClick={() => handleSelectSession(session)}
             >
-              <Text>{session.title}</Text>
+              <View className='ai-chat__session-main'>
+                <Text className='ai-chat__session-title'>{session.title || `关于《${session.bookId}》的伴读`}</Text>
+                <Text className='ai-chat__session-book'>对应书籍：{sessionBookTitle(session)}</Text>
+              </View>
+              <Text className='ai-chat__session-time'>{formatSessionTime(session.createdAt)}</Text>
             </View>
           ))}
-        </View>
-      )}
+        </ScrollView>
+      </View>
+    )
+  }
+
+  return (
+    <View className='ai-chat'>
+      <View className='ai-chat__header'>
+        <Button size='mini' className='ai-chat__header-button' onClick={handleBackToSessions}>会话列表</Button>
+        <Text className='ai-chat__title'>{book.title ? `伴读：${book.title}` : '新建伴读'}</Text>
+        <Button size='mini' className='ai-chat__header-button' onClick={handleNewSession}>新建</Button>
+      </View>
 
       {!bookId && (
         <View className='ai-chat__book-form'>
+          <Text className='ai-chat__form-label'>先填写书籍信息</Text>
           <Input
             className='ai-chat__book-input'
-            placeholder='Book title (required)'
+            placeholder='书名（必填）'
             value={book.title}
             onInput={(event) => setBook({ ...book, title: event.detail.value })}
           />
           <Input
             className='ai-chat__book-input'
-            placeholder='Author (optional)'
+            placeholder='作者（可选）'
             value={book.author ?? ''}
             onInput={(event) => setBook({ ...book, author: event.detail.value })}
+          />
+          <Input
+            className='ai-chat__book-input'
+            placeholder='版本或 ISBN（可选）'
+            value={book.edition ?? book.isbn ?? ''}
+            onInput={(event) => setBook({ ...book, edition: event.detail.value })}
           />
         </View>
       )}
 
       {loadingBook && <StateView loading />}
       <ScrollView className='ai-chat__messages' scrollY>
-        {messages.length === 0 && <Text className='ai-chat__empty'>Ask a question about the book to begin.</Text>}
+        {messages.length === 0 && <Text className='ai-chat__empty'>输入问题，开始和这本书讨论。</Text>}
         {messages.map((message, index) => <ChatBubble key={message.msgId || index} message={message} />)}
       </ScrollView>
 
       {imagePreview && (
         <View className='ai-chat__image-preview'>
           <Image src={imagePreview} mode='aspectFit' />
-          <Text onClick={() => { setImage(null); setImagePreview('') }}>Remove image</Text>
+          <Button size='mini' onClick={() => { setImage(null); setImagePreview('') }}>移除图片</Button>
         </View>
       )}
       <Textarea
         className='ai-chat__context'
-        placeholder='Optional context about the pictured passage'
+        placeholder='补充图片或片段的上下文（可选）'
         value={context}
         onInput={(event) => setContext(event.detail.value)}
       />
       <View className='ai-chat__input-bar'>
-        <Text className='ai-chat__image-btn' onClick={handleChooseImage}>Photo</Text>
+        <Button size='mini' className='ai-chat__image-button' disabled={loading} onClick={handleChooseImage}>上传图片</Button>
         <Input
           className='ai-chat__input'
-          placeholder='Ask a question'
+          placeholder='输入你想问的问题'
           value={question}
           onInput={(event) => setQuestion(event.detail.value)}
           onConfirm={handleSend}
         />
-        <View className={`ai-chat__send-btn ${loading ? 'ai-chat__send-btn--disabled' : ''}`} onClick={handleSend}>
-          <Text>{loading ? '…' : 'Send'}</Text>
-        </View>
+        <Button size='mini' className='ai-chat__send-button' disabled={loading} onClick={handleSend}>
+          {loading ? '发送中' : '发送'}
+        </Button>
       </View>
     </View>
   )
