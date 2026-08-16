@@ -15,7 +15,11 @@ export default defineConfig(async (merge) => {
     sourceRoot: 'src',
     outputRoot: 'dist',
     plugins: [],
-    defineConstants: {},
+    defineConstants: {
+      'process.env.TARO_APP_RUN_MODE': JSON.stringify(process.env.TARO_APP_RUN_MODE ?? 'local'),
+      'process.env.TARO_APP_CLOUD_ENV_ID': JSON.stringify(process.env.TARO_APP_CLOUD_ENV_ID ?? ''),
+      'process.env.TARO_APP_CLOUD_TRACE_USER': JSON.stringify(process.env.TARO_APP_CLOUD_TRACE_USER ?? 'true'),
+    },
     copy: { patterns: [], options: {} },
     framework: 'react',
     compiler: {
