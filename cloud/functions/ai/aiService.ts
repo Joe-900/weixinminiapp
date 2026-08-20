@@ -151,6 +151,7 @@ export async function handleChat(
     return fail(ErrorCode.INTERNAL_ERROR, 'Invalid AI_HISTORY_LIMIT configuration')
   }
   const historyMessages = await repo.getSessionMessages(sessionId, historyLimit)
+  const hasImageContext = Boolean(params.image || historyMessages.some((message) => message.imageFileId))
 
   const textQuestion = params.context ? `${question}\n\nContext supplied by the reader:\n${params.context}` : question
   const imageUrls = new Map<string, string>()
@@ -211,9 +212,9 @@ export async function handleChat(
 
   let reply: string
   try {
-    if (params.image && aiClient.chatMultimodal) {
+    if (hasImageContext && aiClient.chatMultimodal) {
       reply = await aiClient.chatMultimodal(messages)
-    } else if (params.image) {
+    } else if (hasImageContext) {
       return fail(ErrorCode.AI_ERROR, 'This AI provider does not support image input')
     } else {
       reply = await aiClient.chat(messages as OpenAIChatMessage[])

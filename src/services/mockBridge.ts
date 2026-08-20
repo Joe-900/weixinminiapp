@@ -272,6 +272,7 @@ async function mockAiMain(data: Record<string, unknown>): Promise<ApiResponse<un
       ? `${normalizedQuestion}\n\nContext supplied by the reader:\n${data.context.trim()}`
       : normalizedQuestion
     const history = await repo.getSessionMessages(sessionId, 10)
+    const hasImageContext = Boolean(image || history.some((item) => item.imageFileId))
     const system = `You are a careful reading companion. The platform has metadata but no full book text. title: ${book.title}; author: ${book.author || 'unknown'}; edition: ${book.edition || 'unknown'}; ISBN: ${book.isbn || 'unknown'}; summary: ${book.summary || 'not provided'}. Do not invent unsupported quotations or plot details.`
     let messages: OpenAIMultimodalChatMessage[]
     try {
@@ -310,7 +311,7 @@ async function mockAiMain(data: Record<string, unknown>): Promise<ApiResponse<un
     })
     let reply: string
     try {
-      reply = image
+      reply = hasImageContext
         ? await aiClient.chatMultimodal(messages)
         : await aiClient.chat(messages as OpenAIChatMessage[])
     } catch {

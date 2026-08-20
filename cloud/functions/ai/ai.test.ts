@@ -293,13 +293,17 @@ describe('AI domain - multimodal image context', () => {
     }
     let firstMessages: OpenAIMultimodalChatMessage[] = []
     let secondMessages: OpenAIMultimodalChatMessage[] = []
+    let usedMultimodalForSecond = false
     const multimodalClient: AiClient = {
       async chat(messages) {
-        secondMessages = messages
         return 'text reply'
       },
       async chatMultimodal(messages) {
-        firstMessages = messages
+        if (firstMessages.length === 0) firstMessages = messages
+        else {
+          usedMultimodalForSecond = true
+          secondMessages = messages
+        }
         return 'image reply'
       },
     }
@@ -324,6 +328,7 @@ describe('AI domain - multimodal image context', () => {
     )
 
     expect(firstMessages.length).toBeGreaterThan(0)
+    expect(usedMultimodalForSecond).toBe(true)
     const historicalUser = secondMessages.find((message) => message.role === 'user')
     expect(historicalUser?.content).toEqual([
       { type: 'text', text: '图片里的人物是谁？' },
