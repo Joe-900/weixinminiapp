@@ -15,6 +15,7 @@ import type {
   OpenAIChatMessage,
   OpenAIMultimodalChatMessage,
 } from '../../../src/types/ai'
+import { DEFAULT_IMAGE_QUESTION } from '../../../src/types/ai'
 import type { Book } from '../../../src/types/book'
 import { success, fail } from '../common/response'
 import { ErrorCode } from '../../../src/types/common'
@@ -76,7 +77,7 @@ export async function handleChat(
   const validationError = validateParams<ChatResult>(
     params as unknown as Record<string, unknown>,
     [
-      { name: 'question', type: 'string', required: true },
+      { name: 'question', type: 'string', required: false },
     ],
   )
   if (validationError) return validationError
@@ -84,8 +85,11 @@ export async function handleChat(
   if (!params.bookId && !params.book?.title) {
     return fail(ErrorCode.BAD_REQUEST, 'book.title or bookId is required')
   }
-  if (!params.question.trim() || (params.book && !params.book.title.trim())) {
-    return fail(ErrorCode.BAD_REQUEST, 'book.title and question cannot be blank')
+  if (!params.question.trim() && !params.image) {
+    return fail(ErrorCode.BAD_REQUEST, 'question is required unless an image is provided')
+  }
+  if (params.book && !params.book.title.trim()) {
+    return fail(ErrorCode.BAD_REQUEST, 'book.title cannot be blank')
   }
   if (params.image && (!params.image.fileId || !params.image.mimeType.startsWith('image/'))) {
     return fail(ErrorCode.BAD_REQUEST, 'image.fileId and an image mimeType are required')
@@ -95,7 +99,8 @@ export async function handleChat(
   if (!Number.isInteger(questionLengthLimit) || questionLengthLimit < 1) {
     return fail(ErrorCode.INTERNAL_ERROR, 'Invalid AI_QUESTION_LENGTH_LIMIT configuration')
   }
-  if (params.question.length + (params.context?.length ?? 0) > questionLengthLimit) {
+  const question = params.question.trim() || DEFAULT_IMAGE_QUESTION
+  if (question.length + (params.context?.length ?? 0) > questionLengthLimit) {
     return fail(ErrorCode.AI_LIMIT, `Question too long, max ${questionLengthLimit} characters`)
   }
 
@@ -147,21 +152,36 @@ export async function handleChat(
   }
   const historyMessages = await repo.getSessionMessages(sessionId, historyLimit)
 
-  const textQuestion = params.context ? `${params.question}\n\nContext supplied by the reader:\n${params.context}` : params.question
-  let imageUrl = ''
-  if (params.image) {
-    try {
-      imageUrl = storage ? await storage.getTempFileURL(params.image.fileId) : params.image.fileId
-    } catch {
-      return fail(ErrorCode.AI_ERROR, 'Unable to prepare the image for AI')
+  const textQuestion = params.context ? `${question}\n\nContext supplied by the reader:\n${params.context}` : question
+  const imageUrls = new Map<string, string>()
+  const resolveImageUrl = async (fileId: string): Promise<string> => {
+    const existing = imageUrls.get(fileId)
+    if (existing) return existing
+    const url = storage ? await storage.getTempFileURL(fileId) : fileId
+    imageUrls.set(fileId, url)
+    return url
+  }
+
+  let currentImageUrl = ''
+  try {
+    if (params.image) currentImageUrl = await resolveImageUrl(params.image.fileId)
+    for (const message of historyMessages) {
+      if (message.imageFileId) await resolveImageUrl(message.imageFileId)
     }
+  } catch {
+    return fail(ErrorCode.STORAGE_ERROR, 'Unable to prepare the image for AI')
   }
 
   const messages: OpenAIMultimodalChatMessage[] = [
     { role: 'system', content: buildSystemPrompt(book, params.context) },
     ...historyMessages.map((m) => ({
       role: m.role,
-      content: m.content,
+      content: m.imageFileId
+        ? [
+            { type: 'text' as const, text: m.content },
+            { type: 'image_url' as const, image_url: { url: imageUrls.get(m.imageFileId)! } },
+          ]
+        : m.content,
     })),
     {
       role: 'user',
@@ -171,7 +191,7 @@ export async function handleChat(
             {
               type: 'image_url',
               image_url: {
-                url: imageUrl,
+                url: currentImageUrl,
               },
             },
           ]
@@ -185,6 +205,7 @@ export async function handleChat(
     role: 'user',
     content: textQuestion,
     imageFileId: params.image?.fileId,
+    imageMimeType: params.image?.mimeType,
     createdAt: Date.now(),
   })
 

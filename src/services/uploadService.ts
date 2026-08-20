@@ -27,7 +27,13 @@ export async function uploadCover(filePath: string): Promise<string> {
 }
 
 export async function uploadAiImage(filePath: string, mimeType = 'image/jpeg'): Promise<AiImageInput> {
-  const extension = mimeType === 'image/png' ? 'png' : 'jpg'
+  const extension = mimeType === 'image/png'
+    ? 'png'
+    : mimeType === 'image/webp'
+      ? 'webp'
+      : mimeType === 'image/gif'
+        ? 'gif'
+        : 'jpg'
   const cloudPath = `ai-images/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`
   const fileId = await uploadFile(filePath, cloudPath)
   return { fileId, mimeType, name: cloudPath.split('/').pop() }

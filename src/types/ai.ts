@@ -22,8 +22,11 @@ export interface AiMessage {
   role: AiMessageRole
   content: string
   imageFileId?: string
+  imageMimeType?: string
   createdAt: number
 }
+
+export const DEFAULT_IMAGE_QUESTION = '请解释图片中的文字，并结合这本书的背景回答。'
 
 export interface BookContextInput {
   title: string

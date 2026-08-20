@@ -22,6 +22,7 @@ export enum ErrorCode {
   AI_TIMEOUT = 2004,
   AI_QUOTA_EXCEEDED = 2005,
   AI_INVALID_RESPONSE = 2006,
+  STORAGE_ERROR = 2007,
   INTERNAL_ERROR = 5000,
 }
 
@@ -38,6 +39,7 @@ export const ERROR_MESSAGE_MAP: Record<number, string> = {
   [ErrorCode.AI_TIMEOUT]: 'AI 请求超时',
   [ErrorCode.AI_QUOTA_EXCEEDED]: 'AI 额度不足',
   [ErrorCode.AI_INVALID_RESPONSE]: 'AI 返回异常',
+  [ErrorCode.STORAGE_ERROR]: '图片存储处理失败',
   [ErrorCode.INTERNAL_ERROR]: '服务器内部错误',
 }
 

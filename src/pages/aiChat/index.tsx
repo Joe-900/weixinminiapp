@@ -9,6 +9,7 @@ import { useAiStore } from '../../store/aiStore'
 import ChatBubble from '../../components/ChatBubble'
 import StateView from '../../components/StateView'
 import type { AiImageInput, AiSession, BookContextInput } from '../../types'
+import { DEFAULT_IMAGE_QUESTION } from '../../types/ai'
 import { ErrorCode } from '../../types/common'
 import './index.scss'
 
@@ -30,6 +31,14 @@ function sessionBookTitle(session: AiSession): string {
 
 function formatSessionTime(timestamp: number): string {
   return new Date(timestamp).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
+function inferImageMimeType(filePath: string): string {
+  const extension = filePath.split('?')[0].split('.').pop()?.toLowerCase()
+  if (extension === 'png') return 'image/png'
+  if (extension === 'webp') return 'image/webp'
+  if (extension === 'gif') return 'image/gif'
+  return 'image/jpeg'
 }
 
 export default function AiChat() {
@@ -102,8 +111,12 @@ export default function AiChat() {
       })
       const file = result.tempFiles[0]
       if (!file?.tempFilePath) return
+      if (file.fileType && file.fileType !== 'image') {
+        Taro.showToast({ title: '只能上传图片', icon: 'none' })
+        return
+      }
       setLoading(true)
-      const uploaded = await uploadAiImage(file.tempFilePath, 'image/jpeg')
+      const uploaded = await uploadAiImage(file.tempFilePath, inferImageMimeType(file.tempFilePath))
       setImage(uploaded)
       setImagePreview(file.tempFilePath)
     } catch (error) {
@@ -127,7 +140,7 @@ export default function AiChat() {
     const params = {
       bookId: bookId || undefined,
       book: { ...book, title },
-      question: text || '请解释图片中的文字，并结合这本书的背景回答。',
+      question: text || DEFAULT_IMAGE_QUESTION,
       context: context.trim() || undefined,
       image: image ?? undefined,
       sessionId: currentSessionId || undefined,

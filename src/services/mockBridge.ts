@@ -4,6 +4,7 @@ import type { ApiResponse, PaginatedData } from '../types/common'
 import { ErrorCode, ERROR_MESSAGE_MAP } from '../types/common'
 import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../types/book'
 import type { BookContextInput, AiImageInput, OpenAIChatMessage, OpenAIMultimodalChatMessage } from '../types/ai'
+import { DEFAULT_IMAGE_QUESTION } from '../types/ai'
 import type { User } from '../types/user'
 import type { ReadingEvent, ReadingEventType } from '../types/reading'
 import type { CommunityGroupType } from '../types/community'
@@ -200,9 +201,10 @@ async function mockAiMain(data: Record<string, unknown>): Promise<ApiResponse<un
     const bookInput = data.book && typeof data.book === 'object' ? data.book as BookContextInput : undefined
     const bookId = typeof data.bookId === 'string' ? data.bookId : undefined
     const image = data.image && typeof data.image === 'object' ? data.image as AiImageInput : undefined
-    if (!question) return fail(ErrorCode.BAD_REQUEST, 'question is required')
+    if (!question && !image) return fail(ErrorCode.BAD_REQUEST, 'question is required unless an image is provided')
     if (!bookId && !bookInput?.title?.trim()) return fail(ErrorCode.BAD_REQUEST, 'book.title or bookId is required')
-    if (question.length + (typeof data.context === 'string' ? data.context.length : 0) > 1000) {
+    const normalizedQuestion = question || DEFAULT_IMAGE_QUESTION
+    if (normalizedQuestion.length + (typeof data.context === 'string' ? data.context.length : 0) > 1000) {
       return fail(ErrorCode.AI_LIMIT, 'Question is too long')
     }
     if (await repo.countTodayChats(user.openid) >= 50) return fail(ErrorCode.AI_LIMIT, 'Daily limit reached')
@@ -253,29 +255,43 @@ async function mockAiMain(data: Record<string, unknown>): Promise<ApiResponse<un
     sessionId = session.sessionId
 
     const contextText = typeof data.context === 'string' && data.context.trim()
-      ? `${question}\n\nContext supplied by the reader:\n${data.context.trim()}`
-      : question
+      ? `${normalizedQuestion}\n\nContext supplied by the reader:\n${data.context.trim()}`
+      : normalizedQuestion
     const history = await repo.getSessionMessages(sessionId, 10)
     const system = `You are a careful reading companion. The platform has metadata but no full book text. title: ${book.title}; author: ${book.author || 'unknown'}; edition: ${book.edition || 'unknown'}; ISBN: ${book.isbn || 'unknown'}; summary: ${book.summary || 'not provided'}. Do not invent unsupported quotations or plot details.`
-    const messages: OpenAIMultimodalChatMessage[] = [
-      { role: 'system', content: system },
-      ...history.map((item) => ({ role: item.role, content: item.content })),
-      {
-        role: 'user',
-        content: image
-          ? [
-              { type: 'text', text: contextText },
-              { type: 'image_url', image_url: { url: await storage.getTempFileURL(image.fileId) } },
-            ]
-          : contextText,
-      },
-    ]
+    let messages: OpenAIMultimodalChatMessage[]
+    try {
+      messages = [
+        { role: 'system', content: system },
+        ...await Promise.all(history.map(async (item) => ({
+          role: item.role,
+          content: item.imageFileId
+            ? [
+                { type: 'text' as const, text: item.content },
+                { type: 'image_url' as const, image_url: { url: await storage.getTempFileURL(item.imageFileId) } },
+              ]
+            : item.content,
+        }))),
+        {
+          role: 'user',
+          content: image
+            ? [
+                { type: 'text', text: contextText },
+                { type: 'image_url', image_url: { url: await storage.getTempFileURL(image.fileId) } },
+              ]
+            : contextText,
+        },
+      ]
+    } catch {
+      return fail(ErrorCode.STORAGE_ERROR, 'Unable to prepare the image for AI')
+    }
     await repo.addMessage({
       sessionId,
       openid: user.openid,
       role: 'user',
       content: contextText,
       imageFileId: image?.fileId,
+      imageMimeType: image?.mimeType,
       createdAt: Date.now(),
     })
     let reply: string

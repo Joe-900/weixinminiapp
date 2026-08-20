@@ -18,6 +18,11 @@ export function createError<T = null>(code: ErrorCode, customMessage?: string): 
     [ErrorCode.ACCESS_DENIED]: 'Access denied',
     [ErrorCode.AI_ERROR]: 'AI service error',
     [ErrorCode.AI_LIMIT]: 'Usage limit reached',
+    [ErrorCode.AI_CONFIG_MISSING]: 'AI service is not configured',
+    [ErrorCode.AI_TIMEOUT]: 'AI request timed out',
+    [ErrorCode.AI_QUOTA_EXCEEDED]: 'AI quota exceeded',
+    [ErrorCode.AI_INVALID_RESPONSE]: 'AI returned an invalid response',
+    [ErrorCode.STORAGE_ERROR]: 'Image storage processing failed',
     [ErrorCode.INTERNAL_ERROR]: 'Internal server error',
   }
 

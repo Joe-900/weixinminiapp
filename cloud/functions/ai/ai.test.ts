@@ -11,7 +11,13 @@ import { seedUsers, seedBooks, SEED_USER_OPENID } from '../mock/seedData'
 import type { Repository } from '../interfaces/repository'
 import type { AiClient } from '../interfaces/aiClient'
 import type { ApiResponse } from '../../../src/types/common'
-import type { ChatResult, AiMessage, AiSession } from '../../../src/types/ai'
+import type {
+  ChatResult,
+  AiMessage,
+  AiSession,
+  OpenAIMultimodalChatMessage,
+} from '../../../src/types/ai'
+import type { Storage } from '../interfaces/storage'
 
 let repo: Repository
 let aiClient: MockAiClient
@@ -239,6 +245,106 @@ describe('AI domain - LAI10: Mock reply persisted', () => {
 
     expect(assistantMsg).toBeTruthy()
     expect(assistantMsg!.content).toContain('Journey to the West')
+  })
+})
+
+describe('AI domain - multimodal image context', () => {
+  test('image-only question uses the default question and sends an image part', async () => {
+    let captured: OpenAIMultimodalChatMessage[] = []
+    const storage: Storage = {
+      async upload() { return 'file://unused' },
+      async getTempFileURL(fileId) { return `https://files.example/${fileId}` },
+    }
+    const multimodalClient: AiClient = {
+      async chat() { return 'text reply' },
+      async chatMultimodal(messages) {
+        captured = messages
+        return 'image reply'
+      },
+    }
+
+    const result = await aiMain(
+      {
+        action: 'chat',
+        bookId: 'book_001',
+        question: '',
+        image: { fileId: 'image_001', mimeType: 'image/png' },
+      },
+      MOCK_CTX,
+      repo,
+      multimodalClient,
+      undefined,
+      storage,
+    ) as ApiResponse<ChatResult>
+
+    expect(result.code).toBe(ErrorCode.SUCCESS)
+    const userMessage = captured[captured.length - 1]
+    expect(Array.isArray(userMessage.content)).toBe(true)
+    expect(userMessage.content).toEqual([
+      { type: 'text', text: '请解释图片中的文字，并结合这本书的背景回答。' },
+      { type: 'image_url', image_url: { url: 'https://files.example/image_001' } },
+    ])
+  })
+
+  test('historical image messages are rebuilt with temporary URLs', async () => {
+    const storage: Storage = {
+      async upload() { return 'file://unused' },
+      async getTempFileURL(fileId) { return `https://files.example/${fileId}` },
+    }
+    let firstMessages: OpenAIMultimodalChatMessage[] = []
+    let secondMessages: OpenAIMultimodalChatMessage[] = []
+    const multimodalClient: AiClient = {
+      async chat(messages) {
+        secondMessages = messages
+        return 'text reply'
+      },
+      async chatMultimodal(messages) {
+        firstMessages = messages
+        return 'image reply'
+      },
+    }
+
+    const first = await aiMain(
+      { action: 'chat', bookId: 'book_001', question: '图片里的人物是谁？', image: { fileId: 'image_002', mimeType: 'image/jpeg' } },
+      MOCK_CTX,
+      repo,
+      multimodalClient,
+      undefined,
+      storage,
+    ) as ApiResponse<ChatResult>
+    expect(first.code).toBe(ErrorCode.SUCCESS)
+
+    await aiMain(
+      { action: 'chat', bookId: 'book_001', question: '请继续说明。', sessionId: first.data!.sessionId },
+      MOCK_CTX,
+      repo,
+      multimodalClient,
+      undefined,
+      storage,
+    )
+
+    expect(firstMessages.length).toBeGreaterThan(0)
+    const historicalUser = secondMessages.find((message) => message.role === 'user')
+    expect(historicalUser?.content).toEqual([
+      { type: 'text', text: '图片里的人物是谁？' },
+      { type: 'image_url', image_url: { url: 'https://files.example/image_002' } },
+    ])
+  })
+
+  test('image storage failures use the storage error code', async () => {
+    const storage: Storage = {
+      async upload() { return 'file://unused' },
+      async getTempFileURL() { throw new Error('storage unavailable') },
+    }
+    const result = await aiMain(
+      { action: 'chat', bookId: 'book_001', question: '图片问题', image: { fileId: 'image_003', mimeType: 'image/jpeg' } },
+      MOCK_CTX,
+      repo,
+      aiClient,
+      undefined,
+      storage,
+    )
+    expect(result.code).toBe(ErrorCode.STORAGE_ERROR)
   })
 })
 
