@@ -6,7 +6,7 @@
 import type { User } from '../types/user'
 import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../types/book'
 import type { Note, Checkin, CheckinStat } from '../types/note'
-import type { AiSession, AiMessage } from '../types/ai'
+import type { AiProviderConfig, AiSession, AiMessage } from '../types/ai'
 import type { ReadingEvent, ReadingPlan, ReadingStat } from '../types/reading'
 import type { ClassGroup, CommunityMember } from '../types/community'
 import type { ReadingTask, TaskSubmission, TaskFeedback } from '../types/task'
@@ -48,6 +48,8 @@ export interface MockRepository {
   getSessionMessages(sessionId: string, limit: number): Promise<AiMessage[]>
   addMessage(message: Omit<AiMessage, '_id' | 'msgId'>): Promise<AiMessage>
   countTodayChats(openid: string): Promise<number>
+  getAiProviderConfig(): Promise<AiProviderConfig | null>
+  saveAiProviderConfig(config: Omit<AiProviderConfig, '_id'>): Promise<AiProviderConfig>
   addReadingEvent(event: Omit<ReadingEvent, '_id' | 'eventId'>): Promise<ReadingEvent>
   listReadingEvents(openid: string, bookId?: string): Promise<ReadingEvent[]>
   listAllReadingEvents(groupId?: string): Promise<ReadingEvent[]>

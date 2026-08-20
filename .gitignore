@@ -10,3 +10,9 @@ coverage/
 *.md
 .tools/
 .codex/
+.env
+.env.*
+!.env.example
+cloud/functions/**/.env
+cloud/functions/**/.env.*
+!cloud/functions/**/.env.example

@@ -8,7 +8,7 @@ import type { Repository, PageResult } from '../interfaces/repository'
 import type { User } from '../../../src/types/user'
 import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../../../src/types/book'
 import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
-import type { AiSession, AiMessage } from '../../../src/types/ai'
+import type { AiProviderConfig, AiSession, AiMessage } from '../../../src/types/ai'
 import type { ReadingEvent, ReadingPlan, ReadingStat } from '../../../src/types/reading'
 import type { ClassGroup, CommunityMember } from '../../../src/types/community'
 import type { ReadingTask, TaskSubmission, TaskFeedback } from '../../../src/types/task'
@@ -236,6 +236,26 @@ export class CloudRepository implements Repository {
       .count()
 
     return res.total
+  }
+
+  async getAiProviderConfig(): Promise<AiProviderConfig | null> {
+    const result = await this.db.collection('ai_config').where({ configId: 'default' }).get()
+    return (result.data[0] as unknown as AiProviderConfig) ?? null
+  }
+
+  async saveAiProviderConfig(config: Omit<AiProviderConfig, '_id'>): Promise<AiProviderConfig> {
+    const collection = this.db.collection('ai_config')
+    const current = await collection.where({ configId: config.configId }).get()
+    const saved: AiProviderConfig = {
+      ...config,
+      _id: (current.data[0] as unknown as AiProviderConfig | undefined)?._id ?? config.configId,
+    }
+    if (current.data[0]) {
+      await collection.where({ configId: config.configId }).update({ ...config })
+    } else {
+      await collection.add({ ...config })
+    }
+    return saved
   }
 
   private makeId(prefix: string): string {

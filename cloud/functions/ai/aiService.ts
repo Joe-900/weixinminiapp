@@ -7,20 +7,30 @@ import type { Repository } from '../interfaces/repository'
 import type { AiClient } from '../interfaces/aiClient'
 import type { Storage } from '../interfaces/storage'
 import type { ApiResponse } from '../../../src/types/common'
-import type {
-  AiSession,
-  AiMessage,
-  ChatParams,
-  ChatResult,
-  OpenAIChatMessage,
-  OpenAIMultimodalChatMessage,
+import {
+  DEFAULT_IMAGE_QUESTION,
+  type AiProviderConfig,
+  type AiProviderConfigUpdate,
+  type AiProviderConfigView,
+  type AiSession,
+  type AiMessage,
+  type ChatParams,
+  type ChatResult,
+  type OpenAIChatMessage,
+  type OpenAIMultimodalChatMessage,
 } from '../../../src/types/ai'
-import { DEFAULT_IMAGE_QUESTION } from '../../../src/types/ai'
 import type { Book } from '../../../src/types/book'
+import type { AuthContext } from '../common/auth'
 import { success, fail } from '../common/response'
 import { ErrorCode } from '../../../src/types/common'
 import { validateParams } from '../common/validate'
 import { AiClientError } from '../cloud/aiClientError'
+import { requireAdmin } from '../common/auth'
+import {
+  applyAiProviderConfigUpdate,
+  toAiProviderConfigView,
+  validateAiProviderConfigUpdate,
+} from '../../../src/utils/aiProviderConfig'
 
 const DEFAULT_HISTORY_LIMIT = 10
 const DEFAULT_DAILY_LIMIT = 50
@@ -279,4 +289,49 @@ export async function handleListSessions(
 ): Promise<ApiResponse<AiSession[]>> {
   const sessions = await repo.listSessions(openid)
   return success(sessions)
+}
+
+export async function handleGetProviderConfig(
+  repo: Repository,
+  auth: AuthContext,
+  env: Record<string, string | undefined>,
+): Promise<ApiResponse<AiProviderConfigView>> {
+  const adminError = requireAdmin<AiProviderConfigView>(auth)
+  if (adminError) return adminError
+  let persisted: AiProviderConfig | null
+  try {
+    persisted = await repo.getAiProviderConfig()
+  } catch {
+    return fail(ErrorCode.INTERNAL_ERROR, 'Unable to load AI provider configuration')
+  }
+  return success(toAiProviderConfigView(env, persisted))
+}
+
+export async function handleUpdateProviderConfig(
+  repo: Repository,
+  auth: AuthContext,
+  params: AiProviderConfigUpdate,
+  env: Record<string, string | undefined>,
+): Promise<ApiResponse<AiProviderConfigView>> {
+  const adminError = requireAdmin<AiProviderConfigView>(auth)
+  if (adminError) return adminError
+
+  const validation = validateAiProviderConfigUpdate(params)
+  if (!validation.valid) return fail(ErrorCode.BAD_REQUEST, validation.message)
+
+  let current: AiProviderConfig | null
+  try {
+    current = await repo.getAiProviderConfig()
+  } catch {
+    return fail(ErrorCode.INTERNAL_ERROR, 'Unable to load AI provider configuration')
+  }
+
+  const nextConfig = applyAiProviderConfigUpdate(current, validation.update, auth.openid)
+  let next: AiProviderConfig
+  try {
+    next = await repo.saveAiProviderConfig(nextConfig)
+  } catch {
+    return fail(ErrorCode.INTERNAL_ERROR, 'Unable to save AI provider configuration')
+  }
+  return success(toAiProviderConfigView(env, next))
 }

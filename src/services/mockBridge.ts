@@ -3,7 +3,7 @@
 import type { ApiResponse, PaginatedData } from '../types/common'
 import { ErrorCode, ERROR_MESSAGE_MAP } from '../types/common'
 import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../types/book'
-import type { BookContextInput, AiImageInput, OpenAIChatMessage, OpenAIMultimodalChatMessage } from '../types/ai'
+import type { AiImageInput, AiProviderConfigUpdate, BookContextInput, OpenAIChatMessage, OpenAIMultimodalChatMessage } from '../types/ai'
 import { DEFAULT_IMAGE_QUESTION } from '../types/ai'
 import type { User } from '../types/user'
 import type { ReadingEvent, ReadingEventType } from '../types/reading'
@@ -14,6 +14,11 @@ import { LocalStorage } from '../mock/localStorage'
 import { MockAiClient } from '../mock/mockAiClient'
 import { seedUsers, seedBooks, seedGroups, seedMembers, seedTasks, seedReadingEvents, MOCK_LOGIN_OPENID } from '../mock/seedData'
 import { validateBookTags } from '../utils/bookTags'
+import {
+  applyAiProviderConfigUpdate,
+  toAiProviderConfigView,
+  validateAiProviderConfigUpdate,
+} from '../utils/aiProviderConfig'
 
 const repo = new MemoryRepository()
 const storage = new LocalStorage()
@@ -209,6 +214,24 @@ async function mockAiMain(data: Record<string, unknown>): Promise<ApiResponse<un
   const action = data.action as string
   const user = await getCurrentUser()
   if (!user) return fail(ErrorCode.UNAUTHORIZED)
+
+  if (action === 'getConfig') {
+    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN, 'Admin only')
+    return success(toAiProviderConfigView({}, await repo.getAiProviderConfig()))
+  }
+
+  if (action === 'updateConfig') {
+    if (user.role !== 'admin') return fail(ErrorCode.FORBIDDEN, 'Admin only')
+    const validation = validateAiProviderConfigUpdate({
+      baseURL: data.baseURL as string | null | undefined,
+      apiKey: data.apiKey as string | null | undefined,
+    } satisfies AiProviderConfigUpdate)
+    if (!validation.valid) return fail(ErrorCode.BAD_REQUEST, validation.message)
+    const current = await repo.getAiProviderConfig()
+    const nextConfig = applyAiProviderConfigUpdate(current, validation.update, user.openid)
+    const saved = await repo.saveAiProviderConfig(nextConfig)
+    return success(toAiProviderConfigView({}, saved))
+  }
 
   if (action === 'chat') {
     const question = typeof data.question === 'string' ? data.question.trim() : ''

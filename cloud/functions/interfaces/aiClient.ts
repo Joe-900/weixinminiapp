@@ -7,4 +7,5 @@ import type { OpenAIChatMessage, OpenAIMultimodalChatMessage } from '../../../sr
 export interface AiClient {
   chat(messages: OpenAIChatMessage[]): Promise<string>
   chatMultimodal?(messages: OpenAIMultimodalChatMessage[]): Promise<string>
+  configure?(env: Record<string, string | undefined>): AiClient
 }

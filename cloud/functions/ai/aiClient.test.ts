@@ -15,7 +15,7 @@ import type { ChatResult } from '../../../src/types/ai'
 
 const ENV = {
   AI_BASE_URL: 'https://ai.example.com/v1',
-  AI_API_KEY: 'test-key',
+  AI_API_KEY: 'test-provider-value',
   AI_MODEL: 'test-model',
   AI_TIMEOUT: '1000',
   AI_MAX_TOKENS: '100',
@@ -53,7 +53,7 @@ describe('OpenAiClient - request assembly', () => {
     expect(reply).toBe('hi')
     expect(capturedUrl).toBe('https://ai.example.com/v1/chat/completions')
     const headers = capturedInit!.headers as Record<string, string>
-    expect(headers.Authorization).toBe('Bearer test-key')
+    expect(headers.Authorization).toBe('Bearer test-provider-value')
     const body = JSON.parse(capturedInit!.body as string)
     expect(body.model).toBe('test-model')
     expect(body.messages).toEqual([{ role: 'user', content: 'hello' }])
@@ -68,6 +68,33 @@ describe('OpenAiClient - request assembly', () => {
     const client = new OpenAiClient({ ...ENV, AI_BASE_URL: 'https://ai.example.com/v1///' })
     await client.chat([{ role: 'user', content: 'x' }])
     expect(capturedUrl).toBe('https://ai.example.com/v1/chat/completions')
+  })
+
+  test('configure replaces the runtime provider configuration', async () => {
+    let capturedUrl = ''
+    let capturedAuthorization = ''
+    let capturedModel = ''
+    mockFetch(async (url, init) => {
+      capturedUrl = url
+      capturedAuthorization = (init.headers as Record<string, string>).Authorization
+      capturedModel = (JSON.parse(init.body as string) as { model: string }).model
+      return jsonResponse(200, { choices: [{ message: { content: 'reconfigured' } }] })
+    })
+
+    const client = new OpenAiClient(ENV)
+    client.configure({
+      AI_BASE_URL: 'https://database.example.com/v1/',
+      AI_API_KEY: 'database-provider-value',
+      AI_MODEL: 'database-model',
+      AI_TIMEOUT: '1000',
+      AI_MAX_TOKENS: '100',
+      AI_TEMPERATURE: '0.7',
+    })
+    await expect(client.chat([{ role: 'user', content: 'hello' }])).resolves.toBe('reconfigured')
+
+    expect(capturedUrl).toBe('https://database.example.com/v1/chat/completions')
+    expect(capturedAuthorization).toBe('Bearer database-provider-value')
+    expect(capturedModel).toBe('database-model')
   })
 
   test('uses the ShuaiAPI-compatible base URL and configured model', async () => {
@@ -95,7 +122,7 @@ describe('OpenAiClient - request assembly', () => {
 
   test('does not expose the API key in the response', async () => {
     mockFetch(async () => jsonResponse(200, { choices: [{ message: { content: '安全回复' } }] }))
-    const client = new OpenAiClient({ ...ENV, AI_API_KEY: 'secret-provider-key' })
+    const client = new OpenAiClient({ ...ENV, AI_API_KEY: 'secret-provider-value' })
     await expect(client.chat([{ role: 'user', content: '问题' }])).resolves.toBe('安全回复')
   })
 })

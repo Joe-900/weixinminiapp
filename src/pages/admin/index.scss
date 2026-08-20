@@ -111,6 +111,22 @@
     line-height: 1.4;
   }
 
+  &__ai-config {
+    margin-bottom: 20px;
+  }
+
+  &__ai-status {
+    margin-bottom: 8px;
+  }
+
+  &__ai-message {
+    display: block;
+    margin: 4px 0 8px;
+    color: #2563eb;
+    font-size: 22px;
+    line-height: 1.4;
+  }
+
   &__input {
     border: 1px solid #e5e5e5;
     border-radius: 8px;

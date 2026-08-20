@@ -57,6 +57,30 @@ export interface ChatResult {
   uncertainty?: string
 }
 
+export interface AiProviderConfig {
+  _id?: string
+  configId: 'default'
+  baseURL?: string | null
+  apiKey?: string | null
+  updatedAt: number
+  updatedBy: string
+}
+
+export type AiProviderConfigSource = 'environment' | 'database' | 'mixed'
+
+export interface AiProviderConfigView {
+  baseURL: string
+  model: string
+  apiKeyConfigured: boolean
+  source: AiProviderConfigSource
+  updatedAt?: number
+}
+
+export interface AiProviderConfigUpdate {
+  baseURL?: string | null
+  apiKey?: string | null
+}
+
 export interface OpenAITextContentPart {
   type: 'text'
   text: string

@@ -8,7 +8,7 @@
 2. 微信图片上传、历史图片上下文和多模态对话；
 3. 管理员维护图书元数据标签，并支持用户侧展示与筛选。
 
-API 密钥只允许通过云函数运行时的 `AI_API_KEY` 环境变量注入，不写入仓库、前端产物、日志、测试输出或命令行参数。非敏感配置为 `AI_BASE_URL=https://api.shuaiapi.com/v1`、`AI_MODEL=qwen3.7-flash`。
+API 密钥只允许通过云函数运行时的 `AI_API_KEY` 环境变量或管理员服务端配置注入，不写入仓库、前端产物、日志、测试输出或命令行参数。非敏感配置为 `AI_BASE_URL=https://api.shuaiapi.com/v1`、`AI_MODEL=qwen3.7-flash`。
 
 ## 已核实的可复用模块
 
@@ -28,12 +28,23 @@ API 密钥只允许通过云函数运行时的 `AI_API_KEY` 环境变量注入�
 
 `Book.tags?: string[]`，`BookListParams.tag?: string`。服务端统一校验：去首尾空白、忽略空值、去重、最多 2 个、单个最多 20 个字符；仅管理员可以在创建、更新和元数据导入后修改。标签只用于展示和筛选，不注入 AI 提示词。
 
+### AI Provider 管理员配置（追加）
+
+配置来源按字段合并：云端 `ai_config` 单例中的管理员配置优先，未设置的字段使用云函数环境变量；因此既支持管理员页面修改，也支持直接在运行环境填入 `AI_BASE_URL`、`AI_API_KEY` 和 `AI_MODEL`。`AI_API_KEY` 永远不返回前端、不写日志、不进入 Git；仓库只保留 `.env.example`。
+
+- `ai({ action: 'getConfig' }) -> ApiResponse<AiProviderConfigView>`：仅管理员可调用；返回 `baseURL`、`model`、`apiKeyConfigured`、`source` 和更新时间，不返回密钥或密钥片段。
+- `ai({ action: 'updateConfig', baseURL?, apiKey? }) -> ApiResponse<AiProviderConfigView>`：仅管理员可调用；至少修改一个字段；非空 `baseURL` 必须为 `http`/`https` 绝对 URL，API Key 只在请求中写入服务端配置；返回脱敏视图。
+- `Repository.getAiProviderConfig() -> Promise<AiProviderConfig | null>` 和 `saveAiProviderConfig(config) -> Promise<AiProviderConfig>`：CloudBase 与本地 Mock 共用同一抽象；配置记录使用 `configId: 'default'` 单例。
+- `AiClient.configure?(config) -> AiClient`：聊天前按环境变量和持久化配置生成实际 Provider 客户端；Mock 客户端不改变行为。
+
+管理员接口错误使用现有 `FORBIDDEN`、`BAD_REQUEST` 和 `INTERNAL_ERROR`；配置查询失败不得静默使用空配置。
+
 ## 实施顺序
 
 ### 阶段一：文本 Provider
 
 - 核对并补充 ShuaiAPI 非敏感环境变量示例和错误映射；
-- 保持 API Key 仅由 `process.env.AI_API_KEY` 读取；
+- 保持 API Key 只在服务端运行时读取，不进入前端代码；
 - 使用本机临时探针做一次非敏感文本响应验证（探针位于被忽略的 `.temp/`，不入 Git）；
 - 补充请求地址、模型、历史上限、上下文和密钥隔离测试；
 - 运行测试、类型检查、Lint、微信构建和 Cloud 函数检查；
@@ -56,6 +67,16 @@ API 密钥只允许通过云函数运行时的 `AI_API_KEY` 环境变量注入�
 - 补充 0/1/2 标签、去重、超长、第三标签和非管理员拒绝测试；
 - 提交：`增加管理员图书标签管理`。
 
+### 阶段四：AI Provider 管理员配置
+
+- 新增共享配置类型、Repository 读写接口和 `ai_config` 单例实现；
+- 增加 AI 云函数 `getConfig`/`updateConfig` 管理员动作，查询只返回脱敏状态；
+- 聊天请求按“持久化配置覆盖环境变量、空字段沿用环境变量”合并配置；
+- 管理员页面增加 Base URL、API Key 输入和当前配置状态；API Key 输入框不回填旧值；
+- 增加 `.env`/`.env.*` 忽略规则并保留 `cloud/functions/ai/.env.example`；
+- 使用本机进程环境变量执行一次 ShuaiAPI 文本请求，探针只输出状态分类和是否取得非空回复；
+- 提交：`支持管理员配置 AI Provider`。
+
 ## 验证与提交边界
 
 每个阶段分别执行：
@@ -68,7 +89,7 @@ npm run build:weapp
 npm run build:cloud:check
 ```
 
-阶段提交只包含本阶段文件，`demo.zip` 始终保持原样且不加入 Git。最终验收包括文本连续会话、图片多模态及历史上下文、管理员标签权限和筛选、前端不含密钥、Mock 不联网、微信构建和 Cloud 函数打包全部通过。
+阶段提交只包含本阶段文件，`demo.zip` 不加入 Git，本次按授权删除。最终验收包括文本连续会话、图片多模态及历史上下文、管理员标签权限和筛选、前端不含密钥、Mock 不联网、微信构建和 Cloud 函数打包全部通过。
 
 ## 未在本轮假设的外部条件
 
@@ -82,4 +103,5 @@ npm run build:cloud:check
 - 阶段二已提交：`5bad391 完善伴读图片上传与多模态请求`。当前图片、历史图片、图片-only 默认问题、微信文件类型校验和存储错误已覆盖。
 - 阶段三已提交：`b422630 增加管理员图书标签管理`。图书标签字段、管理员权限、标签过滤、页面展示和边界测试均已通过。
 - 阶段三补充修复已提交：管理员标签输入框增加重复与超长的即时提示，不改变服务端校验规则。
-- 最终本地验证：99 项 Jest 测试通过，`typecheck`、`lint`、`build:weapp`、`build:cloud:check` 均通过。微信构建保留 Sass `@import` 弃用和 admin 包体积提示。
+- 阶段四实现完成：管理员可通过 `getConfig`/`updateConfig` 管理 AI Provider 的 Base URL 和 API Key；管理员配置按字段覆盖环境变量，清除覆盖后回退到环境变量；API Key 不返回前端、不写入仓库或前端产物。
+- 阶段四本地验证：110 项 Jest 测试、`typecheck`、`lint`、`build:weapp`、完整 `build:cloud` 和 Cloud 函数部署包冒烟检查均通过。微信构建保留 Sass `@import` 弃用和 admin 包体积提示。真实 ShuaiAPI 请求已确认端点可达，但当前机器未注入 API Key，匿名请求返回 HTTP 401，待注入真实密钥后完成成功响应验证。

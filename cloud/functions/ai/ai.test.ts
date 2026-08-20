@@ -7,11 +7,12 @@ import { MemoryRepository } from '../mock/memoryRepository'
 import { MockAiClient } from '../mock/mockAiClient'
 import { aiMain } from './index'
 import { ErrorCode } from '../../../src/types/common'
-import { seedUsers, seedBooks, SEED_USER_OPENID } from '../mock/seedData'
+import { seedUsers, seedBooks, SEED_ADMIN_OPENID, SEED_USER_OPENID } from '../mock/seedData'
 import type { Repository } from '../interfaces/repository'
 import type { AiClient } from '../interfaces/aiClient'
 import type { ApiResponse } from '../../../src/types/common'
 import type {
+  AiProviderConfig,
   ChatResult,
   AiMessage,
   AiSession,
@@ -419,5 +420,171 @@ describe('AI domain - loadHistory and listSessions', () => {
     )
 
     expect(result.code).toBe(ErrorCode.ACCESS_DENIED)
+  })
+})
+
+describe('AI Provider configuration', () => {
+  const env = {
+    AI_BASE_URL: 'https://env.example.com/v1',
+    AI_MODEL: 'env-model',
+    AI_API_KEY: 'env-provider-value',
+  }
+
+  test('admin can read a redacted provider configuration', async () => {
+    const result = await aiMain(
+      { action: 'getConfig' },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+      aiClient,
+      env,
+    ) as ApiResponse<{ baseURL: string; model: string; apiKeyConfigured: boolean }>
+
+    expect(result.code).toBe(ErrorCode.SUCCESS)
+    expect(result.data).toMatchObject({
+      baseURL: env.AI_BASE_URL,
+      model: env.AI_MODEL,
+      apiKeyConfigured: true,
+    })
+    expect(JSON.stringify(result.data)).not.toContain(env.AI_API_KEY)
+  })
+
+  test('non-admin cannot read or update provider configuration', async () => {
+    const read = await aiMain(
+      { action: 'getConfig' },
+      MOCK_CTX,
+      repo,
+      aiClient,
+      env,
+    )
+    const update = await aiMain(
+      { action: 'updateConfig', baseURL: 'https://new.example.com/v1', apiKey: 'new-provider-value' },
+      MOCK_CTX,
+      repo,
+      aiClient,
+      env,
+    )
+
+    expect(read.code).toBe(ErrorCode.FORBIDDEN)
+    expect(update.code).toBe(ErrorCode.FORBIDDEN)
+  })
+
+  test('admin update persists overrides and never returns the API key', async () => {
+    const result = await aiMain(
+      { action: 'updateConfig', baseURL: 'https://database.example.com/v1' },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+      aiClient,
+      env,
+    ) as ApiResponse<{ baseURL: string; apiKeyConfigured: boolean }>
+
+    expect(result.code).toBe(ErrorCode.SUCCESS)
+    expect(result.data).toMatchObject({ baseURL: 'https://database.example.com/v1', apiKeyConfigured: true })
+    expect(JSON.stringify(result.data)).not.toContain('env-provider-value')
+    expect(await repo.getAiProviderConfig()).toMatchObject({
+      baseURL: 'https://database.example.com/v1',
+    })
+
+    const withKey = await aiMain(
+      { action: 'updateConfig', apiKey: 'database-provider-value' },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+      aiClient,
+      env,
+    ) as ApiResponse<{ baseURL: string; apiKeyConfigured: boolean }>
+    expect(withKey.code).toBe(ErrorCode.SUCCESS)
+    expect(withKey.data).toMatchObject({ baseURL: 'https://database.example.com/v1', apiKeyConfigured: true })
+    expect(JSON.stringify(withKey.data)).not.toContain('database-provider-value')
+    expect(await repo.getAiProviderConfig()).toMatchObject({
+      baseURL: 'https://database.example.com/v1',
+      apiKey: 'database-provider-value',
+    })
+
+    const cleared = await aiMain(
+      { action: 'updateConfig', apiKey: null },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+      aiClient,
+      env,
+    ) as ApiResponse<{ apiKeyConfigured: boolean }>
+    expect(cleared.code).toBe(ErrorCode.SUCCESS)
+    expect(cleared.data!.apiKeyConfigured).toBe(true)
+    expect((await repo.getAiProviderConfig())!.apiKey).toBeNull()
+  })
+
+  test('chat applies persisted overrides and keeps environment fallbacks', async () => {
+    await repo.saveAiProviderConfig({
+      configId: 'default',
+      baseURL: 'https://database.example.com/v1',
+      apiKey: null,
+      updatedAt: 123,
+      updatedBy: SEED_ADMIN_OPENID,
+    })
+
+    let configured: Record<string, string | undefined> = {}
+    const configuredClient: AiClient = {
+      configure(environment) {
+        configured = environment
+        return this
+      },
+      async chat() {
+        return 'configured reply'
+      },
+    }
+
+    const result = await aiMain(
+      { action: 'chat', bookId: 'book_001', question: '请继续阅读' },
+      MOCK_CTX,
+      repo,
+      configuredClient,
+      env,
+    )
+
+    expect(result.code).toBe(ErrorCode.SUCCESS)
+    expect(configured).toMatchObject({
+      AI_BASE_URL: 'https://database.example.com/v1',
+      AI_API_KEY: 'env-provider-value',
+      AI_MODEL: 'env-model',
+    })
+  })
+
+  test('admin update rejects invalid URLs', async () => {
+    const result = await aiMain(
+      { action: 'updateConfig', baseURL: 'file:///not-a-provider' },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+      aiClient,
+      env,
+    )
+    expect(result.code).toBe(ErrorCode.BAD_REQUEST)
+  })
+
+  test('configuration storage failures return INTERNAL_ERROR instead of empty config', async () => {
+    class FailingConfigRepository extends MemoryRepository {
+      async getAiProviderConfig(): Promise<AiProviderConfig | null> {
+        throw new Error('config store unavailable')
+      }
+    }
+
+    const failingRepo = new FailingConfigRepository()
+    failingRepo.seedUsers(seedUsers)
+    failingRepo.seedBooks(seedBooks)
+
+    const read = await aiMain(
+      { action: 'getConfig' },
+      { OPENID: SEED_ADMIN_OPENID },
+      failingRepo,
+      aiClient,
+      env,
+    )
+    const chat = await aiMain(
+      { action: 'chat', bookId: 'book_001', question: '配置读取失败时不应继续请求' },
+      MOCK_CTX,
+      failingRepo,
+      aiClient,
+      env,
+    )
+
+    expect(read.code).toBe(ErrorCode.INTERNAL_ERROR)
+    expect(chat.code).toBe(ErrorCode.INTERNAL_ERROR)
   })
 })

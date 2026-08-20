@@ -15,6 +15,10 @@ export {
   OpenAIImageContentPart,
   OpenAIChatMessage,
   OpenAIMultimodalChatMessage,
+  AiProviderConfig,
+  AiProviderConfigSource,
+  AiProviderConfigView,
+  AiProviderConfigUpdate,
 } from './ai'
 export { ReadingEvent, ReadingEventType, ReadingPlan, ReadingStat, ReadingEventParams, ReadingPlanCreateParams, RankingEntry, RankingResult } from './reading'
 export { ClassGroup, CommunityMember, CommunityGroupType, CommunityMemberRole, CommunityGroupParams, CommunityJoinParams } from './community'

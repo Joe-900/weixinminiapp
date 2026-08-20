@@ -49,6 +49,16 @@ export class OpenAiClient implements AiClient {
     return this.request(messages)
   }
 
+  configure(env: Record<string, string | undefined>): AiClient {
+    this.baseURL = (env.AI_BASE_URL ?? '').replace(/\/+$/, '')
+    this.apiKey = env.AI_API_KEY ?? ''
+    this.model = env.AI_MODEL ?? ''
+    this.timeout = Number(env.AI_TIMEOUT ?? '30000')
+    this.maxTokens = Number(env.AI_MAX_TOKENS ?? '1000')
+    this.temperature = Number(env.AI_TEMPERATURE ?? '0.7')
+    return this
+  }
+
   private async request(messages: Array<OpenAIChatMessage | OpenAIMultimodalChatMessage>): Promise<string> {
     if (!this.baseURL || !this.apiKey || !this.model) {
       throw new AiClientError('config_missing', 'AI_BASE_URL, AI_API_KEY and AI_MODEL are required')

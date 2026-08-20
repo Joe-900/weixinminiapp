@@ -8,11 +8,12 @@ import type { Repository } from '../interfaces/repository'
 import type { AiClient } from '../interfaces/aiClient'
 import type { Storage } from '../interfaces/storage'
 import type { AiImageInput, BookContextInput } from '../../../src/types/ai'
-import { handleChat, handleLoadHistory, handleListSessions } from './aiService'
+import { handleChat, handleGetProviderConfig, handleLoadHistory, handleListSessions, handleUpdateProviderConfig } from './aiService'
 import { authenticate } from '../common/auth'
 import { fail } from '../common/response'
 import { ErrorCode } from '../../../src/types/common'
 import { validateParams } from '../common/validate'
+import { mergeAiProviderEnvironment } from '../../../src/utils/aiProviderConfig'
 
 interface AiEvent {
   action?: string
@@ -23,6 +24,8 @@ interface AiEvent {
   image?: AiImageInput
   sessionId?: string
   limit?: number
+  baseURL?: string | null
+  apiKey?: string | null
   [key: string]: unknown
 }
 
@@ -50,6 +53,15 @@ export async function aiMain(
       const authResult = await authenticate(repo, openid)
       if (authResult.error) return authResult.error
 
+      let persisted
+      try {
+        persisted = await repo.getAiProviderConfig()
+      } catch {
+        return fail(ErrorCode.INTERNAL_ERROR, 'Unable to load AI provider configuration')
+      }
+      const effectiveEnv = mergeAiProviderEnvironment(env ?? {}, persisted)
+      aiClient.configure?.(effectiveEnv)
+
       return handleChat(repo, aiClient, openid, {
         bookId: event.bookId,
         book: event.book,
@@ -57,7 +69,7 @@ export async function aiMain(
         context: event.context,
         image: event.image,
         sessionId: event.sessionId,
-      }, env, storage)
+      }, effectiveEnv, storage)
     }
 
     case 'loadHistory': {
@@ -72,6 +84,21 @@ export async function aiMain(
       if (authResult.error) return authResult.error
 
       return handleListSessions(repo, openid)
+    }
+
+    case 'getConfig': {
+      const authResult = await authenticate(repo, openid)
+      if (authResult.error) return authResult.error
+      return handleGetProviderConfig(repo, authResult.auth!, env ?? {})
+    }
+
+    case 'updateConfig': {
+      const authResult = await authenticate(repo, openid)
+      if (authResult.error) return authResult.error
+      return handleUpdateProviderConfig(repo, authResult.auth!, {
+        baseURL: event.baseURL,
+        apiKey: event.apiKey,
+      }, env ?? {})
     }
 
     default:

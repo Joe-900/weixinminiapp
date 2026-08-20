@@ -7,7 +7,7 @@ import type { Repository, PageResult } from '../interfaces/repository'
 import type { User } from '../../../src/types/user'
 import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../../../src/types/book'
 import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
-import type { AiSession, AiMessage } from '../../../src/types/ai'
+import type { AiProviderConfig, AiSession, AiMessage } from '../../../src/types/ai'
 import type { ReadingEvent, ReadingPlan, ReadingStat } from '../../../src/types/reading'
 import type { ClassGroup, CommunityMember } from '../../../src/types/community'
 import type { ReadingTask, TaskSubmission, TaskFeedback } from '../../../src/types/task'
@@ -20,6 +20,7 @@ export class MemoryRepository implements Repository {
   private checkins: Map<string, Checkin> = new Map()
   private sessions: Map<string, AiSession> = new Map()
   private messages: Map<string, AiMessage> = new Map()
+  private aiProviderConfig: AiProviderConfig | null = null
   private readingEvents: Map<string, ReadingEvent> = new Map()
   private readingPlans: Map<string, ReadingPlan> = new Map()
   private groups: Map<string, ClassGroup> = new Map()
@@ -36,6 +37,7 @@ export class MemoryRepository implements Repository {
     this.checkins.clear()
     this.sessions.clear()
     this.messages.clear()
+    this.aiProviderConfig = null
     this.readingEvents.clear()
     this.readingPlans.clear()
     this.groups.clear()
@@ -266,6 +268,16 @@ export class MemoryRepository implements Repository {
         m.createdAt >= startOfDay &&
         m.createdAt < endOfDay,
     ).length
+  }
+
+  async getAiProviderConfig(): Promise<AiProviderConfig | null> {
+    return this.aiProviderConfig ? { ...this.aiProviderConfig } : null
+  }
+
+  async saveAiProviderConfig(config: Omit<AiProviderConfig, '_id'>): Promise<AiProviderConfig> {
+    const saved: AiProviderConfig = { ...config, _id: config.configId }
+    this.aiProviderConfig = saved
+    return { ...saved }
   }
 
   private makeId(prefix: string): string {

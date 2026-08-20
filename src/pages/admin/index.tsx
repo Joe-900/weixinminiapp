@@ -7,6 +7,7 @@ import { View, Text, Input, Textarea, Button } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect, useCallback } from 'react'
 import { bookList, bookCreate, bookUpdate, bookOffline, bookOnline } from '../../services/bookService'
+import { aiGetProviderConfig, aiUpdateProviderConfig } from '../../services/aiService'
 import { importLibraryMetadata } from '../../services/libraryService'
 import { isSuccess, showErrorToast } from '../../services/request'
 import AuthGuard from '../../components/AuthGuard'
@@ -21,6 +22,7 @@ import type { ImportPreview } from '../../utils/libraryImport'
 import type { LibraryImportResult } from '../../types/library'
 import type { BuptLibraryBookRow } from '../../utils/buptSourceAdapter'
 import type { Book } from '../../types/book'
+import type { AiProviderConfigUpdate, AiProviderConfigView } from '../../types/ai'
 import { MAX_BOOK_TAG_LENGTH, validateBookTags } from '../../utils/bookTags'
 import './index.scss'
 
@@ -30,6 +32,12 @@ const STATUS_LABEL_MAP: Record<StatusFilter, string> = {
   all: '全部',
   online: '已上架',
   offline: '已下架',
+}
+
+const AI_CONFIG_SOURCE_LABEL: Record<AiProviderConfigView['source'], string> = {
+  environment: '运行环境',
+  database: '管理员配置',
+  mixed: '运行环境 + 管理员配置',
 }
 
 export default function Admin() {
@@ -49,6 +57,13 @@ export default function Admin() {
   const [importResult, setImportResult] = useState<LibraryImportResult | null>(null)
   const [importing, setImporting] = useState(false)
   const [importError, setImportError] = useState('')
+  const [providerConfig, setProviderConfig] = useState<AiProviderConfigView | null>(null)
+  const [providerBaseURL, setProviderBaseURL] = useState('')
+  const [providerBaseURLInitial, setProviderBaseURLInitial] = useState('')
+  const [providerApiKey, setProviderApiKey] = useState('')
+  const [providerLoading, setProviderLoading] = useState(false)
+  const [providerSaving, setProviderSaving] = useState(false)
+  const [providerMessage, setProviderMessage] = useState('')
 
   const loadBooks = useCallback(async () => {
     setLoading(true)
@@ -68,6 +83,25 @@ export default function Admin() {
   useEffect(() => {
     loadBooks()
   }, [loadBooks])
+
+  const loadProviderConfig = useCallback(async () => {
+    setProviderLoading(true)
+    const res = await aiGetProviderConfig()
+    setProviderLoading(false)
+    if (isSuccess(res) && res.data) {
+      setProviderConfig(res.data)
+      setProviderBaseURL(res.data.baseURL)
+      setProviderBaseURLInitial(res.data.baseURL)
+      setProviderApiKey('')
+      setProviderMessage('')
+    } else {
+      setProviderMessage(res.message)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadProviderConfig()
+  }, [loadProviderConfig])
 
   function openCreateForm() {
     setEditBook(null)
@@ -212,6 +246,49 @@ export default function Admin() {
     }
   }
 
+  async function handleSaveProviderConfig() {
+    const baseURL = providerBaseURL.trim()
+    const apiKey = providerApiKey.trim()
+    const update: AiProviderConfigUpdate = {
+      ...(baseURL !== providerBaseURLInitial.trim() ? { baseURL: baseURL || null } : {}),
+      ...(apiKey ? { apiKey } : {}),
+    }
+    if (Object.keys(update).length === 0) {
+      setProviderMessage('没有需要保存的配置变更。')
+      return
+    }
+
+    setProviderSaving(true)
+    setProviderMessage('')
+    const res = await aiUpdateProviderConfig(update)
+    setProviderSaving(false)
+    if (isSuccess(res) && res.data) {
+      setProviderConfig(res.data)
+      setProviderBaseURL(res.data.baseURL)
+      setProviderBaseURLInitial(res.data.baseURL)
+      setProviderApiKey('')
+      setProviderMessage('AI 配置已保存，旧 API Key 不会回显。')
+    } else {
+      setProviderMessage(res.message)
+      showErrorToast(res.code)
+    }
+  }
+
+  async function handleClearProviderApiKey() {
+    setProviderSaving(true)
+    setProviderMessage('')
+    const res = await aiUpdateProviderConfig({ apiKey: null })
+    setProviderSaving(false)
+    if (isSuccess(res) && res.data) {
+      setProviderConfig(res.data)
+      setProviderApiKey('')
+      setProviderMessage('管理员配置中的 API Key 覆盖已清除；如环境变量仍有密钥，仍会继续使用环境变量。')
+    } else {
+      setProviderMessage(res.message)
+      showErrorToast(res.code)
+    }
+  }
+
   const normalizedFormTags = [formTagOne.trim(), formTagTwo.trim()]
   const duplicateTag = normalizedFormTags[0] && normalizedFormTags[0] === normalizedFormTags[1]
     ? normalizedFormTags[0]
@@ -241,6 +318,38 @@ export default function Admin() {
               <Text>{STATUS_LABEL_MAP[s]}</Text>
             </View>
           ))}
+        </View>
+
+        <View className='admin__section admin__ai-config'>
+          <Text className='admin__section-title'>AI 服务配置</Text>
+          {providerLoading && <Text className='admin__section-note'>正在读取配置……</Text>}
+          {!providerLoading && providerConfig && (
+            <View className='admin__ai-status'>
+              <Text className='admin__section-note'>当前 Base URL：{providerConfig.baseURL || '未配置'}</Text>
+              <Text className='admin__section-note'>当前模型：{providerConfig.model || '未配置'}</Text>
+              <Text className='admin__section-note'>API Key：{providerConfig.apiKeyConfigured ? '已配置（不会显示）' : '未配置'}</Text>
+              <Text className='admin__section-note'>配置来源：{AI_CONFIG_SOURCE_LABEL[providerConfig.source]}</Text>
+            </View>
+          )}
+          <Input
+            className='admin__input'
+            placeholder='Base URL，例如 https://api.shuaiapi.com/v1'
+            value={providerBaseURL}
+            onInput={(event) => setProviderBaseURL(event.detail.value)}
+          />
+          <Input
+            className='admin__input'
+            password
+            placeholder='新的 API Key（留空表示不修改）'
+            value={providerApiKey}
+            onInput={(event) => setProviderApiKey(event.detail.value)}
+          />
+          <Text className='admin__form-note'>API Key 只提交到服务端配置，不会回显、写入前端包或 Git。清空 Base URL 会移除管理员覆盖并回到环境变量。</Text>
+          {providerMessage && <Text className='admin__ai-message'>{providerMessage}</Text>}
+          <View className='admin__form-actions'>
+            <Button loading={providerSaving} disabled={providerSaving} onClick={handleSaveProviderConfig}>保存 AI 配置</Button>
+            <Button loading={providerSaving} disabled={providerSaving} onClick={handleClearProviderApiKey}>清除 API Key 覆盖</Button>
+          </View>
         </View>
 
         <StateView loading={loading} empty={books.length === 0} emptyText='暂无书籍' />

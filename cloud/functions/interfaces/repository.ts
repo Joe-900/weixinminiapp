@@ -5,7 +5,7 @@
 import type { User } from '../../../src/types/user'
 import type { Book, BookKeywordField, BookSortField, BookSortOrder } from '../../../src/types/book'
 import type { Note, Checkin, CheckinStat } from '../../../src/types/note'
-import type { AiSession, AiMessage } from '../../../src/types/ai'
+import type { AiProviderConfig, AiSession, AiMessage } from '../../../src/types/ai'
 import type { ReadingEvent, ReadingStat, ReadingPlan } from '../../../src/types/reading'
 import type { ClassGroup, CommunityMember } from '../../../src/types/community'
 import type { ReadingTask, TaskSubmission, TaskFeedback } from '../../../src/types/task'
@@ -51,6 +51,8 @@ export interface Repository {
   getSessionMessages(sessionId: string, limit: number): Promise<AiMessage[]>
   addMessage(message: Omit<AiMessage, '_id' | 'msgId'>): Promise<AiMessage>
   countTodayChats(openid: string): Promise<number>
+  getAiProviderConfig(): Promise<AiProviderConfig | null>
+  saveAiProviderConfig(config: Omit<AiProviderConfig, '_id'>): Promise<AiProviderConfig>
 
   addReadingEvent(event: Omit<ReadingEvent, '_id' | 'eventId'>): Promise<ReadingEvent>
   listReadingEvents(openid: string, bookId?: string): Promise<ReadingEvent[]>
