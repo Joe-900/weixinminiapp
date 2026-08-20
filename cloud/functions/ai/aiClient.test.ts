@@ -69,6 +69,35 @@ describe('OpenAiClient - request assembly', () => {
     await client.chat([{ role: 'user', content: 'x' }])
     expect(capturedUrl).toBe('https://ai.example.com/v1/chat/completions')
   })
+
+  test('uses the ShuaiAPI-compatible base URL and configured model', async () => {
+    let capturedUrl = ''
+    const captured: { body?: Record<string, unknown> } = {}
+    mockFetch(async (url, init) => {
+      capturedUrl = url
+      captured.body = JSON.parse(init.body as string) as Record<string, unknown>
+      return jsonResponse(200, { choices: [{ message: { content: '已收到' } }] })
+    })
+
+    const client = new OpenAiClient({
+      ...ENV,
+      AI_BASE_URL: 'https://api.shuaiapi.com/v1',
+      AI_MODEL: 'qwen3.7-flash',
+    })
+    await client.chat([{ role: 'user', content: '请介绍这本书的阅读重点' }])
+
+    expect(capturedUrl).toBe('https://api.shuaiapi.com/v1/chat/completions')
+    expect(captured.body).toBeDefined()
+    const body = captured.body!
+    expect(body.model).toBe('qwen3.7-flash')
+    expect(body.messages).toEqual([{ role: 'user', content: '请介绍这本书的阅读重点' }])
+  })
+
+  test('does not expose the API key in the response', async () => {
+    mockFetch(async () => jsonResponse(200, { choices: [{ message: { content: '安全回复' } }] }))
+    const client = new OpenAiClient({ ...ENV, AI_API_KEY: 'secret-provider-key' })
+    await expect(client.chat([{ role: 'user', content: '问题' }])).resolves.toBe('安全回复')
+  })
 })
 
 describe('OpenAiClient - error classification', () => {
