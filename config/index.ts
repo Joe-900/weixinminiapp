@@ -28,7 +28,7 @@ export default defineConfig(async (merge) => {
     },
     cache: { enable: false },
     sass: {
-      data: '@import "D:/weixinminiapp/src/assets/styles/variables.scss";',
+      data: '@import "./src/assets/styles/variables.scss";',
     },
     mini: {
       postcss: {

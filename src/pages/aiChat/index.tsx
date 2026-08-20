@@ -280,9 +280,13 @@ export default function AiChat() {
       )}
 
       {loadingBook && <StateView loading />}
-      <ScrollView className='ai-chat__messages' scrollY>
+      <ScrollView className='ai-chat__messages' scrollY scrollIntoView={messages.length > 0 ? `msg-${messages.length - 1}` : ''}>
         {messages.length === 0 && <Text className='ai-chat__empty'>输入问题，开始和这本书讨论。</Text>}
-        {messages.map((message, index) => <ChatBubble key={message.msgId || index} message={message} />)}
+        {messages.map((message, index) => (
+          <View key={message.msgId || index} id={`msg-${index}`}>
+            <ChatBubble message={message} />
+          </View>
+        ))}
       </ScrollView>
 
       {imagePreview && (
