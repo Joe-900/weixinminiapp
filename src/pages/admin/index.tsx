@@ -212,6 +212,17 @@ export default function Admin() {
     }
   }
 
+  const normalizedFormTags = [formTagOne.trim(), formTagTwo.trim()]
+  const duplicateTag = normalizedFormTags[0] && normalizedFormTags[0] === normalizedFormTags[1]
+    ? normalizedFormTags[0]
+    : ''
+  const overlongTag = [formTagOne, formTagTwo].find((tag) => tag.trim().length > MAX_BOOK_TAG_LENGTH)
+  const tagWarning = overlongTag
+    ? `标签不能超过 ${MAX_BOOK_TAG_LENGTH} 个字`
+    : duplicateTag
+      ? `标签“${duplicateTag}”重复，保存时会自动去重`
+      : ''
+
   return (
     <AuthGuard requiredRole='admin'>
       <View className='admin'>
@@ -260,6 +271,7 @@ export default function Admin() {
             <Input className='admin__input' placeholder='封面地址或文件ID' value={formCover} onInput={(e) => setFormCover(e.detail.value)} />
             <Input className='admin__input' placeholder='标签一（可选）' maxlength={MAX_BOOK_TAG_LENGTH} value={formTagOne} onInput={(e) => setFormTagOne(e.detail.value)} />
             <Input className='admin__input' placeholder='标签二（可选）' maxlength={MAX_BOOK_TAG_LENGTH} value={formTagTwo} onInput={(e) => setFormTagTwo(e.detail.value)} />
+            {tagWarning && <Text className='admin__form-tag-warning'>{tagWarning}</Text>}
             <Text className='admin__form-note'>标签最多 2 个，保存后用于书单展示和筛选，不会自动生成。</Text>
             <View className='admin__form-actions'>
               <Button onClick={handleSubmit}>保存</Button>
