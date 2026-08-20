@@ -27,6 +27,7 @@ interface BookEvent {
   keywordField?: BookKeywordField
   sortBy?: BookSortField
   sortOrder?: BookSortOrder
+  tag?: string
   bookId?: string
   title?: string
   author?: string
@@ -47,6 +48,7 @@ interface BookEvent {
   librarySource?: string
   collectionStatus?: string
   location?: string
+  tags?: string[]
   status?: string
   [key: string]: unknown
 }
@@ -81,6 +83,7 @@ export async function bookMain(
         event.keywordField ?? 'all',
         event.sortBy ?? 'createdAt',
         event.sortOrder ?? 'desc',
+        event.tag,
       )
     }
 
@@ -115,6 +118,7 @@ export async function bookMain(
         librarySource: event.librarySource,
         collectionStatus: event.collectionStatus,
         location: event.location,
+        tags: event.tags,
       })
     }
 
@@ -143,6 +147,7 @@ export async function bookMain(
         librarySource: event.librarySource,
         collectionStatus: event.collectionStatus,
         location: event.location,
+        tags: event.tags,
       })
     }
 

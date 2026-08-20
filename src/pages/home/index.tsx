@@ -25,11 +25,13 @@ export default function Home() {
     keywordField,
     sortBy,
     sortOrder,
+    tag,
     setFilters,
   } = useBookStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [draftKeyword, setDraftKeyword] = useState(keyword)
+  const [draftTag, setDraftTag] = useState(tag)
   const initialized = useRef(false)
 
   const keywordFields: Array<{ value: BookKeywordField; label: string }> = [
@@ -52,6 +54,7 @@ export default function Home() {
     field: BookKeywordField,
     orderBy: BookSortField,
     order: BookSortOrder,
+    selectedTag: string,
   ) => {
     setLoading(true)
     setError('')
@@ -63,6 +66,7 @@ export default function Home() {
         keywordField: field,
         sortBy: orderBy,
         sortOrder: order,
+        tag: selectedTag || undefined,
       })
       if (isSuccess(res) && res.data) {
         const currentBooks = useBookStore.getState().bookList
@@ -84,22 +88,25 @@ export default function Home() {
     nextField = keywordField,
     nextSortBy = sortBy,
     nextSortOrder = sortOrder,
+    nextTag = draftTag,
   ) => {
     const normalizedKeyword = nextKeyword.trim()
     setDraftKeyword(normalizedKeyword)
-    setFilters(normalizedKeyword, nextField, nextSortBy, nextSortOrder)
-    loadBooks(1, normalizedKeyword, nextField, nextSortBy, nextSortOrder)
-  }, [draftKeyword, keywordField, loadBooks, setFilters, sortBy, sortOrder])
+    const normalizedTag = nextTag.trim()
+    setDraftTag(normalizedTag)
+    setFilters(normalizedKeyword, nextField, nextSortBy, nextSortOrder, normalizedTag)
+    loadBooks(1, normalizedKeyword, nextField, nextSortBy, nextSortOrder, normalizedTag)
+  }, [draftKeyword, draftTag, keywordField, loadBooks, setFilters, sortBy, sortOrder])
 
   const handleRefresh = useCallback(() => {
-    loadBooks(1, keyword, keywordField, sortBy, sortOrder)
-  }, [keyword, keywordField, loadBooks, sortBy, sortOrder])
+    loadBooks(1, keyword, keywordField, sortBy, sortOrder, tag)
+  }, [keyword, keywordField, loadBooks, sortBy, sortOrder, tag])
 
   const handleLoadMore = useCallback(() => {
     if (books.length < total) {
-      loadBooks(page + 1, keyword, keywordField, sortBy, sortOrder)
+      loadBooks(page + 1, keyword, keywordField, sortBy, sortOrder, tag)
     }
-  }, [books.length, keyword, keywordField, loadBooks, page, sortBy, sortOrder, total])
+  }, [books.length, keyword, keywordField, loadBooks, page, sortBy, sortOrder, tag, total])
 
   const handleBookClick = useCallback((bookId: string) => {
     Taro.navigateTo({ url: `/pages/bookDetail/index?bookId=${bookId}` })
@@ -108,8 +115,8 @@ export default function Home() {
   useEffect(() => {
     if (initialized.current) return
     initialized.current = true
-    loadBooks(1, keyword, keywordField, sortBy, sortOrder)
-  }, [keyword, keywordField, loadBooks, sortBy, sortOrder])
+    loadBooks(1, keyword, keywordField, sortBy, sortOrder, tag)
+  }, [keyword, keywordField, loadBooks, sortBy, sortOrder, tag])
 
   const selectedFieldIndex = keywordFields.findIndex((item) => item.value === keywordField)
   const selectedSortIndex = sortOptions.findIndex((item) => item.sortBy === sortBy && item.sortOrder === sortOrder)
@@ -128,6 +135,15 @@ export default function Home() {
             onConfirm={() => applyFilters()}
           />
           <Button size='mini' className='home__search-button' onClick={() => applyFilters()}>筛选</Button>
+        </View>
+        <View className='home__tag-row'>
+          <Input
+            className='home__tag-input'
+            value={draftTag}
+            placeholder='按标签筛选（精确匹配）'
+            onInput={(event) => setDraftTag(event.detail.value)}
+            onConfirm={() => applyFilters()}
+          />
         </View>
         <View className='home__filter-row'>
           <Picker

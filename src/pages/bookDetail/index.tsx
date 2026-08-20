@@ -94,6 +94,7 @@ export default function BookDetail() {
         {book.isbn && <Text className='book-detail__meta'>ISBN：{book.isbn}</Text>}
         {book.librarySource && <Text className='book-detail__meta'>数据来源：{book.librarySource}</Text>}
         {book.location && <Text className='book-detail__meta'>馆藏位置：{book.location}</Text>}
+        {book.tags && book.tags.length > 0 && <Text className='book-detail__meta'>标签：{book.tags.join('、')}</Text>}
         <Text className='book-detail__summary'>{book.summary || '平台仅保存图书元数据，不提供整本书正文。'}</Text>
       </View>
       {availability && <Text className='book-detail__availability'>{availability}</Text>}

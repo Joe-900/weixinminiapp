@@ -13,6 +13,7 @@ import { MemoryRepository } from '../mock/memoryRepository'
 import { LocalStorage } from '../mock/localStorage'
 import { MockAiClient } from '../mock/mockAiClient'
 import { seedUsers, seedBooks, seedGroups, seedMembers, seedTasks, seedReadingEvents, MOCK_LOGIN_OPENID } from '../mock/seedData'
+import { validateBookTags } from '../utils/bookTags'
 
 const repo = new MemoryRepository()
 const storage = new LocalStorage()
@@ -112,6 +113,7 @@ async function mockBookMain(data: Record<string, unknown>): Promise<ApiResponse<
       data.keywordField as BookKeywordField | undefined,
       data.sortBy as BookSortField | undefined,
       data.sortOrder as BookSortOrder | undefined,
+      data.tag as string | undefined,
     )
     return success({ ...result, page, pageSize })
   }
@@ -131,6 +133,8 @@ async function mockBookMain(data: Record<string, unknown>): Promise<ApiResponse<
       { name: 'cover', type: 'string', required: true },
     ])
     if (validationError) return validationError
+    const createTags = validateBookTags(data.tags)
+    if (!createTags.valid) return fail(ErrorCode.BAD_REQUEST, createTags.message)
     const bookId = `book_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     const now = Date.now()
     await repo.createBook({
@@ -154,6 +158,7 @@ async function mockBookMain(data: Record<string, unknown>): Promise<ApiResponse<
       librarySource: data.librarySource as string | undefined,
       collectionStatus: data.collectionStatus as string | undefined,
       location: data.location as string | undefined,
+      tags: createTags.tags,
       status: 'online',
       addedBy: user.openid,
       createdAt: now,
@@ -166,6 +171,10 @@ async function mockBookMain(data: Record<string, unknown>): Promise<ApiResponse<
     const bookId = data.bookId as string
     if (!bookId) return fail(ErrorCode.BAD_REQUEST, 'bookId is required')
     if (!(await repo.findBookById(bookId))) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+    if (data.tags !== undefined) {
+      const tagsResult = validateBookTags(data.tags)
+      if (!tagsResult.valid) return fail(ErrorCode.BAD_REQUEST, tagsResult.message)
+    }
     const updates: Partial<Book> = {}
     const keys: Array<keyof Book> = [
       'title', 'author', 'isbn', 'cover', 'summary', 'edition', 'publisher', 'librarySource', 'collectionStatus', 'location',
@@ -176,6 +185,11 @@ async function mockBookMain(data: Record<string, unknown>): Promise<ApiResponse<
       if (typeof value === 'string' || typeof value === 'number') {
         ;(updates as Record<string, unknown>)[key] = value
       }
+    }
+    if (data.tags !== undefined) {
+      const updateTags = validateBookTags(data.tags)
+      if (!updateTags.valid) return fail(ErrorCode.BAD_REQUEST, updateTags.message)
+      updates.tags = updateTags.tags
     }
     await repo.updateBook(bookId, updates)
     return success('ok')
@@ -735,7 +749,7 @@ async function mockLibraryMain(data: Record<string, unknown>): Promise<ApiRespon
       const list = book ? [book] : []
       return success<PaginatedData<Book>>({ list, total: list.length, page, pageSize })
     }
-    const result = await repo.listBooks(page, pageSize, data.keyword as string | undefined, 'online')
+    const result = await repo.listBooks(page, pageSize, data.keyword as string | undefined, 'online', undefined, undefined, undefined, data.tag as string | undefined)
     return success<PaginatedData<Book>>({ ...result, page, pageSize })
   }
   if (data.action === 'import') {
@@ -750,6 +764,11 @@ async function mockLibraryMain(data: Record<string, unknown>): Promise<ApiRespon
         continue
       }
       const item = raw as LibraryMetadata
+      const tagsResult = validateBookTags(item.tags)
+      if (!tagsResult.valid) {
+        failures.push({ index: i, reason: tagsResult.message })
+        continue
+      }
       const title = item.title?.trim()
       const source = item.librarySource?.trim()
       const isbn = item.isbn?.replace(/[-\s]/g, '') ?? ''
@@ -783,6 +802,7 @@ async function mockLibraryMain(data: Record<string, unknown>): Promise<ApiRespon
         librarySource: source,
         collectionStatus: item.collectionStatus?.trim(),
         location: item.location?.trim(),
+        tags: tagsResult.tags,
         status: 'online',
         addedBy: user.openid,
         createdAt: now,

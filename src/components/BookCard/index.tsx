@@ -19,6 +19,7 @@ export default function BookCard({ book, onClick }: BookCardProps) {
       <View className='book-card__info'>
         <Text className='book-card__title'>{book.title}</Text>
         <Text className='book-card__author'>作者：{book.author || '未知'}</Text>
+        {book.tags && book.tags.length > 0 && <Text className='book-card__tags'>标签：{book.tags.join('、')}</Text>}
       </View>
     </View>
   )

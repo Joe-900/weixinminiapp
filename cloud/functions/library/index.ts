@@ -16,6 +16,7 @@ interface LibraryEvent {
   pageSize?: number
   keyword?: string
   isbn?: string
+  tag?: string
   [key: string]: unknown
 }
 
@@ -37,6 +38,7 @@ export async function libraryMain(
         pageSize: event.pageSize,
         keyword: event.keyword,
         isbn: event.isbn,
+        tag: event.tag,
       })
     case 'import':
       return handleImportLibraryMetadata(repo, authResult.auth!, event.items ?? [])

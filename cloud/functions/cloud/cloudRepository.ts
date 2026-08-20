@@ -78,9 +78,11 @@ export class CloudRepository implements Repository {
     keywordField: BookKeywordField = 'all',
     sortBy: BookSortField = 'createdAt',
     sortOrder: BookSortOrder = 'desc',
+    tag?: string,
   ): Promise<PageResult<Book>> {
     const condition: Record<string, unknown> = {}
     if (status) condition.status = status
+    if (tag) condition.tags = tag
 
     let query = this.db.collection('book').where(condition)
 

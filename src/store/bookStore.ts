@@ -16,10 +16,11 @@ interface BookState {
   keywordField: BookKeywordField
   sortBy: BookSortField
   sortOrder: BookSortOrder
+  tag: string
   setBookList: (list: Book[], total: number, page: number) => void
   setLoading: (loading: boolean) => void
   setKeyword: (keyword: string) => void
-  setFilters: (keyword: string, keywordField: BookKeywordField, sortBy: BookSortField, sortOrder: BookSortOrder) => void
+  setFilters: (keyword: string, keywordField: BookKeywordField, sortBy: BookSortField, sortOrder: BookSortOrder, tag: string) => void
   resetList: () => void
 }
 
@@ -33,6 +34,7 @@ export const useBookStore = create<BookState>((set) => ({
   keywordField: 'all',
   sortBy: 'createdAt',
   sortOrder: 'desc',
+  tag: '',
 
   setBookList: (list, total, page) =>
     set({ bookList: list, total, page }),
@@ -41,8 +43,8 @@ export const useBookStore = create<BookState>((set) => ({
 
   setKeyword: (keyword) => set({ keyword, page: 1, bookList: [] }),
 
-  setFilters: (keyword, keywordField, sortBy, sortOrder) =>
-    set({ keyword, keywordField, sortBy, sortOrder, page: 1, bookList: [], total: 0 }),
+  setFilters: (keyword, keywordField, sortBy, sortOrder, tag) =>
+    set({ keyword, keywordField, sortBy, sortOrder, tag, page: 1, bookList: [], total: 0 }),
 
-  resetList: () => set({ bookList: [], total: 0, page: 1, keyword: '', keywordField: 'all', sortBy: 'createdAt', sortOrder: 'desc' }),
+  resetList: () => set({ bookList: [], total: 0, page: 1, keyword: '', keywordField: 'all', sortBy: 'createdAt', sortOrder: 'desc', tag: '' }),
 }))

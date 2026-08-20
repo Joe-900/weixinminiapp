@@ -21,6 +21,7 @@ import type { ImportPreview } from '../../utils/libraryImport'
 import type { LibraryImportResult } from '../../types/library'
 import type { BuptLibraryBookRow } from '../../utils/buptSourceAdapter'
 import type { Book } from '../../types/book'
+import { MAX_BOOK_TAG_LENGTH, validateBookTags } from '../../utils/bookTags'
 import './index.scss'
 
 type StatusFilter = 'all' | 'online' | 'offline'
@@ -42,6 +43,8 @@ export default function Admin() {
   const [formIsbn, setFormIsbn] = useState('')
   const [formSummary, setFormSummary] = useState('')
   const [formCover, setFormCover] = useState('')
+  const [formTagOne, setFormTagOne] = useState('')
+  const [formTagTwo, setFormTagTwo] = useState('')
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null)
   const [importResult, setImportResult] = useState<LibraryImportResult | null>(null)
   const [importing, setImporting] = useState(false)
@@ -73,6 +76,8 @@ export default function Admin() {
     setFormIsbn('')
     setFormSummary('')
     setFormCover('')
+    setFormTagOne('')
+    setFormTagTwo('')
     setShowForm(true)
   }
 
@@ -83,12 +88,20 @@ export default function Admin() {
     setFormIsbn(book.isbn)
     setFormSummary(book.summary)
     setFormCover(book.cover)
+    setFormTagOne(book.tags?.[0] ?? '')
+    setFormTagTwo(book.tags?.[1] ?? '')
     setShowForm(true)
   }
 
   async function handleSubmit() {
     if (!formTitle || !formAuthor || !formIsbn) {
       Taro.showToast({ title: '请填写必填项', icon: 'none' })
+      return
+    }
+
+    const tagsResult = validateBookTags([formTagOne, formTagTwo])
+    if (!tagsResult.valid) {
+      Taro.showToast({ title: tagsResult.message, icon: 'none' })
       return
     }
 
@@ -100,6 +113,7 @@ export default function Admin() {
         isbn: formIsbn,
         summary: formSummary,
         cover: formCover,
+        tags: tagsResult.tags,
       })
       if (isSuccess(res)) {
         Taro.showToast({ title: '更新成功', icon: 'success' })
@@ -115,6 +129,7 @@ export default function Admin() {
         isbn: formIsbn,
         summary: formSummary,
         cover: formCover || 'local-mock://cover/default.png',
+        tags: tagsResult.tags,
       })
       if (isSuccess(res)) {
         Taro.showToast({ title: '创建成功', icon: 'success' })
@@ -224,6 +239,7 @@ export default function Admin() {
             <View className='admin__book-info'>
               <Text className='admin__book-title'>{book.title}</Text>
               <Text className='admin__book-status'>{book.status === 'online' ? '已上架' : '已下架'}</Text>
+              {book.tags && book.tags.length > 0 && <Text className='admin__book-tags'>标签：{book.tags.join('、')}</Text>}
             </View>
             <View className='admin__book-actions'>
               <Button size='mini' onClick={() => openEditForm(book)}>编辑</Button>
@@ -242,6 +258,9 @@ export default function Admin() {
             <Input className='admin__input' placeholder='ISBN' value={formIsbn} onInput={(e) => setFormIsbn(e.detail.value)} />
             <Textarea className='admin__textarea' placeholder='简介' value={formSummary} onInput={(e) => setFormSummary(e.detail.value)} />
             <Input className='admin__input' placeholder='封面地址或文件ID' value={formCover} onInput={(e) => setFormCover(e.detail.value)} />
+            <Input className='admin__input' placeholder='标签一（可选）' maxlength={MAX_BOOK_TAG_LENGTH} value={formTagOne} onInput={(e) => setFormTagOne(e.detail.value)} />
+            <Input className='admin__input' placeholder='标签二（可选）' maxlength={MAX_BOOK_TAG_LENGTH} value={formTagTwo} onInput={(e) => setFormTagTwo(e.detail.value)} />
+            <Text className='admin__form-note'>标签最多 2 个，保存后用于书单展示和筛选，不会自动生成。</Text>
             <View className='admin__form-actions'>
               <Button onClick={handleSubmit}>保存</Button>
               <Button onClick={() => setShowForm(false)}>取消</Button>

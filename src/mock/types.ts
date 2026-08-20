@@ -32,6 +32,7 @@ export interface MockRepository {
     keywordField?: BookKeywordField,
     sortBy?: BookSortField,
     sortOrder?: BookSortOrder,
+    tag?: string,
   ): Promise<PageResult<Book>>
   createBook(book: Omit<Book, '_id'>): Promise<Book>
   updateBook(bookId: string, updates: Partial<Book>): Promise<Book>

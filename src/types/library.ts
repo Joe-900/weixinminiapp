@@ -22,6 +22,7 @@ export interface LibraryMetadata {
   librarySource: string
   collectionStatus?: string
   location?: string
+  tags?: string[]
 }
 
 export interface LibrarySearchParams {
@@ -29,6 +30,7 @@ export interface LibrarySearchParams {
   pageSize?: number
   keyword?: string
   isbn?: string
+  tag?: string
 }
 
 export interface LibraryImportFailure {

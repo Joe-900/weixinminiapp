@@ -6,6 +6,7 @@ import type { LibraryImportFailure, LibraryImportResult, LibraryMetadata, Librar
 import { ErrorCode } from '../../../src/types/common'
 import { fail, success } from '../common/response'
 import { requireAdmin } from '../common/auth'
+import { validateBookTags } from '../../../src/utils/bookTags'
 
 export function normalizeLibraryMetadata(input: LibraryMetadata): LibraryMetadata {
   return {
@@ -28,6 +29,7 @@ export function normalizeLibraryMetadata(input: LibraryMetadata): LibraryMetadat
     librarySource: input.librarySource?.trim(),
     collectionStatus: input.collectionStatus?.trim(),
     location: input.location?.trim(),
+    tags: input.tags,
   }
 }
 
@@ -45,6 +47,11 @@ export async function handleImportLibraryMetadata(
   const failures: LibraryImportFailure[] = []
   for (let i = 0; i < items.length; i += 1) {
     const item = normalizeLibraryMetadata(items[i])
+    const tagsResult = validateBookTags(item.tags)
+    if (!tagsResult.valid) {
+      failures.push({ index: i, reason: tagsResult.message })
+      continue
+    }
     if (!item.title || !item.librarySource) {
       failures.push({ index: i, reason: !item.title ? '缺少书名' : '缺少来源(librarySource)' })
       continue
@@ -77,6 +84,7 @@ export async function handleImportLibraryMetadata(
       librarySource: item.librarySource,
       collectionStatus: item.collectionStatus,
       location: item.location,
+      tags: tagsResult.tags,
       status: 'online',
       addedBy: auth.openid,
       createdAt: now,
@@ -101,6 +109,6 @@ export async function handleSearchLibraryMetadata(
     const list = book && book.status === 'online' ? [book] : []
     return success({ list, total: list.length, page, pageSize })
   }
-  const result = await repo.listBooks(page, pageSize, params.keyword, 'online')
+  const result = await repo.listBooks(page, pageSize, params.keyword, 'online', undefined, undefined, undefined, params.tag)
   return success({ ...result, page, pageSize })
 }

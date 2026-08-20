@@ -18,6 +18,7 @@ import { ErrorCode } from '../../../src/types/common'
 import { validateParams } from '../common/validate'
 import type { AuthContext } from '../common/auth'
 import { requireAdmin } from '../common/auth'
+import { validateBookTags } from '../../../src/utils/bookTags'
 
 export async function handleList(
   repo: Repository,
@@ -28,8 +29,9 @@ export async function handleList(
   keywordField?: BookKeywordField,
   sortBy?: BookSortField,
   sortOrder?: BookSortOrder,
+  tag?: string,
 ): Promise<ApiResponse<PaginatedData<Book>>> {
-  const result = await repo.listBooks(page, pageSize, keyword, status, keywordField, sortBy, sortOrder)
+  const result = await repo.listBooks(page, pageSize, keyword, status, keywordField, sortBy, sortOrder, tag)
   return success({
     list: result.list,
     total: result.total,
@@ -72,6 +74,9 @@ export async function handleCreate(
   )
   if (validationError) return validationError
 
+  const tagsResult = validateBookTags(params.tags)
+  if (!tagsResult.valid) return fail(ErrorCode.BAD_REQUEST, tagsResult.message)
+
   const bookId = `book_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
   const now = Date.now()
 
@@ -96,6 +101,7 @@ export async function handleCreate(
     librarySource: params.librarySource,
     collectionStatus: params.collectionStatus,
     location: params.location,
+    tags: tagsResult.tags,
     status: 'online',
     addedBy: auth.openid,
     createdAt: now,
@@ -124,6 +130,9 @@ export async function handleUpdate(
     return fail(ErrorCode.NOT_FOUND, 'Book not found')
   }
 
+  const tagsResult = validateBookTags(params.tags)
+  if (!tagsResult.valid) return fail(ErrorCode.BAD_REQUEST, tagsResult.message)
+
   const updates: Partial<Book> = { updatedAt: Date.now() }
   if (params.title !== undefined) updates.title = params.title
   if (params.author !== undefined) updates.author = params.author
@@ -144,6 +153,7 @@ export async function handleUpdate(
   if (params.librarySource !== undefined) updates.librarySource = params.librarySource
   if (params.collectionStatus !== undefined) updates.collectionStatus = params.collectionStatus
   if (params.location !== undefined) updates.location = params.location
+  if (params.tags !== undefined) updates.tags = tagsResult.tags
 
   await repo.updateBook(params.bookId, updates)
   return success('ok')

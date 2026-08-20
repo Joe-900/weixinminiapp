@@ -108,12 +108,14 @@ export class MemoryRepository implements Repository {
     keywordField: BookKeywordField = 'all',
     sortBy: BookSortField = 'createdAt',
     sortOrder: BookSortOrder = 'desc',
+    tag?: string,
   ): Promise<PageResult<Book>> {
     let list = Array.from(this.books.values())
 
     if (status) {
       list = list.filter((b) => b.status === status)
     }
+    if (tag) list = list.filter((b) => b.tags?.includes(tag))
 
     if (keyword) {
       const kw = keyword.toLowerCase()

@@ -31,6 +31,7 @@ export interface Book {
   librarySource?: string
   collectionStatus?: string
   location?: string
+  tags?: string[]
   status: BookStatus
   addedBy: string
   createdAt: number
@@ -44,6 +45,7 @@ export interface BookListParams {
   keywordField?: BookKeywordField
   sortBy?: BookSortField
   sortOrder?: BookSortOrder
+  tag?: string
 }
 
 export interface BookCreateParams {
@@ -66,6 +68,7 @@ export interface BookCreateParams {
   librarySource?: string
   collectionStatus?: string
   location?: string
+  tags?: string[]
 }
 
 export interface BookUpdateParams {
@@ -89,4 +92,5 @@ export interface BookUpdateParams {
   librarySource?: string
   collectionStatus?: string
   location?: string
+  tags?: string[]
 }

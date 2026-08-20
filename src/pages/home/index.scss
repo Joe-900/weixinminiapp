@@ -17,6 +17,8 @@
   }
 
   &__search-row { margin-bottom: 12px; }
+  &__tag-row { margin-bottom: 12px; }
+  &__tag-input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 25px; }
   &__search-input { flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 25px; }
   &__search-button { color: #fff; background: #2563eb; font-size: 24px; }
   &__filter-row { justify-content: space-between; }

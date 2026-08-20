@@ -21,3 +21,5 @@ export function formatTime(timestamp: number): string {
   const min = String(date.getMinutes()).padStart(2, '0')
   return `${h}:${min}`
 }
+
+export { MAX_BOOK_TAGS, MAX_BOOK_TAG_LENGTH, validateBookTags } from './bookTags'

@@ -181,3 +181,81 @@ describe('Book domain - offline/online', () => {
     expect(result.code).toBe(ErrorCode.FORBIDDEN)
   })
 })
+
+describe('Book domain - administrator tags', () => {
+  test('admin can create two normalized unique tags', async () => {
+    const result = await bookMain(
+      {
+        action: 'create',
+        title: 'Tagged Book',
+        author: 'Author',
+        isbn: 'tagged-isbn',
+        summary: 'Summary',
+        cover: 'cover.png',
+        tags: [' 经典 ', '经典', '现代'],
+      },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+    ) as ApiResponse<string>
+
+    expect(result.code).toBe(ErrorCode.SUCCESS)
+    expect((await repo.findBookById(result.data!))!.tags).toEqual(['经典', '现代'])
+  })
+
+  test('admin can clear tags and duplicate tags are removed', async () => {
+    const update = await bookMain(
+      { action: 'update', bookId: 'book_001', tags: [' 重点 ', '重点'] },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+    )
+    expect(update.code).toBe(ErrorCode.SUCCESS)
+    expect((await repo.findBookById('book_001'))!.tags).toEqual(['重点'])
+
+    const clear = await bookMain(
+      { action: 'update', bookId: 'book_001', tags: [] },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+    )
+    expect(clear.code).toBe(ErrorCode.SUCCESS)
+    expect((await repo.findBookById('book_001'))!.tags).toEqual([])
+  })
+
+  test('third or overlong tag is rejected', async () => {
+    const tooMany = await bookMain(
+      { action: 'update', bookId: 'book_001', tags: ['一', '二', '三'] },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+    )
+    expect(tooMany.code).toBe(ErrorCode.BAD_REQUEST)
+
+    const tooLong = await bookMain(
+      { action: 'update', bookId: 'book_001', tags: ['a'.repeat(21)] },
+      { OPENID: SEED_ADMIN_OPENID },
+      repo,
+    )
+    expect(tooLong.code).toBe(ErrorCode.BAD_REQUEST)
+  })
+
+  test('non-admin cannot modify tags', async () => {
+    const result = await bookMain(
+      { action: 'update', bookId: 'book_001', tags: ['学生'] },
+      { OPENID: SEED_USER_OPENID },
+      repo,
+    )
+    expect(result.code).toBe(ErrorCode.FORBIDDEN)
+  })
+
+  test('tag filter runs before sorting and pagination', async () => {
+    await repo.updateBook('book_001', { tags: ['古典', '重点'] })
+    await repo.updateBook('book_002', { tags: ['现代'] })
+    const result = await bookMain(
+      { action: 'list', page: 1, pageSize: 1, tag: '古典', sortBy: 'title', sortOrder: 'asc' },
+      { OPENID: SEED_USER_OPENID },
+      repo,
+    ) as ApiResponse<PaginatedData<Book>>
+
+    expect(result.code).toBe(ErrorCode.SUCCESS)
+    expect(result.data!.total).toBe(1)
+    expect(result.data!.list[0].bookId).toBe('book_001')
+  })
+})
