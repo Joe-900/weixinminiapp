@@ -11,6 +11,7 @@ export default defineAppConfig({
     'pages/tasks/index',
     'pages/ranking/index',
     'pages/reservations/index',
+    'pages/transfers/index',
   ],
   tabBar: {
     color: '#999999',

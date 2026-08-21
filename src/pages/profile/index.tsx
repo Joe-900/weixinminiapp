@@ -24,6 +24,7 @@ export default function Profile() {
         <Button className='profile__btn' onClick={() => go('notes')}>笔记与打卡</Button>
         <Button className='profile__btn' onClick={() => go('reading')}>阅读计划</Button>
         <Button className='profile__btn' onClick={() => go('reservations')}>我的预约</Button>
+        <Button className='profile__btn' onClick={() => go('transfers')}>转取记录</Button>
         <Button className='profile__btn' onClick={() => go('community')}>班级与小组</Button>
         <Button className='profile__btn' onClick={() => go('tasks')}>阅读任务</Button>
         <Button className='profile__btn' onClick={() => go('ranking')}>行为排行榜</Button>

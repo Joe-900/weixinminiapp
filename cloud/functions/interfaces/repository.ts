@@ -9,7 +9,7 @@ import type { AiProviderConfig, AiSession, AiMessage } from '../../../src/types/
 import type { ReadingEvent, ReadingStat, ReadingPlan } from '../../../src/types/reading'
 import type { ClassGroup, CommunityMember } from '../../../src/types/community'
 import type { ReadingTask, TaskSubmission, TaskFeedback } from '../../../src/types/task'
-import type { Reservation } from '../../../src/types/reservation'
+import type { Reservation, BookTransfer } from '../../../src/types/reservation'
 
 export interface PageResult<T> {
   list: T[]
@@ -87,4 +87,9 @@ export interface Repository {
   findReservation(reservationId: string): Promise<Reservation | null>
   listReservations(openid: string): Promise<Reservation[]>
   updateReservation(reservationId: string, openid: string, updates: Partial<Reservation>): Promise<Reservation>
+
+  createTransfer(transfer: Omit<BookTransfer, '_id' | 'transferId'>): Promise<BookTransfer>
+  findTransfer(transferId: string): Promise<BookTransfer | null>
+  listTransfers(openid: string): Promise<BookTransfer[]>
+  updateTransfer(transferId: string, openid: string, updates: Partial<BookTransfer>): Promise<BookTransfer>
 }

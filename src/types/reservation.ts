@@ -25,3 +25,30 @@ export interface ReservationProviderResult {
   externalId?: string
   message?: string
 }
+
+// 转取（跨校区调书取书）功能
+export type TransferStatus = 'requested' | 'in_transit' | 'arrived' | 'picked_up' | 'cancelled'
+
+export interface BookTransfer {
+  _id: string
+  transferId: string
+  openid: string
+  bookId: string
+  fromLocation: string
+  toLocation: string
+  status: TransferStatus
+  estimatedDays: number
+  pickupCode?: string
+  pickupDeadline?: number
+  message?: string
+  createdAt: number
+  updatedAt: number
+}
+
+// 取书地点查询结果
+export interface PickupResult {
+  type: 'available' | 'transfer' | 'unavailable'
+  message: string
+  location: string
+  transfer?: BookTransfer
+}

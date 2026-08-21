@@ -12,7 +12,7 @@ import type { AiProviderConfig, AiSession, AiMessage } from '../../../src/types/
 import type { ReadingEvent, ReadingPlan, ReadingStat } from '../../../src/types/reading'
 import type { ClassGroup, CommunityMember } from '../../../src/types/community'
 import type { ReadingTask, TaskSubmission, TaskFeedback } from '../../../src/types/task'
-import type { Reservation } from '../../../src/types/reservation'
+import type { Reservation, BookTransfer } from '../../../src/types/reservation'
 
 interface CloudDbCollection {
   where(condition: Record<string, unknown>): CloudDbCollection
@@ -488,6 +488,32 @@ export class CloudRepository implements Repository {
     if (!current) throw new Error('Reservation not found')
     const next = { ...updates, updatedAt: Date.now() }
     await this.db.collection('reservation').where({ reservationId, openid }).update(next)
+    return { ...current, ...next }
+  }
+
+  async createTransfer(transfer: Omit<BookTransfer, '_id' | 'transferId'>): Promise<BookTransfer> {
+    const transferId = this.makeId('transfer')
+    const created: BookTransfer = { ...transfer, _id: transferId, transferId }
+    await this.db.collection('book_transfer').add({ ...created })
+    return created
+  }
+
+  async findTransfer(transferId: string): Promise<BookTransfer | null> {
+    const result = await this.db.collection('book_transfer').where({ transferId }).get()
+    return (result.data[0] as unknown as BookTransfer) ?? null
+  }
+
+  async listTransfers(openid: string): Promise<BookTransfer[]> {
+    const result = await this.db.collection('book_transfer').where({ openid }).orderBy('createdAt', 'desc').get()
+    return result.data as unknown as BookTransfer[]
+  }
+
+  async updateTransfer(transferId: string, openid: string, updates: Partial<BookTransfer>): Promise<BookTransfer> {
+    const result = await this.db.collection('book_transfer').where({ transferId, openid }).get()
+    const current = result.data[0] as unknown as BookTransfer | undefined
+    if (!current) throw new Error('Transfer not found')
+    const next = { ...updates, updatedAt: Date.now() }
+    await this.db.collection('book_transfer').where({ transferId, openid }).update(next)
     return { ...current, ...next }
   }
 }

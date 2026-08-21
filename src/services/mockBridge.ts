@@ -691,6 +691,79 @@ async function mockReservationMain(data: Record<string, unknown>): Promise<ApiRe
     }))
   }
   if (action === 'list') return success(await repo.listReservations(user.openid))
+
+  // 取书地点：查询校区库存，有库存直接取，无库存则发起转取
+  if (action === 'pickup') {
+    const bookId = data.bookId as string
+    const toLocation = data.toLocation as string
+    if (!bookId || !toLocation) return fail(ErrorCode.BAD_REQUEST, 'bookId and toLocation are required')
+    const book = await repo.findBookById(bookId)
+    if (!book) return fail(ErrorCode.NOT_FOUND, 'Book not found')
+
+    // Mock校区库存判断：基于bookId+campus稳定hash
+    const campuses = ['沙河校区', '西土城校区']
+    const otherCampus = campuses.find((c) => c !== toLocation) ?? ''
+    function campusStock(bookId: string, campus: string): boolean {
+      const key = bookId + campus
+      let hash = 0
+      for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash) + key.charCodeAt(i)
+      return Math.abs(hash) % 3 > 0 // 2/3概率有库存
+    }
+
+    const targetHas = campusStock(bookId, toLocation)
+    const otherHas = campusStock(bookId, otherCampus)
+
+    if (targetHas) {
+      return success({ type: 'available', location: toLocation, message: `${toLocation}有馆藏，可直接前往取书` })
+    }
+    if (otherHas) {
+      // 目标校区无库存，其他校区有 → 发起转取
+      const existing = (await repo.listTransfers(user.openid)).find(
+        (item) => item.bookId === bookId && item.toLocation === toLocation && item.status !== 'cancelled' && item.status !== 'picked_up',
+      )
+      if (existing) {
+        return success({ type: 'transfer', location: toLocation, message: `需从${otherCampus}调书，预计${existing.estimatedDays}个工作日`, transfer: existing })
+      }
+      const now = Date.now()
+      const transfer = await repo.createTransfer({
+        openid: user.openid,
+        bookId,
+        fromLocation: otherCampus,
+        toLocation,
+        status: 'requested',
+        estimatedDays: 3,
+        pickupCode: `PK${now.toString(36).toUpperCase().slice(-6)}`,
+        pickupDeadline: now + 7 * 24 * 60 * 60 * 1000,
+        message: `需从${otherCampus}调书至${toLocation}`,
+        createdAt: now,
+        updatedAt: now,
+      })
+      return success({ type: 'transfer', location: toLocation, message: `需从${otherCampus}调书，预计${transfer.estimatedDays}个工作日`, transfer })
+    }
+    // 两个校区都无库存
+    return success({ type: 'unavailable', location: toLocation, message: '两个校区均无可用馆藏' })
+  }
+  if (action === 'listTransfers') return success(await repo.listTransfers(user.openid))
+  if (action === 'confirmPickup') {
+    const transferId = data.transferId as string
+    const transfer = await repo.findTransfer(transferId)
+    if (!transfer) return fail(ErrorCode.NOT_FOUND, 'Transfer not found')
+    if (transfer.openid !== user.openid) return fail(ErrorCode.ACCESS_DENIED)
+    return success(await repo.updateTransfer(transferId, user.openid, {
+      status: 'picked_up',
+      message: '已确认取书，转取完成',
+    }))
+  }
+  if (action === 'cancelTransfer') {
+    const transferId = data.transferId as string
+    const transfer = await repo.findTransfer(transferId)
+    if (!transfer) return fail(ErrorCode.NOT_FOUND, 'Transfer not found')
+    if (transfer.openid !== user.openid) return fail(ErrorCode.ACCESS_DENIED)
+    return success(await repo.updateTransfer(transferId, user.openid, {
+      status: 'cancelled',
+      message: '转取请求已取消',
+    }))
+  }
   return fail(ErrorCode.BAD_REQUEST, `Unknown action: ${action}`)
 }
 

@@ -10,7 +10,7 @@ import type { AiProviderConfig, AiSession, AiMessage } from '../types/ai'
 import type { ReadingEvent, ReadingPlan, ReadingStat } from '../types/reading'
 import type { ClassGroup, CommunityMember } from '../types/community'
 import type { ReadingTask, TaskSubmission, TaskFeedback } from '../types/task'
-import type { Reservation } from '../types/reservation'
+import type { Reservation, BookTransfer } from '../types/reservation'
 
 export interface PageResult<T> {
   list: T[]
@@ -80,6 +80,10 @@ export interface MockRepository {
   findReservation(reservationId: string): Promise<Reservation | null>
   listReservations(openid: string): Promise<Reservation[]>
   updateReservation(reservationId: string, openid: string, updates: Partial<Reservation>): Promise<Reservation>
+  createTransfer(transfer: Omit<BookTransfer, '_id' | 'transferId'>): Promise<BookTransfer>
+  findTransfer(transferId: string): Promise<BookTransfer | null>
+  listTransfers(openid: string): Promise<BookTransfer[]>
+  updateTransfer(transferId: string, openid: string, updates: Partial<BookTransfer>): Promise<BookTransfer>
   reset(): void
   seedUsers(users: User[]): void
   seedBooks(books: Book[]): void

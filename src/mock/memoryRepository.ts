@@ -10,7 +10,7 @@ import type { AiProviderConfig, AiSession, AiMessage } from '../types/ai'
 import type { ReadingEvent, ReadingPlan, ReadingStat } from '../types/reading'
 import type { ClassGroup, CommunityMember } from '../types/community'
 import type { ReadingTask, TaskSubmission, TaskFeedback } from '../types/task'
-import type { Reservation } from '../types/reservation'
+import type { Reservation, BookTransfer } from '../types/reservation'
 import type { MockRepository, PageResult } from './types'
 
 export class MemoryRepository implements MockRepository {
@@ -29,6 +29,7 @@ export class MemoryRepository implements MockRepository {
   private submissions: Map<string, TaskSubmission> = new Map()
   private feedback: Map<string, TaskFeedback> = new Map()
   private reservations: Map<string, Reservation> = new Map()
+  private transfers: Map<string, BookTransfer> = new Map()
 
   reset(): void {
     this.users.clear()
@@ -46,6 +47,7 @@ export class MemoryRepository implements MockRepository {
     this.submissions.clear()
     this.feedback.clear()
     this.reservations.clear()
+    this.transfers.clear()
   }
 
   seedUsers(users: User[]): void {
@@ -463,6 +465,31 @@ export class MemoryRepository implements MockRepository {
     if (!existing || existing.openid !== openid) throw new Error('Reservation not found')
     const updated = { ...existing, ...updates, updatedAt: Date.now() }
     this.reservations.set(reservationId, updated)
+    return updated
+  }
+
+  async createTransfer(transfer: Omit<BookTransfer, '_id' | 'transferId'>): Promise<BookTransfer> {
+    const transferId = this.makeId('transfer')
+    const created: BookTransfer = { ...transfer, _id: transferId, transferId }
+    this.transfers.set(transferId, created)
+    return created
+  }
+
+  async findTransfer(transferId: string): Promise<BookTransfer | null> {
+    return this.transfers.get(transferId) ?? null
+  }
+
+  async listTransfers(openid: string): Promise<BookTransfer[]> {
+    return Array.from(this.transfers.values())
+      .filter((transfer) => transfer.openid === openid)
+      .sort((a, b) => b.createdAt - a.createdAt)
+  }
+
+  async updateTransfer(transferId: string, openid: string, updates: Partial<BookTransfer>): Promise<BookTransfer> {
+    const existing = this.transfers.get(transferId)
+    if (!existing || existing.openid !== openid) throw new Error('Transfer not found')
+    const updated = { ...existing, ...updates, updatedAt: Date.now() }
+    this.transfers.set(transferId, updated)
     return updated
   }
 }

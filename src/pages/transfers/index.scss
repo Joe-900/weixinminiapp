@@ -1,0 +1,13 @@
+.transfers-page { min-height: 100vh; padding: 20px; background: #f5f7fb;
+  &__notice { display: block; margin-bottom: 14px; padding: 14px; color: #1e40af; background: #eff6ff; border-radius: 10px; font-size: 22px; }
+  &__item { margin-bottom: 12px; padding: 20px; background: #fff; border-radius: 12px; }
+  &__item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  &__item-title { flex: 1; color: #111827; font-size: 28px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__item-status { font-size: 23px; font-weight: 600; }
+  &__item-body { display: flex; flex-direction: column; gap: 6px; }
+  &__item-row { color: #6b7280; font-size: 23px; }
+  &__item-code { color: #dc2626; font-weight: 700; font-size: 25px; }
+  &__item-actions { display: flex; gap: 10px; margin-top: 14px; }
+  &__btn { color: #fff; background: #2563eb; font-size: 22px; }
+  &__btn--cancel { background: #9ca3af; }
+}
